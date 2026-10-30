@@ -18,6 +18,7 @@ import (
 	"golearn/backend/internal/platform/storage"
 	"golearn/backend/internal/ports"
 	"golearn/backend/internal/service/catalog"
+	checkoutsvc "golearn/backend/internal/service/checkout"
 	"golearn/backend/internal/service/contentadmin"
 	"golearn/backend/internal/service/courseadmin"
 	idsvc "golearn/backend/internal/service/identity"
@@ -41,6 +42,7 @@ type App struct {
 	Content      *contentadmin.Service
 	MediaService *mediasvc.Service
 	Playback     *playback.Service
+	Checkout     *checkoutsvc.Service
 	Instructors  ports.InstructorRepo
 	Media        ports.MediaRepo
 	Audit        ports.AuditRepo
@@ -49,6 +51,7 @@ type App struct {
 	Sections     ports.SectionRepo
 	Lessons      ports.LessonRepo
 	Categories   ports.CategoryRepo
+	Orders       ports.OrderRepo
 	Attachments  ports.AttachmentRepo
 	Entitlements ports.EntitlementRepo
 	StoragePort  ports.Storage
@@ -91,6 +94,11 @@ func NewRouter(a *App) http.Handler {
 			r.Get("/me", a.handleMe)
 			r.Post("/auth/password/change", a.handlePasswordChange)
 			r.With(a.rateLimit("review", 10, time.Hour)).Post("/courses/{slug}/reviews", a.handleReviewSubmit)
+			r.Post("/checkout", a.handleCheckout)
+			r.Post("/checkout/{order_id}/pay", a.handleCheckoutPay)
+			r.Post("/coupons/validate", a.handleCouponValidate)
+			r.Get("/me/orders", a.handleMyOrders)
+			r.Get("/me/orders/{id}", a.handleMyOrder)
 		})
 
 		// playback: optional auth, anonymous previews legal, per-IP issuance limit
@@ -99,6 +107,10 @@ func NewRouter(a *App) http.Handler {
 			r.With(a.rateLimit("playback", 60, time.Minute)).Get("/playback/lessons/{lesson_id}", a.handlePlaybackLesson)
 			r.With(a.rateLimit("playback", 30, time.Minute)).Get("/playback/attachments/{id}", a.handlePlaybackAttachment)
 		})
+
+		// payment gateway redirect target (unauthenticated by design, verified server-side)
+		r.Post("/payments/callback/{gateway}", a.handlePaymentCallback)
+		r.Get("/payments/callback/{gateway}", a.handlePaymentCallback)
 
 		// public reads (ISR-cacheable)
 		r.Get("/courses", a.handleCourseList)
@@ -158,6 +170,9 @@ func NewRouter(a *App) http.Handler {
 			r.Post("/admin/messages/{id}/status", a.handleAdminMessageStatus)
 			r.Post("/admin/reviews/{id}/moderate", a.handleAdminReviewModerate)
 			r.Get("/admin/audit-logs", a.handleAdminAuditLogs)
+			r.Get("/admin/orders", a.handleAdminOrders)
+			r.Get("/admin/orders/{id}", a.handleAdminOrder)
+			r.Post("/admin/orders/{id}/refund", a.handleAdminOrderRefund)
 		})
 	})
 

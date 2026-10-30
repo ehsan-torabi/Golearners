@@ -34,6 +34,9 @@ type Config struct {
 
 	VODProvider string        // local | arvanvod
 	PlaybackTTL time.Duration // signed playback URL lifetime
+
+	ZarinpalMerchantID string
+	ZarinpalSandbox    bool
 }
 
 // Load reads the environment and fails fast on missing or invalid values.
@@ -55,6 +58,8 @@ func Load() (Config, error) {
 		SMSProvider: envOr("SMS_PROVIDER", "mock"),
 
 		VODProvider: envOr("VOD_PROVIDER", "local"),
+
+		ZarinpalMerchantID: os.Getenv("PAYMENT_ZARINPAL_MERCHANT_ID"),
 	}
 
 	useSSL, err := strconv.ParseBool(envOr("S3_USE_SSL", "false"))
@@ -68,6 +73,12 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("parse PLAYBACK_TTL: %w", err)
 	}
 	c.PlaybackTTL = playbackTTL
+
+	zarinSandbox, err := strconv.ParseBool(envOr("PAYMENT_ZARINPAL_SANDBOX", "true"))
+	if err != nil {
+		return Config{}, fmt.Errorf("parse PAYMENT_ZARINPAL_SANDBOX: %w", err)
+	}
+	c.ZarinpalSandbox = zarinSandbox
 
 	// Slice (not map) so the error message order is deterministic.
 	required := [][2]string{

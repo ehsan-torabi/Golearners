@@ -186,3 +186,35 @@ func eventOf(paymentID uuid.UUID, etype string, payload any) *commerce.PaymentEv
 		ID: uuid.Must(uuid.NewV7()), PaymentID: paymentID, Type: etype, Payload: raw,
 	}
 }
+
+// ListForUser returns the caller's orders (ownership enforced).
+func (s *Service) ListForUser(ctx context.Context, userID uuid.UUID, page, perPage int) ([]*commerce.Order, int, error) {
+	return s.d.Orders.ListForUser(ctx, userID, page, perPage)
+}
+
+// OrderForUser returns one order + items, enforcing ownership.
+func (s *Service) OrderForUser(ctx context.Context, userID, orderID uuid.UUID) (*commerce.Order, []commerce.OrderItem, error) {
+	o, err := s.d.Orders.ByID(ctx, orderID)
+	if err != nil {
+		if errors.Is(err, ports.ErrNotFound) {
+			return nil, nil, apperr.ErrNotFound
+		}
+		return nil, nil, err
+	}
+	if o.UserID != userID {
+		return nil, nil, apperr.ErrNotFound // IDOR: other users' orders look missing
+	}
+	items, err := s.d.Orders.ItemsOf(ctx, o.ID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return o, items, nil
+}
+
+// PaymentsOfOrder lists gateway attempts of an order (receipt view).
+func (s *Service) PaymentsOfOrder(ctx context.Context, orderID uuid.UUID) []*commerce.Payment {
+	if p, err := s.d.Payments.ActiveForOrder(ctx, orderID); err == nil {
+		return []*commerce.Payment{p}
+	}
+	return nil
+}

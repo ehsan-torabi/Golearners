@@ -17,12 +17,13 @@ import (
 
 // Deps for task handlers.
 type Deps struct {
-	Media      ports.MediaRepo
-	Video      ports.VideoPlatform
-	Queue      ports.JobQueue
-	Log        *slog.Logger
-	MaxPolls   int           // poll attempts before marking failed
-	NextPollIn time.Duration // delay between status polls
+	Media          ports.MediaRepo
+	Video          ports.VideoPlatform
+	Queue          ports.JobQueue
+	Log            *slog.Logger
+	MaxPolls       int           // poll attempts before marking failed
+	NextPollIn     time.Duration // delay between status polls
+	ReconcileAfter time.Duration // stuck-payment threshold for reconciliation
 }
 
 // NewMux builds the asynq handler mux.

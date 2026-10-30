@@ -3,6 +3,7 @@ package checkout
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -168,3 +169,43 @@ func ptrStr(s *string) string {
 }
 
 func strPtr(s string) *string { return &s }
+
+// ListAdmin lists orders for the admin grid.
+func (s *Service) ListAdmin(ctx context.Context, status string, page, perPage int) ([]*commerce.Order, int, error) {
+	return s.d.Orders.ListAdmin(ctx, status, page, perPage)
+}
+
+// OrderDetailForAdmin returns order + items + payments + event ledger.
+func (s *Service) OrderDetailForAdmin(ctx context.Context, orderID uuid.UUID) (*commerce.Order, []commerce.OrderItem, []*commerce.Payment, []*commerce.PaymentEvent, error) {
+	o, err := s.d.Orders.ByID(ctx, orderID)
+	if err != nil {
+		if errors.Is(err, ports.ErrNotFound) {
+			return nil, nil, nil, nil, apperr.ErrNotFound
+		}
+		return nil, nil, nil, nil, err
+	}
+	items, err := s.d.Orders.ItemsOf(ctx, o.ID)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+	payments, events := s.paymentHistory(ctx, o.ID)
+	return o, items, payments, events, nil
+}
+
+// paymentHistory assembles all payment attempts + their event ledgers.
+func (s *Service) paymentHistory(ctx context.Context, orderID uuid.UUID) ([]*commerce.Payment, []*commerce.PaymentEvent) {
+	// v1 keeps attempts small; a dedicated list query arrives with the admin grid phase if needed
+	var payments []*commerce.Payment
+	if p, err := s.d.Payments.ActiveForOrder(ctx, orderID); err == nil {
+		payments = append(payments, p)
+	}
+	var events []*commerce.PaymentEvent
+	for _, p := range payments {
+		if evs, err := s.d.Events.ListForPayment(ctx, p.ID); err == nil {
+			events = append(events, evs...)
+		}
+	}
+	return payments, events
+}
+
+var _ = json.Marshal

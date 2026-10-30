@@ -21,3 +21,9 @@ type PollPayload struct {
 	MediaID uuid.UUID `json:"media_id"`
 	Attempt int       `json:"attempt"`
 }
+
+// Scheduled commerce task names.
+const (
+	TypeOrdersExpire      = "orders:expire"
+	TypePaymentsReconcile = "payments:reconcile"
+)
