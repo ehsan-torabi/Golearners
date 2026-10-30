@@ -1,0 +1,97 @@
+package repository
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"golearn/backend/internal/domain/course"
+	"golearn/backend/internal/ports"
+)
+
+// MediaRepo implements ports.MediaRepo (metadata only; pipeline in phase 5).
+type MediaRepo struct{ pool *pgxpool.Pool }
+
+func NewMediaRepo(pool *pgxpool.Pool) *MediaRepo { return &MediaRepo{pool: pool} }
+
+const mediaColumns = `id, kind, storage_key, mime, size_bytes, checksum_sha256, status,
+	duration_seconds, vod_provider, vod_remote_id, error_message, uploaded_by,
+	created_at, updated_at`
+
+func scanMedia(row pgx.Row) (*course.MediaAsset, error) {
+	m := &course.MediaAsset{}
+	var kind, status string
+	err := row.Scan(&m.ID, &kind, &m.StorageKey, &m.Mime, &m.SizeBytes, &m.Checksum,
+		&status, &m.DurationSecs, &m.VODProvider, &m.VODRemoteID, &m.ErrorMessage,
+		&m.UploadedBy, &m.CreatedAt, &m.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ports.ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("scan media: %w", err)
+	}
+	m.Kind = course.MediaKind(kind)
+	m.Status = course.MediaStatus(status)
+	return m, nil
+}
+
+func (r *MediaRepo) Create(ctx context.Context, m *course.MediaAsset) error {
+	_, err := querierOf(ctx, r.pool).Exec(ctx,
+		`INSERT INTO media_assets (id, kind, storage_key, mime, size_bytes, checksum_sha256, status, duration_seconds, uploaded_by)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+		m.ID, string(m.Kind), m.StorageKey, m.Mime, m.SizeBytes, m.Checksum, string(m.Status), m.DurationSecs, m.UploadedBy)
+	if err != nil {
+		return fmt.Errorf("insert media: %w", err)
+	}
+	return nil
+}
+
+func (r *MediaRepo) ByID(ctx context.Context, id uuid.UUID) (*course.MediaAsset, error) {
+	return scanMedia(querierOf(ctx, r.pool).QueryRow(ctx,
+		`SELECT `+mediaColumns+` FROM media_assets WHERE id=$1`, id))
+}
+
+func (r *MediaRepo) List(ctx context.Context, status string, page, perPage int) ([]*course.MediaAsset, int, error) {
+	where := "TRUE"
+	args := []any{}
+	if status != "" {
+		where = "status = $1"
+		args = append(args, status)
+	}
+	q := `SELECT ` + mediaColumns + ` FROM media_assets WHERE ` + where +
+		` ORDER BY created_at DESC LIMIT $` + fmt.Sprint(len(args)+1) +
+		` OFFSET $` + fmt.Sprint(len(args)+2)
+	args = append(args, perPage, (page-1)*perPage)
+	rows, err := querierOf(ctx, r.pool).Query(ctx, q, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("list media: %w", err)
+	}
+	defer rows.Close()
+	var out []*course.MediaAsset
+	for rows.Next() {
+		m, err := scanMedia(rows)
+		if err != nil {
+			return nil, 0, err
+		}
+		out = append(out, m)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+	var total int
+	err = querierOf(ctx, r.pool).QueryRow(ctx,
+		`SELECT count(*) FROM media_assets WHERE `+where, args[:len(args)-2]...).Scan(&total)
+	return out, total, err
+}
+
+func (r *MediaRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := querierOf(ctx, r.pool).Exec(ctx, `DELETE FROM media_assets WHERE id=$1`, id)
+	if err != nil {
+		return fmt.Errorf("delete media: %w", err)
+	}
+	return nil
+}

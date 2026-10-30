@@ -55,8 +55,8 @@ type LessonRepo interface {
 	ByID(ctx context.Context, id uuid.UUID) (*course.Lesson, error)
 	Update(ctx context.Context, l *course.Lesson) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	// ListByCourse returns lessons joined to their sections, ordered.
-	ListByCourse(ctx context.Context, courseID uuid.UUID) ([]*course.Lesson, []uuid.UUID, error)
+	// ListByCourse returns every lesson of the course, ordered by section position.
+	ListByCourse(ctx context.Context, courseID uuid.UUID) ([]*course.Lesson, error)
 	// CountReady counts status='ready'|'published' lessons of a course.
 	CountReady(ctx context.Context, courseID uuid.UUID) (int, error)
 	Reorder(ctx context.Context, sectionID uuid.UUID, ids []uuid.UUID) error
