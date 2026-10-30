@@ -119,3 +119,14 @@ func (r *EntitlementRepo) Grant(ctx context.Context, e *course.Entitlement) erro
 	}
 	return nil
 }
+
+// RevokeByOrder revokes entitlements created by a refunded order.
+func (r *EntitlementRepo) RevokeByOrder(ctx context.Context, orderID uuid.UUID) error {
+	_, err := querierOf(ctx, r.pool).Exec(ctx,
+		`UPDATE entitlements SET revoked_at = now(), updated_at = now()
+		 WHERE order_id = $1 AND revoked_at IS NULL`, orderID)
+	if err != nil {
+		return fmt.Errorf("revoke by order: %w", err)
+	}
+	return nil
+}

@@ -65,4 +65,11 @@ var (
 	ErrWeakPassword       = New(http.StatusBadRequest, "WEAK_PASSWORD", "رمز عبور ضعیف است؛ حداقل ۸ کاراکتر شامل حرف و عدد.")
 	ErrSMSFailed          = New(http.StatusBadGateway, "SMS_FAILED", "ارسال پیامک با خطا مواجه شد؛ دوباره تلاش کنید.")
 	ErrInternal           = New(http.StatusInternalServerError, "INTERNAL_ERROR", "خطای غیرمنتظره رخ داد؛ لطفاً دوباره تلاش کنید.")
+
+	ErrOrderExpired         = New(http.StatusGone, "ORDER_EXPIRED", "مهلت پرداخت این سفارش گذشته است؛ سفارش جدید بسازید.")
+	ErrOrderNotPayable      = New(http.StatusConflict, "ORDER_NOT_PAYABLE", "این سفارش قابل پرداخت نیست.")
+	ErrAlreadyOwned         = New(http.StatusConflict, "ALREADY_OWNED", "شما قبلاً این دوره را خریده‌اید.")
+	ErrCouponInvalid        = New(http.StatusBadRequest, "COUPON_INVALID", "کد تخفیف معتبر نیست یا شرایط آن برقرار نیست.")
+	ErrGatewayNotConfigured = New(http.StatusServiceUnavailable, "GATEWAY_NOT_CONFIGURED", "این درگاه پرداخت در دسترس نیست.")
+	ErrRefundFailed         = New(http.StatusConflict, "REFUND_FAILED", "استرداد پرداخت ممکن نشد؛ در پنل درگاه بررسی کنید.")
 )

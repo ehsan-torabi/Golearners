@@ -10,17 +10,17 @@ import (
 
 // Order aggregates order items + discount into the payable amount.
 type Order struct {
-	ID            uuid.UUID
-	UserID        uuid.UUID
-	Status        OrderStatus
-	SubtotalRial  int64
-	DiscountRial  int64
-	TotalRial     int64
-	CouponID      *uuid.UUID
-	ExpiresAt     time.Time
-	PaidAt        *time.Time
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID           uuid.UUID
+	UserID       uuid.UUID
+	Status       OrderStatus
+	SubtotalRial int64
+	DiscountRial int64
+	TotalRial    int64
+	CouponID     *uuid.UUID
+	ExpiresAt    time.Time
+	PaidAt       *time.Time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 // Items is the order's line items (one course per order in v1).

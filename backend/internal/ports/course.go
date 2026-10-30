@@ -90,6 +90,8 @@ type ReviewRepo interface {
 type EntitlementRepo interface {
 	HasActive(ctx context.Context, userID, courseID uuid.UUID) (bool, error)
 	Grant(ctx context.Context, e *course.Entitlement) error
+	// RevokeByOrder revokes entitlements created by an order (refunds).
+	RevokeByOrder(ctx context.Context, orderID uuid.UUID) error
 }
 
 // MediaRepo — metadata + pipeline status for stored files.

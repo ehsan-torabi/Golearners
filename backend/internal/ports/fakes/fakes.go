@@ -578,12 +578,13 @@ func (f *SectionRepo) ListByCourse(context.Context, uuid.UUID) ([]*course.Sectio
 func (f *SectionRepo) Reorder(context.Context, uuid.UUID, []uuid.UUID) error { return nil }
 
 type EntitlementRepo struct {
-	mu     sync.Mutex
-	active map[[2]uuid.UUID]bool
+	mu             sync.Mutex
+	active         map[[2]uuid.UUID]bool
+	revokedByOrder map[uuid.UUID]bool
 }
 
 func NewEntitlementRepo() *EntitlementRepo {
-	return &EntitlementRepo{active: map[[2]uuid.UUID]bool{}}
+	return &EntitlementRepo{active: map[[2]uuid.UUID]bool{}, revokedByOrder: map[uuid.UUID]bool{}}
 }
 
 // Grant implements ports.EntitlementRepo.
@@ -647,3 +648,11 @@ func (f *AuditSink) List(context.Context, int, int) ([]*ports.AuditEntry, int, e
 type Transactor struct{}
 
 func (Transactor) WithinTx(ctx context.Context, fn func(context.Context) error) error { return fn(ctx) }
+
+// RevokeByOrder marks entitlements of an order revoked (refund path).
+func (f *EntitlementRepo) RevokeByOrder(_ context.Context, orderID uuid.UUID) error {
+	f.mu.Lock()
+	f.revokedByOrder[orderID] = true
+	f.mu.Unlock()
+	return nil
+}
