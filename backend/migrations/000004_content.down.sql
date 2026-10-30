@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS contact_messages;
+DROP TABLE IF EXISTS testimonials;
+DROP TABLE IF EXISTS faqs;
+DROP TABLE IF EXISTS pages;
+DROP TABLE IF EXISTS blog_post_tags;
+DROP TABLE IF EXISTS blog_posts;
+DROP TABLE IF EXISTS blog_tags;
+DROP TABLE IF EXISTS blog_categories;
+DROP TYPE IF EXISTS contact_status;
+DROP TYPE IF EXISTS post_status;

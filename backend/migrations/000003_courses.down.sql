@@ -1,0 +1,17 @@
+DROP TABLE IF EXISTS entitlements;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS lesson_attachments;
+DROP TABLE IF EXISTS lessons;
+DROP TABLE IF EXISTS course_sections;
+DROP TABLE IF EXISTS course_category_courses;
+DROP TABLE IF EXISTS courses;
+DROP TABLE IF EXISTS course_categories;
+DROP TABLE IF EXISTS instructors;
+DROP TABLE IF EXISTS media_assets;
+DROP TYPE IF EXISTS entitlement_source;
+DROP TYPE IF EXISTS review_status;
+DROP TYPE IF EXISTS media_status;
+DROP TYPE IF EXISTS media_kind;
+DROP TYPE IF EXISTS lesson_status;
+DROP TYPE IF EXISTS course_status;
+DROP TYPE IF EXISTS course_level;
