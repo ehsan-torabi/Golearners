@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Config is the fully-parsed application configuration.
@@ -30,6 +31,9 @@ type Config struct {
 	JWTSecret string // ≥ 32 bytes in production; signs access tokens and peppers OTP hashes
 
 	SMSProvider string // mock | kavenegar
+
+	VODProvider string        // local | arvanvod
+	PlaybackTTL time.Duration // signed playback URL lifetime
 }
 
 // Load reads the environment and fails fast on missing or invalid values.
@@ -49,6 +53,8 @@ func Load() (Config, error) {
 		JWTSecret:   os.Getenv("JWT_SECRET"),
 
 		SMSProvider: envOr("SMS_PROVIDER", "mock"),
+
+		VODProvider: envOr("VOD_PROVIDER", "local"),
 	}
 
 	useSSL, err := strconv.ParseBool(envOr("S3_USE_SSL", "false"))
@@ -56,6 +62,12 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("parse S3_USE_SSL: %w", err)
 	}
 	c.S3UseSSL = useSSL
+
+	playbackTTL, err := time.ParseDuration(envOr("PLAYBACK_TTL", "5m"))
+	if err != nil {
+		return Config{}, fmt.Errorf("parse PLAYBACK_TTL: %w", err)
+	}
+	c.PlaybackTTL = playbackTTL
 
 	// Slice (not map) so the error message order is deterministic.
 	required := [][2]string{

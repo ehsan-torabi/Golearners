@@ -185,3 +185,22 @@ type Instructor struct {
 	AvatarMediaID *uuid.UUID
 	Socials       map[string]string
 }
+
+// PlaybackSession audits a playback-URL issuance.
+type PlaybackSession struct {
+	ID        uuid.UUID
+	UserID    *uuid.UUID
+	LessonID  uuid.UUID
+	IssuedAt  time.Time
+	ExpiresAt time.Time
+	IP        string
+}
+
+// LessonAttachment is a downloadable file attached to a lesson.
+type LessonAttachment struct {
+	ID            uuid.UUID
+	LessonID      uuid.UUID
+	MediaID       uuid.UUID
+	Title         string
+	AllowDownload bool
+}

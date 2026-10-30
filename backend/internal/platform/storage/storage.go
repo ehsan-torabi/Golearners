@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	appconfig "golearn/backend/internal/platform/config"
+	"golearn/backend/internal/ports"
 )
 
 // Client wraps the S3 API for our single private media bucket.
@@ -47,6 +48,57 @@ func (c *Client) Ping(ctx context.Context) error {
 	defer cancel()
 	if _, err := c.api.HeadBucket(pingCtx, &s3.HeadBucketInput{Bucket: aws.String(c.bucket)}); err != nil {
 		return fmt.Errorf("head bucket %q: %w", c.bucket, err)
+	}
+	return nil
+}
+
+// PresignPut returns a short-lived single-object upload URL.
+func (c *Client) PresignPut(ctx context.Context, key, contentType string, ttl time.Duration) (string, error) {
+	presign := s3.NewPresignClient(c.api)
+	out, err := presign.PresignPutObject(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(c.bucket),
+		Key:         aws.String(key),
+		ContentType: aws.String(contentType),
+	}, s3.WithPresignExpires(ttl))
+	if err != nil {
+		return "", fmt.Errorf("presign put: %w", err)
+	}
+	return out.URL, nil
+}
+
+// PresignGet returns a short-lived download URL for a private object.
+func (c *Client) PresignGet(ctx context.Context, key string, ttl time.Duration) (string, string, error) {
+	presign := s3.NewPresignClient(c.api)
+	out, err := presign.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+	}, s3.WithPresignExpires(ttl))
+	if err != nil {
+		return "", "", fmt.Errorf("presign get: %w", err)
+	}
+	return out.URL, "", nil
+}
+
+// Stat returns object metadata via HeadObject.
+func (c *Client) Stat(ctx context.Context, key string) (ports.ObjectInfo, error) {
+	out, err := c.api.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return ports.ObjectInfo{}, fmt.Errorf("stat %q: %w", key, err)
+	}
+	return ports.ObjectInfo{SizeBytes: aws.ToInt64(out.ContentLength), ETag: aws.ToString(out.ETag)}, nil
+}
+
+// Delete removes a private object.
+func (c *Client) Delete(ctx context.Context, key string) error {
+	_, err := c.api.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return fmt.Errorf("delete %q: %w", key, err)
 	}
 	return nil
 }

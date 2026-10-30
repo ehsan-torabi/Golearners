@@ -92,12 +92,14 @@ type EntitlementRepo interface {
 	Grant(ctx context.Context, e *course.Entitlement) error
 }
 
-// MediaRepo — metadata for stored files (pipeline arrives in phase 5).
+// MediaRepo — metadata + pipeline status for stored files.
 type MediaRepo interface {
 	Create(ctx context.Context, m *course.MediaAsset) error
 	ByID(ctx context.Context, id uuid.UUID) (*course.MediaAsset, error)
 	List(ctx context.Context, status string, page, perPage int) ([]*course.MediaAsset, int, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	SetStatus(ctx context.Context, id uuid.UUID, status course.MediaStatus, errMsg string) error
+	SetIngested(ctx context.Context, id uuid.UUID, provider, remoteID string) error
 }
 
 // Entitlement is defined in the course domain to keep commerce decoupled.

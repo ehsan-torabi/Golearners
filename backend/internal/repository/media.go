@@ -95,3 +95,27 @@ func (r *MediaRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 	return nil
 }
+
+func (r *MediaRepo) SetStatus(ctx context.Context, id uuid.UUID, status course.MediaStatus, errMsg string) error {
+	var msgPtr *string
+	if errMsg != "" {
+		msgPtr = &errMsg
+	}
+	_, err := querierOf(ctx, r.pool).Exec(ctx,
+		`UPDATE media_assets SET status=$2, error_message=$3, updated_at=now() WHERE id=$1`,
+		id, string(status), msgPtr)
+	if err != nil {
+		return fmt.Errorf("set media status: %w", err)
+	}
+	return nil
+}
+
+func (r *MediaRepo) SetIngested(ctx context.Context, id uuid.UUID, provider, remoteID string) error {
+	_, err := querierOf(ctx, r.pool).Exec(ctx,
+		`UPDATE media_assets SET vod_provider=$2, vod_remote_id=$3, status='processing', updated_at=now() WHERE id=$1`,
+		id, provider, remoteID)
+	if err != nil {
+		return fmt.Errorf("set ingested: %w", err)
+	}
+	return nil
+}
