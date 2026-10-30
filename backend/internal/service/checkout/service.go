@@ -218,3 +218,29 @@ func (s *Service) PaymentsOfOrder(ctx context.Context, orderID uuid.UUID) []*com
 	}
 	return nil
 }
+
+// checkCouponUsable re-applies usage caps at payment time.
+func (s *Service) checkCouponUsable(ctx context.Context, o *commerce.Order, coupon *commerce.Coupon) error {
+	if !coupon.Active(s.now()) {
+		return apperr.ErrCouponInvalid.Wrap(fmt.Errorf("expired at pay time"))
+	}
+	if coupon.MaxUses != nil {
+		uses, err := s.d.Coupons.CountUses(ctx, coupon.ID)
+		if err != nil {
+			return err
+		}
+		if uses >= *coupon.MaxUses {
+			return apperr.ErrCouponInvalid.Wrap(fmt.Errorf("exhausted at pay time"))
+		}
+	}
+	if coupon.PerUserLimit != nil {
+		uses, err := s.d.Coupons.CountUsesByUser(ctx, coupon.ID, o.UserID)
+		if err != nil {
+			return err
+		}
+		if uses >= *coupon.PerUserLimit {
+			return apperr.ErrCouponInvalid.Wrap(fmt.Errorf("per-user limit at pay time"))
+		}
+	}
+	return nil
+}

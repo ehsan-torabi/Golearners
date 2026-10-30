@@ -46,6 +46,16 @@ func (s *Service) InitiatePayment(ctx context.Context, userID, orderID uuid.UUID
 		return nil, "", err
 	}
 
+	// re-validate the order's coupon right before charging (max_uses window)
+	if o.CouponID != nil {
+		coupon, err := s.d.Coupons.ByID(ctx, *o.CouponID)
+		if err != nil {
+			return nil, "", err
+		}
+		if err := s.checkCouponUsable(ctx, o, coupon); err != nil {
+			return nil, "", err
+		}
+	}
 	p := &commerce.Payment{
 		ID: uuid.Must(uuid.NewV7()), OrderID: o.ID, Gateway: gw,
 		AmountRial: o.TotalRial, Status: commerce.PaymentInitiated,

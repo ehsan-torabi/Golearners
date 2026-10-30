@@ -48,10 +48,13 @@ func (s *Service) RefundOrder(ctx context.Context, actor Actor, orderID uuid.UUI
 		return nil, apperr.ErrInternal.Wrap(fmt.Errorf("order without items"))
 	}
 
-	// the verified payment of this order (latest)
-	payments := s.paymentsOfOrder(ctx, o.ID)
+	// the verified payment of this order (latest attempt first)
+	attempts, err := s.d.Payments.ListForOrder(ctx, o.ID)
+	if err != nil {
+		return nil, err
+	}
 	var verified *commerce.Payment
-	for _, p := range payments {
+	for _, p := range attempts {
 		if p.Status == commerce.PaymentVerified {
 			verified = p
 			break
@@ -113,15 +116,6 @@ func (s *Service) RefundOrder(ctx context.Context, actor Actor, orderID uuid.UUI
 		return nil, err
 	}
 	return rf, nil
-}
-
-func (s *Service) paymentsOfOrder(ctx context.Context, orderID uuid.UUID) []*commerce.Payment {
-	// v1: orders have at most a handful of attempts; the active+latest lookups
-	// cover the verified one (MarkVerified only from redirected/initiated).
-	if p, err := s.d.Payments.ActiveForOrder(ctx, orderID); err == nil {
-		return []*commerce.Payment{p}
-	}
-	return nil
 }
 
 // ReconcileStuck verifies or fails redirected payments older than the
@@ -194,10 +188,9 @@ func (s *Service) OrderDetailForAdmin(ctx context.Context, orderID uuid.UUID) (*
 
 // paymentHistory assembles all payment attempts + their event ledgers.
 func (s *Service) paymentHistory(ctx context.Context, orderID uuid.UUID) ([]*commerce.Payment, []*commerce.PaymentEvent) {
-	// v1 keeps attempts small; a dedicated list query arrives with the admin grid phase if needed
-	var payments []*commerce.Payment
-	if p, err := s.d.Payments.ActiveForOrder(ctx, orderID); err == nil {
-		payments = append(payments, p)
+	payments, err := s.d.Payments.ListForOrder(ctx, orderID)
+	if err != nil {
+		return nil, nil
 	}
 	var events []*commerce.PaymentEvent
 	for _, p := range payments {

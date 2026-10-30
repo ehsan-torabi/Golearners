@@ -48,6 +48,8 @@ type PaymentRepo interface {
 	ByGatewayRef(ctx context.Context, g commerce.Gateway, ref string) (*commerce.Payment, error)
 	// ActiveForOrder returns the single in-flight payment, if any.
 	ActiveForOrder(ctx context.Context, orderID uuid.UUID) (*commerce.Payment, error)
+	// ListForOrder returns every attempt (newest first) for receipts/refunds.
+	ListForOrder(ctx context.Context, orderID uuid.UUID) ([]*commerce.Payment, error)
 	MarkRedirected(ctx context.Context, id uuid.UUID, gatewayRef string) error
 	// MarkVerified transitions redirected → verified; false = someone else won.
 	MarkVerified(ctx context.Context, id uuid.UUID, cardMasked string) (bool, error)

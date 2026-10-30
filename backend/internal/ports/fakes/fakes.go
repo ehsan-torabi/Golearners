@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"net/url"
 
+	"golearn/backend/internal/domain/commerce"
 	"golearn/backend/internal/domain/course"
 	"golearn/backend/internal/domain/identity"
 	"golearn/backend/internal/ports"
@@ -655,4 +657,398 @@ func (f *EntitlementRepo) RevokeByOrder(_ context.Context, orderID uuid.UUID) er
 	f.revokedByOrder[orderID] = true
 	f.mu.Unlock()
 	return nil
+}
+
+// --- commerce fakes ---
+
+type OrderRepo struct {
+	mu    sync.Mutex
+	byID  map[uuid.UUID]*commerce.Order
+	items map[uuid.UUID][]commerce.OrderItem
+}
+
+func NewOrderRepo() *OrderRepo {
+	return &OrderRepo{byID: map[uuid.UUID]*commerce.Order{}, items: map[uuid.UUID][]commerce.OrderItem{}}
+}
+
+func (f *OrderRepo) Create(_ context.Context, o *commerce.Order, items []commerce.OrderItem) error {
+	f.mu.Lock()
+	clone := *o
+	f.byID[o.ID] = &clone
+	f.items[o.ID] = items
+	f.mu.Unlock()
+	return nil
+}
+
+func (f *OrderRepo) ByID(_ context.Context, id uuid.UUID) (*commerce.Order, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	o, ok := f.byID[id]
+	if !ok {
+		return nil, ports.ErrNotFound
+	}
+	clone := *o
+	return &clone, nil
+}
+
+func (f *OrderRepo) ItemsOf(_ context.Context, orderID uuid.UUID) ([]commerce.OrderItem, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.items[orderID], nil
+}
+
+func (f *OrderRepo) MarkPaid(_ context.Context, id uuid.UUID) (bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	o, ok := f.byID[id]
+	if !ok {
+		return false, ports.ErrNotFound
+	}
+	if o.Status != commerce.OrderAwaitingPayment {
+		return false, nil
+	}
+	o.Status = commerce.OrderPaid
+	return true, nil
+}
+
+func (f *OrderRepo) MarkRefunded(_ context.Context, id uuid.UUID) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if o, ok := f.byID[id]; ok {
+		o.Status = commerce.OrderRefunded
+	}
+	return nil
+}
+
+func (f *OrderRepo) Expire(_ context.Context, id uuid.UUID) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if o, ok := f.byID[id]; ok && o.Status == commerce.OrderAwaitingPayment {
+		o.Status = commerce.OrderExpired
+	}
+	return nil
+}
+
+func (f *OrderRepo) Cancel(context.Context, uuid.UUID) error { return nil }
+
+func (f *OrderRepo) ExpireDue(context.Context, time.Time) (int64, error) { return 0, nil }
+
+func (f *OrderRepo) ListForUser(context.Context, uuid.UUID, int, int) ([]*commerce.Order, int, error) {
+	return nil, 0, nil
+}
+
+func (f *OrderRepo) ListAdmin(context.Context, string, int, int) ([]*commerce.Order, int, error) {
+	return nil, 0, nil
+}
+
+type CouponRepo struct {
+	mu     sync.Mutex
+	byCode map[string]*commerce.Coupon
+	byID   map[uuid.UUID]*commerce.Coupon
+	uses   map[uuid.UUID]int
+	perUsr map[[2]uuid.UUID]int
+}
+
+func NewCouponRepo() *CouponRepo {
+	return &CouponRepo{byCode: map[string]*commerce.Coupon{}, byID: map[uuid.UUID]*commerce.Coupon{},
+		uses: map[uuid.UUID]int{}, perUsr: map[[2]uuid.UUID]int{}}
+}
+
+func (f *CouponRepo) Add(c *commerce.Coupon) {
+	f.mu.Lock()
+	clone := *c
+	f.byCode[c.Code] = &clone
+	f.byID[c.ID] = &clone
+	f.mu.Unlock()
+}
+
+func (f *CouponRepo) Create(context.Context, *commerce.Coupon) error { return nil }
+func (f *CouponRepo) ByID(_ context.Context, id uuid.UUID) (*commerce.Coupon, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	c, ok := f.byID[id]
+	if !ok {
+		return nil, ports.ErrNotFound
+	}
+	clone := *c
+	return &clone, nil
+}
+
+func (f *CouponRepo) ByCode(_ context.Context, code string) (*commerce.Coupon, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	c, ok := f.byCode[code]
+	if !ok {
+		return nil, ports.ErrNotFound
+	}
+	clone := *c
+	return &clone, nil
+}
+
+func (f *CouponRepo) Update(context.Context, *commerce.Coupon) error { return nil }
+func (f *CouponRepo) Delete(context.Context, uuid.UUID) error        { return nil }
+
+func (f *CouponRepo) List(context.Context, int, int) ([]*commerce.Coupon, int, error) {
+	return nil, 0, nil
+}
+
+func (f *CouponRepo) CountUses(_ context.Context, couponID uuid.UUID) (int, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.uses[couponID], nil
+}
+
+func (f *CouponRepo) CountUsesByUser(_ context.Context, couponID, userID uuid.UUID) (int, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.perUsr[[2]uuid.UUID{couponID, userID}], nil
+}
+
+func (f *CouponRepo) Redeem(_ context.Context, couponID, userID, _ uuid.UUID) error {
+	f.mu.Lock()
+	f.uses[couponID]++
+	f.perUsr[[2]uuid.UUID{couponID, userID}]++
+	f.mu.Unlock()
+	return nil
+}
+
+type PaymentRepo struct {
+	mu       sync.Mutex
+	byRef    map[string]*commerce.Payment
+	byID     map[uuid.UUID]*commerce.Payment
+	verifyOK bool // scriptable verify precondition
+}
+
+func NewPaymentRepo() *PaymentRepo {
+	return &PaymentRepo{byRef: map[string]*commerce.Payment{}, byID: map[uuid.UUID]*commerce.Payment{}}
+}
+
+func (f *PaymentRepo) Create(_ context.Context, p *commerce.Payment) error {
+	f.mu.Lock()
+	clone := *p
+	f.byID[p.ID] = &clone
+	f.byID[p.ID] = &clone
+	f.mu.Unlock()
+	return nil
+}
+
+func (f *PaymentRepo) ByID(_ context.Context, id uuid.UUID) (*commerce.Payment, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	p, ok := f.byID[id]
+	if !ok {
+		return nil, ports.ErrNotFound
+	}
+	clone := *p
+	return &clone, nil
+}
+
+func (f *PaymentRepo) ByGatewayRef(_ context.Context, _ commerce.Gateway, ref string) (*commerce.Payment, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	p, ok := f.byRef[ref]
+	if !ok {
+		return nil, ports.ErrNotFound
+	}
+	clone := *p
+	return &clone, nil
+}
+
+func (f *PaymentRepo) ActiveForOrder(_ context.Context, orderID uuid.UUID) (*commerce.Payment, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for _, p := range f.byID {
+		if p.OrderID == orderID && (p.Status == commerce.PaymentInitiated || p.Status == commerce.PaymentRedirected) {
+			clone := *p
+			return &clone, nil
+		}
+	}
+	return nil, ports.ErrNotFound
+}
+
+func (f *PaymentRepo) MarkRedirected(_ context.Context, id uuid.UUID, ref string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if p, ok := f.byID[id]; ok {
+		p.Status = commerce.PaymentRedirected
+		p.GatewayRef = &ref
+		f.byRef[ref] = p
+	}
+	return nil
+}
+
+func (f *PaymentRepo) MarkVerified(_ context.Context, id uuid.UUID, card string) (bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	p, ok := f.byID[id]
+	if !ok {
+		return false, ports.ErrNotFound
+	}
+	if p.Status != commerce.PaymentInitiated && p.Status != commerce.PaymentRedirected {
+		return false, nil
+	}
+	p.Status = commerce.PaymentVerified
+	return true, nil
+}
+
+func (f *PaymentRepo) MarkFailed(_ context.Context, id uuid.UUID, reason string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if p, ok := f.byID[id]; ok {
+		p.Status = commerce.PaymentFailed
+		p.FailureReason = &reason
+	}
+	return nil
+}
+
+func (f *PaymentRepo) MarkReversed(_ context.Context, id uuid.UUID) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if p, ok := f.byID[id]; ok {
+		p.Status = commerce.PaymentReversed
+	}
+	return nil
+}
+
+func (f *PaymentRepo) ListForOrder(_ context.Context, orderID uuid.UUID) ([]*commerce.Payment, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	var out []*commerce.Payment
+	for _, p := range f.byID {
+		if p.OrderID == orderID {
+			clone := *p
+			out = append(out, &clone)
+		}
+	}
+	return out, nil
+}
+
+func (f *PaymentRepo) StuckForReconcile(context.Context, time.Duration, int) ([]*commerce.Payment, error) {
+	return nil, nil
+}
+
+type PaymentEvents struct {
+	mu sync.Mutex
+	n  int
+}
+
+func (f *PaymentEvents) Insert(context.Context, *commerce.PaymentEvent) error {
+	f.mu.Lock()
+	f.n++
+	f.mu.Unlock()
+	return nil
+}
+func (f *PaymentEvents) ListForPayment(context.Context, uuid.UUID) ([]*commerce.PaymentEvent, error) {
+	return nil, nil
+}
+func (f *PaymentEvents) Count() int { f.mu.Lock(); defer f.mu.Unlock(); return f.n }
+
+type RefundRepo struct {
+	mu    sync.Mutex
+	byPay map[uuid.UUID]*commerce.Refund
+}
+
+func (f *RefundRepo) Create(_ context.Context, r *commerce.Refund) error {
+	f.mu.Lock()
+	clone := *r
+	f.byPay[r.PaymentID] = &clone
+	f.mu.Unlock()
+	return nil
+}
+
+func (f *RefundRepo) ForPayment(_ context.Context, paymentID uuid.UUID) (*commerce.Refund, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	r, ok := f.byPay[paymentID]
+	if !ok {
+		return nil, ports.ErrNotFound
+	}
+	clone := *r
+	return &clone, nil
+}
+
+func (f *RefundRepo) UpdateStatus(context.Context, uuid.UUID, commerce.RefundStatus, *string) error {
+	return nil
+}
+
+// ScriptedGateway is a configurable ports.PaymentGateway for the scenario matrix.
+type ScriptedGateway struct {
+	Name_        commerce.Gateway
+	VerifyResult ports.VerifyResult
+	VerifyErr    error
+	RefundOK     bool
+	RefundErr    error
+	VerifyCalls  int
+}
+
+func (f *ScriptedGateway) Name() commerce.Gateway { return f.Name_ }
+
+func (f *ScriptedGateway) Initiate(context.Context, ports.InitiateRequest) (ports.InitiateResult, error) {
+	return ports.InitiateResult{RedirectURL: "http://gw/start", GatewayRef: "ref-1"}, nil
+}
+
+func (f *ScriptedGateway) Verify(_ context.Context, req ports.VerifyRequest) (ports.VerifyResult, error) {
+	f.VerifyCalls++
+	if req.AmountRial != req.AmountRial { // never; keeps linters quiet
+		return ports.VerifyResult{}, nil
+	}
+	return f.VerifyResult, f.VerifyErr
+}
+
+func (f *ScriptedGateway) Refund(context.Context, ports.RefundRequest) (ports.RefundResult, error) {
+	if f.RefundErr != nil {
+		return ports.RefundResult{}, f.RefundErr
+	}
+	return ports.RefundResult{OK: f.RefundOK, GatewayRef: "refund-1"}, nil
+}
+
+func (f *ScriptedGateway) ParseCallback(values url.Values) (ports.CallbackData, error) {
+	return ports.CallbackData{GatewayRef: values.Get("ref"), Status: values.Get("Status"), Raw: values}, nil
+}
+
+type Registry struct {
+	By map[commerce.Gateway]ports.PaymentGateway
+}
+
+func (r *Registry) Gateway(name commerce.Gateway) (ports.PaymentGateway, error) {
+	g, ok := r.By[name]
+	if !ok {
+		return nil, ports.ErrNotConfigured
+	}
+	return g, nil
+}
+
+func NewRefundRepo() *RefundRepo { return &RefundRepo{byPay: map[uuid.UUID]*commerce.Refund{}} }
+
+// CatalogCourses is a minimal ports.CourseRepo fake for checkout tests.
+type CatalogCourses struct {
+	ports.CourseRepo // embedded for unimplemented methods (panics if called)
+	mu               sync.Mutex
+	byID             map[uuid.UUID]*course.Course
+}
+
+func NewCatalogCourses() *CatalogCourses {
+	return &CatalogCourses{byID: map[uuid.UUID]*course.Course{}}
+}
+
+func (f *CatalogCourses) Add(c *course.Course) {
+	f.mu.Lock()
+	clone := *c
+	f.byID[c.ID] = &clone
+	f.mu.Unlock()
+}
+
+func (f *CatalogCourses) ByID(_ context.Context, id uuid.UUID) (*course.Course, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	c, ok := f.byID[id]
+	if !ok {
+		return nil, ports.ErrNotFound
+	}
+	clone := *c
+	return &clone, nil
+}
+
+func (f *CatalogCourses) BySlug(context.Context, string) (*course.Course, error) {
+	return nil, ports.ErrNotFound
 }

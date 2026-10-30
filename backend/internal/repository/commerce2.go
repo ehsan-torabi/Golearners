@@ -194,6 +194,24 @@ func (r *PaymentRepo) ActiveForOrder(ctx context.Context, orderID uuid.UUID) (*c
 		 ORDER BY created_at DESC LIMIT 1`, orderID))
 }
 
+func (r *PaymentRepo) ListForOrder(ctx context.Context, orderID uuid.UUID) ([]*commerce.Payment, error) {
+	rows, err := querierOf(ctx, r.pool).Query(ctx,
+		`SELECT `+paymentColumns+` FROM payments WHERE order_id = $1 ORDER BY created_at DESC`, orderID)
+	if err != nil {
+		return nil, fmt.Errorf("list payments: %w", err)
+	}
+	defer rows.Close()
+	var out []*commerce.Payment
+	for rows.Next() {
+		p, err := scanPayment(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
 func (r *PaymentRepo) MarkRedirected(ctx context.Context, id uuid.UUID, gatewayRef string) error {
 	_, err := querierOf(ctx, r.pool).Exec(ctx,
 		`UPDATE payments SET gateway_ref=$2, status='redirected', updated_at=now() WHERE id=$1`,
