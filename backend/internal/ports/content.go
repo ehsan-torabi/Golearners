@@ -48,6 +48,8 @@ type BlogPostRepo interface {
 	ListAdmin(ctx context.Context, page, perPage int) ([]*content.BlogPost, int, error)
 	// SlugExists checks slug uniqueness excluding excludeID.
 	SlugExists(ctx context.Context, slug string, excludeID uuid.UUID) (bool, error)
+	Publish(ctx context.Context, postID uuid.UUID) error
+	Unpublish(ctx context.Context, postID uuid.UUID) error
 	SetTags(ctx context.Context, postID uuid.UUID, tagIDs []uuid.UUID) error
 	TagsOf(ctx context.Context, postID uuid.UUID) ([]*content.BlogTag, error)
 	Related(ctx context.Context, postID uuid.UUID, limit int) ([]*content.BlogPost, error)
