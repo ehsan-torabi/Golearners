@@ -30,7 +30,12 @@ func (s *Service) Register(ctx context.Context, actor Actor, in RegisterInput) (
 	if !ok {
 		return nil, apperr.ErrValidation.Wrap(fmt.Errorf("mime %q not allowed", mimeForError(in.Mime)))
 	}
-	if !strings.HasPrefix(in.StorageKey, "media/") || path.Ext(in.StorageKey) != "."+extOf(in.Mime) {
+	dir := map[course.MediaKind]string{
+		course.MediaVideo: "video", course.MediaImage: "image", course.MediaPDF: "pdf",
+	}[kind]
+	prefix := "media/" + dir + "/"
+	if !strings.HasPrefix(in.StorageKey, prefix) ||
+		path.Ext(in.StorageKey) != "."+extOf(in.Mime) {
 		return nil, apperr.ErrValidation.Wrap(fmt.Errorf("storage key does not match issued pattern"))
 	}
 	// size re-check against the stored object (never trust the browser)

@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"golearn/backend/internal/domain/course"
 	"golearn/backend/internal/domain/identity"
 	"golearn/backend/internal/ports"
 )
@@ -395,3 +396,254 @@ func (f *UserRepo) FindByMobileForTest(mobile string) (*identity.User, bool) {
 	}
 	return nil, false
 }
+
+// --- media/playback fakes ---
+
+type Storage struct {
+	mu      sync.Mutex
+	objects map[string]int64
+}
+
+func NewStorage() *Storage { return &Storage{objects: map[string]int64{}} }
+
+func (f *Storage) Put(key string, size int64) {
+	f.mu.Lock()
+	f.objects[key] = size
+	f.mu.Unlock()
+}
+
+func (f *Storage) PresignPut(_ context.Context, key, _ string, _ time.Duration) (string, error) {
+	return "http://put/" + key, nil
+}
+
+func (f *Storage) PresignGet(_ context.Context, key string, _ time.Duration) (string, string, error) {
+	f.mu.Lock()
+	_, ok := f.objects[key]
+	f.mu.Unlock()
+	if !ok {
+		return "", "", ports.ErrNotFound
+	}
+	return "http://get/" + key, "", nil
+}
+
+func (f *Storage) Stat(_ context.Context, key string) (ports.ObjectInfo, error) {
+	f.mu.Lock()
+	size, ok := f.objects[key]
+	f.mu.Unlock()
+	if !ok {
+		return ports.ObjectInfo{}, ports.ErrNotFound
+	}
+	return ports.ObjectInfo{SizeBytes: size, ETag: "e"}, nil
+}
+
+func (f *Storage) Delete(_ context.Context, key string) error {
+	f.mu.Lock()
+	delete(f.objects, key)
+	f.mu.Unlock()
+	return nil
+}
+
+type VideoPlatform struct{ Name_ string }
+
+func (f VideoPlatform) Name() string { return f.Name_ }
+
+func (f VideoPlatform) Ingest(_ context.Context, key string) (string, error) {
+	return "remote-" + key, nil
+}
+
+func (f VideoPlatform) Status(context.Context, string) (ports.VideoStatus, error) {
+	return ports.VideoReady, nil
+}
+
+func (f VideoPlatform) Playback(_ context.Context, remoteID string, _ ports.PlaybackOptions) (string, time.Time, error) {
+	return "http://play/" + remoteID, time.Now().Add(5 * time.Minute), nil
+}
+
+func (f VideoPlatform) Delete(context.Context, string) error { return nil }
+
+type MediaRepo struct {
+	mu   sync.Mutex
+	byID map[uuid.UUID]*course.MediaAsset
+}
+
+func NewMediaRepo() *MediaRepo { return &MediaRepo{byID: map[uuid.UUID]*course.MediaAsset{}} }
+
+func (f *MediaRepo) Add(m *course.MediaAsset) {
+	f.mu.Lock()
+	clone := *m
+	f.byID[m.ID] = &clone
+	f.mu.Unlock()
+}
+
+func (f *MediaRepo) Create(_ context.Context, m *course.MediaAsset) error { f.Add(m); return nil }
+
+func (f *MediaRepo) ByID(_ context.Context, id uuid.UUID) (*course.MediaAsset, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	m, ok := f.byID[id]
+	if !ok {
+		return nil, ports.ErrNotFound
+	}
+	clone := *m
+	return &clone, nil
+}
+
+func (f *MediaRepo) List(context.Context, string, int, int) ([]*course.MediaAsset, int, error) {
+	return nil, 0, nil
+}
+
+func (f *MediaRepo) Delete(_ context.Context, id uuid.UUID) error {
+	f.mu.Lock()
+	delete(f.byID, id)
+	f.mu.Unlock()
+	return nil
+}
+
+func (f *MediaRepo) SetStatus(_ context.Context, id uuid.UUID, s course.MediaStatus, _ string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if m, ok := f.byID[id]; ok {
+		m.Status = s
+	}
+	return nil
+}
+
+func (f *MediaRepo) SetIngested(_ context.Context, id uuid.UUID, p, r string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if m, ok := f.byID[id]; ok {
+		m.VODProvider, m.VODRemoteID = &p, &r
+	}
+	return nil
+}
+
+type LessonRepo struct {
+	mu   sync.Mutex
+	byID map[uuid.UUID]*course.Lesson
+}
+
+func NewLessonRepo() *LessonRepo { return &LessonRepo{byID: map[uuid.UUID]*course.Lesson{}} }
+
+func (f *LessonRepo) Add(l *course.Lesson) {
+	f.mu.Lock()
+	clone := *l
+	f.byID[l.ID] = &clone
+	f.mu.Unlock()
+}
+
+func (f *LessonRepo) ByID(_ context.Context, id uuid.UUID) (*course.Lesson, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	l, ok := f.byID[id]
+	if !ok {
+		return nil, ports.ErrNotFound
+	}
+	clone := *l
+	return &clone, nil
+}
+
+func (f *LessonRepo) Create(context.Context, *course.Lesson) error          { return nil }
+func (f *LessonRepo) Update(context.Context, *course.Lesson) error          { return nil }
+func (f *LessonRepo) Delete(context.Context, uuid.UUID) error               { return nil }
+func (f *LessonRepo) Reorder(context.Context, uuid.UUID, []uuid.UUID) error { return nil }
+
+func (f *LessonRepo) ListByCourse(context.Context, uuid.UUID) ([]*course.Lesson, error) {
+	return nil, nil
+}
+
+func (f *LessonRepo) CountReady(context.Context, uuid.UUID) (int, error) { return 0, nil }
+
+type SectionRepo struct{ courseOf map[uuid.UUID]uuid.UUID }
+
+func NewSectionRepo() *SectionRepo { return &SectionRepo{courseOf: map[uuid.UUID]uuid.UUID{}} }
+
+func (f *SectionRepo) Link(sectionID, courseID uuid.UUID) { f.courseOf[sectionID] = courseID }
+
+func (f *SectionRepo) ByID(_ context.Context, id uuid.UUID) (*course.Section, error) {
+	courseID, ok := f.courseOf[id]
+	if !ok {
+		return nil, ports.ErrNotFound
+	}
+	return &course.Section{ID: id, CourseID: courseID}, nil
+}
+
+func (f *SectionRepo) Create(context.Context, *course.Section) error { return nil }
+func (f *SectionRepo) Update(context.Context, *course.Section) error { return nil }
+func (f *SectionRepo) Delete(context.Context, uuid.UUID) error       { return nil }
+
+func (f *SectionRepo) ListByCourse(context.Context, uuid.UUID) ([]*course.Section, error) {
+	return nil, nil
+}
+
+func (f *SectionRepo) Reorder(context.Context, uuid.UUID, []uuid.UUID) error { return nil }
+
+type EntitlementRepo struct {
+	mu     sync.Mutex
+	active map[[2]uuid.UUID]bool
+}
+
+func NewEntitlementRepo() *EntitlementRepo {
+	return &EntitlementRepo{active: map[[2]uuid.UUID]bool{}}
+}
+
+// Grant implements ports.EntitlementRepo.
+func (f *EntitlementRepo) Grant(_ context.Context, e *course.Entitlement) error {
+	f.Allow(e.UserID, e.CourseID)
+	return nil
+}
+
+// Allow grants directly (test helper).
+func (f *EntitlementRepo) Allow(user, c uuid.UUID) {
+	f.mu.Lock()
+	f.active[[2]uuid.UUID{user, c}] = true
+	f.mu.Unlock()
+}
+
+func (f *EntitlementRepo) HasActive(_ context.Context, user, c uuid.UUID) (bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.active[[2]uuid.UUID{user, c}], nil
+}
+
+func (f *EntitlementRepo) Grant2(context.Context, *course.Entitlement) error { return nil }
+
+// GrantDirect is the test helper; Grant is the repo interface method.
+
+type PlaybackSessions struct {
+	mu    sync.Mutex
+	count int
+}
+
+func (f *PlaybackSessions) Insert(context.Context, *course.PlaybackSession) error {
+	f.mu.Lock()
+	f.count++
+	f.mu.Unlock()
+	return nil
+}
+
+func (f *PlaybackSessions) Count() int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.count
+}
+
+type Queue struct{ Ingests []uuid.UUID }
+
+func (f *Queue) EnqueueIngest(_ context.Context, id uuid.UUID) error {
+	f.Ingests = append(f.Ingests, id)
+	return nil
+}
+
+func (f *Queue) EnqueuePoll(context.Context, uuid.UUID, int, time.Duration) error { return nil }
+
+type AuditSink struct{ Entries int }
+
+func (f *AuditSink) Insert(context.Context, *ports.AuditEntry) error { f.Entries++; return nil }
+
+func (f *AuditSink) List(context.Context, int, int) ([]*ports.AuditEntry, int, error) {
+	return nil, 0, nil
+}
+
+type Transactor struct{}
+
+func (Transactor) WithinTx(ctx context.Context, fn func(context.Context) error) error { return fn(ctx) }
