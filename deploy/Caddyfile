@@ -1,0 +1,11 @@
+# Dev reverse proxy. The Go API runs on the host (:8080) via `make dev`;
+# the Next.js frontend will run on :3000 in later phases.
+# Open http://api.localhost/healthz
+
+api.localhost {
+	reverse_proxy host.docker.internal:8080
+}
+
+site.localhost {
+	reverse_proxy host.docker.internal:3000
+}
