@@ -50,7 +50,7 @@ func (a *App) requireAuth(next http.Handler) http.Handler {
 			return
 		}
 		actor := identity.Actor{ID: user.ID, Status: user.Status, Roles: roles}
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKey{}, actor)))
+		next.ServeHTTP(w, r.WithContext(withActor(r, actor)))
 	})
 }
 
@@ -126,4 +126,9 @@ func clientIP(r *http.Request) string {
 		return r.RemoteAddr
 	}
 	return host
+}
+
+// withActor stores the actor in the request context.
+func withActor(r *http.Request, actor identity.Actor) context.Context {
+	return context.WithValue(r.Context(), ctxKey{}, actor)
 }

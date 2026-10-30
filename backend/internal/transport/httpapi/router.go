@@ -21,6 +21,8 @@ import (
 	"golearn/backend/internal/service/contentadmin"
 	"golearn/backend/internal/service/courseadmin"
 	idsvc "golearn/backend/internal/service/identity"
+	mediasvc "golearn/backend/internal/service/media"
+	"golearn/backend/internal/service/playback"
 )
 
 // App carries the wired dependencies for HTTP handlers.
@@ -34,17 +36,22 @@ type App struct {
 	Throttle ports.Throttler
 	Signer   ports.TokenSigner
 
-	Catalog     *catalog.Service
-	CourseAdmin *courseadmin.Service
-	Content     *contentadmin.Service
-	Instructors ports.InstructorRepo
-	Media       ports.MediaRepo
-	Audit       ports.AuditRepo
+	Catalog      *catalog.Service
+	CourseAdmin  *courseadmin.Service
+	Content      *contentadmin.Service
+	MediaService *mediasvc.Service
+	Playback     *playback.Service
+	Instructors  ports.InstructorRepo
+	Media        ports.MediaRepo
+	Audit        ports.AuditRepo
 
 	CoursesRepo  ports.CourseRepo
 	Sections     ports.SectionRepo
 	Lessons      ports.LessonRepo
 	Categories   ports.CategoryRepo
+	Attachments  ports.AttachmentRepo
+	Entitlements ports.EntitlementRepo
+	StoragePort  ports.Storage
 	Posts        ports.BlogPostRepo
 	Taxonomy     ports.TaxonomyRepo
 	Pages        ports.PageRepo
@@ -86,6 +93,13 @@ func NewRouter(a *App) http.Handler {
 			r.With(a.rateLimit("review", 10, time.Hour)).Post("/courses/{slug}/reviews", a.handleReviewSubmit)
 		})
 
+		// playback: optional auth, anonymous previews legal, per-IP issuance limit
+		r.Group(func(r chi.Router) {
+			r.Use(a.optionalAuth)
+			r.With(a.rateLimit("playback", 60, time.Minute)).Get("/playback/lessons/{lesson_id}", a.handlePlaybackLesson)
+			r.With(a.rateLimit("playback", 30, time.Minute)).Get("/playback/attachments/{id}", a.handlePlaybackAttachment)
+		})
+
 		// public reads (ISR-cacheable)
 		r.Get("/courses", a.handleCourseList)
 		r.Get("/courses/{slug}", a.handleCourseDetail)
@@ -120,6 +134,11 @@ func NewRouter(a *App) http.Handler {
 			r.Delete("/admin/sections/{id}", a.handleAdminSectionDelete)
 			r.Put("/admin/lessons/{id}", a.handleAdminLessonUpdate)
 			r.Delete("/admin/lessons/{id}", a.handleAdminLessonDelete)
+
+			r.Post("/admin/media/presign", a.handleAdminMediaPresign)
+			r.Post("/admin/media", a.handleAdminMediaRegister)
+			r.Get("/admin/media", a.handleAdminMediaList)
+			r.Delete("/admin/media/{id}", a.handleAdminMediaDelete)
 
 			r.Post("/admin/categories", a.handleAdminCategoryCreate)
 			r.Put("/admin/categories/{id}", a.handleAdminCategoryUpdate)

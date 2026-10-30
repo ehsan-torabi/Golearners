@@ -10,11 +10,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/hibiken/asynq"
+
+	"golearn/backend/internal/adapter/jobqueue"
 	"golearn/backend/internal/adapter/passwordhasher"
 	"golearn/backend/internal/adapter/ratelimit"
 	"golearn/backend/internal/adapter/sanitizer"
 	"golearn/backend/internal/adapter/sms/kavenegar"
 	smsmock "golearn/backend/internal/adapter/sms/mock"
+	"golearn/backend/internal/adapter/video/local"
 	"golearn/backend/internal/platform/config"
 	"golearn/backend/internal/platform/jwt"
 	"golearn/backend/internal/platform/logger"
@@ -27,6 +31,8 @@ import (
 	"golearn/backend/internal/service/contentadmin"
 	"golearn/backend/internal/service/courseadmin"
 	idsvc "golearn/backend/internal/service/identity"
+	mediasvc "golearn/backend/internal/service/media"
+	"golearn/backend/internal/service/playback"
 	httpapi "golearn/backend/internal/transport/httpapi"
 )
 
@@ -107,6 +113,28 @@ func run() error {
 	txr := repository.NewTransactor(pool)
 	cleanHTML := sanitizer.New().SanitizeHTML
 
+	// media + playback
+	var video ports.VideoPlatform
+	switch cfg.VODProvider {
+	case "arvanvod":
+		return errors.New("arvanvod adapter awaits official docs (TODO(arvan-docs))")
+	default:
+		video = local.New(st, cfg.PlaybackTTL)
+	}
+	asynqClient := asynq.NewClient(asynq.RedisClientOpt{Addr: cfg.RedisAddr})
+	defer asynqClient.Close()
+	queue := jobqueue.New(asynqClient)
+	mediaSvc := mediasvc.NewService(mediasvc.Deps{
+		Storage: st, Queue: queue, Media: repository.NewMediaRepo(pool),
+		Audit: audit, TX: txr,
+	})
+	playbackSvc := playback.NewService(playback.Deps{
+		Lessons: lessons, Sections: sections, Entitlements: entitlements,
+		Media: repository.NewMediaRepo(pool), Video: video,
+		Sessions: repository.NewPlaybackSessionRepo(pool),
+		Throttle: throttler, TTL: cfg.PlaybackTTL,
+	})
+
 	catalogSvc := catalog.NewService(catalog.Deps{
 		Courses: courses, Sections: sections, Lessons: lessons,
 		Categories: categories, Reviews: reviews, Entitlements: entitlements,
@@ -127,6 +155,8 @@ func run() error {
 		Cfg: cfg, Log: log, DB: pool, Redis: rdb, Storage: st,
 		Auth: authSvc, Throttle: throttler, Signer: signer,
 		Catalog: catalogSvc, CourseAdmin: courseAdminSvc, Content: contentAdminSvc,
+		MediaService: mediaSvc, Playback: playbackSvc, StoragePort: st,
+		Attachments: repository.NewAttachmentRepo(pool), Entitlements: entitlements,
 		Instructors: instructors, Media: repository.NewMediaRepo(pool), Audit: audit,
 		CoursesRepo: courses, Sections: sections, Lessons: lessons, Categories: categories,
 		Posts: posts, Taxonomy: taxonomy, Pages: pages, FAQs: faqs,
