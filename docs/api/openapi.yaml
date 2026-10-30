@@ -1,0 +1,401 @@
+openapi: 3.1.0
+info:
+  title: GoLearn API
+  version: 1.0.0-draft
+  description: >
+    Persian-first course platform API. Money values are integer Rials.
+    Auth via httpOnly SameSite=Lax cookies (gl_at access JWT + gl_rt rotating refresh);
+    non-GET requests require X-CSRF-Token matching the gl_csrf cookie.
+servers:
+  - url: https://api.golearn.ir/api/v1
+    description: production (placeholder)
+  - url: http://localhost:8080/api/v1
+    description: local dev
+tags: [auth, public, learner, admin, ops]
+components:
+  securitySchemes:
+    cookieAuth: { type: apiKey, in: cookie, name: gl_at }
+  parameters:
+    page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    perPage: { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, example: ORDER_EXPIRED }
+            message: { type: string, description: Persian user-facing message }
+            details: { type: object, additionalProperties: true }
+    Meta:
+      type: object
+      properties:
+        page: { type: integer }
+        per_page: { type: integer }
+        total: { type: integer }
+        total_pages: { type: integer }
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        mobile: { type: string, example: "09121234567" }
+        email: { type: string, nullable: true }
+        full_name: { type: string }
+        roles: { type: array, items: { type: string, enum: [owner, admin, instructor, learner] } }
+        status: { type: string, enum: [active, blocked, deleted] }
+        created_at: { type: string, format: date-time }
+    Course:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        title: { type: string }
+        summary: { type: string }
+        level: { type: string, enum: [beginner, intermediate, advanced] }
+        status: { type: string, enum: [draft, published, archived] }
+        price_rial: { type: integer, format: int64 }
+        compare_at_price_rial: { type: integer, format: int64, nullable: true }
+        is_featured: { type: boolean }
+        cover_url: { type: string, nullable: true }
+        categories: { type: array, items: { $ref: '#/components/schemas/Category' } }
+        rating_avg: { type: number, nullable: true }
+        rating_count: { type: integer }
+        published_at: { type: string, format: date-time, nullable: true }
+    CourseDetail:
+      allOf:
+        - $ref: '#/components/schemas/Course'
+        - type: object
+          properties:
+            description_html: { type: string, description: sanitized rich text }
+            prerequisites_html: { type: string }
+            outcomes: { type: array, items: { type: string } }
+            instructor: { $ref: '#/components/schemas/Instructor' }
+            sections:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  title: { type: string }
+                  position: { type: integer }
+                  lessons:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        title: { type: string }
+                        position: { type: integer }
+                        is_preview: { type: boolean }
+                        duration_seconds: { type: integer }
+                        status: { type: string, enum: [draft, ready, published] }
+            owned_by_viewer: { type: boolean }
+    Category:
+      type: object
+      properties:
+        slug: { type: string }
+        title: { type: string }
+    Instructor:
+      type: object
+      properties:
+        full_name: { type: string }
+        headline: { type: string }
+        bio_html: { type: string }
+        avatar_url: { type: string, nullable: true }
+    Order:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [awaiting_payment, paid, canceled, expired, refunded] }
+        subtotal_rial: { type: integer, format: int64 }
+        discount_rial: { type: integer, format: int64 }
+        total_rial: { type: integer, format: int64 }
+        coupon_code: { type: string, nullable: true }
+        expires_at: { type: string, format: date-time }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              course_id: { type: string, format: uuid }
+              course_slug: { type: string }
+              title_snapshot: { type: string }
+              unit_price_rial: { type: integer, format: int64 }
+        payments:
+          type: array
+          items: { $ref: '#/components/schemas/Payment' }
+    Payment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        gateway: { type: string, enum: [zarinpal, digipay, snappay, mock] }
+        status: { type: string, enum: [initiated, redirected, verified, failed, reversed] }
+        amount_rial: { type: integer, format: int64 }
+        card_masked: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        verified_at: { type: string, format: date-time, nullable: true }
+    BlogPost:
+      type: object
+      properties:
+        slug: { type: string }
+        title: { type: string }
+        excerpt: { type: string }
+        cover_url: { type: string, nullable: true }
+        category: { $ref: '#/components/schemas/Category' }
+        tags: { type: array, items: { $ref: '#/components/schemas/Category' } }
+        reading_minutes: { type: integer }
+        published_at: { type: string, format: date-time }
+  responses:
+    Err: { description: Error envelope, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register (creates pending user, sends OTP)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile, password, full_name]
+              properties:
+                mobile: { type: string, pattern: '^09\d{9}$' }
+                password: { type: string, minLength: 8, format: password }
+                full_name: { type: string, minLength: 3 }
+      responses:
+        '200': { description: OTP sent to mobile }
+        '400': { $ref: '#/components/responses/Err' }
+        '429': { $ref: '#/components/responses/Err' }
+  /auth/otp/request:
+    post:
+      tags: [auth]
+      summary: Request OTP (verify|login|reset)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile, purpose]
+              properties:
+                mobile: { type: string }
+                purpose: { type: string, enum: [verify, login, reset] }
+      responses:
+        '200': { description: sent (never reveals whether the account exists) }
+        '429': { $ref: '#/components/responses/Err' }
+  /auth/otp/verify:
+    post:
+      tags: [auth]
+      summary: Verify OTP; completes registration or logs in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile, code, purpose]
+              properties:
+                mobile: { type: string }
+                code: { type: string, minLength: 6, maxLength: 6 }
+                purpose: { type: string, enum: [verify, login, reset] }
+      responses:
+        '200': { description: session cookies set }
+        '400': { $ref: '#/components/responses/Err' }
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login with mobile + password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile, password]
+              properties: { mobile: { type: string }, password: { type: string } }
+      responses:
+        '200': { description: session cookies set }
+        '401': { $ref: '#/components/responses/Err' }
+        '429': { $ref: '#/components/responses/Err' }
+  /auth/refresh:
+    post: { tags: [auth], summary: Rotate refresh token, responses: { '200': { description: new cookies }, '401': { $ref: '#/components/responses/Err' } } }
+  /auth/logout:
+    post: { tags: [auth], summary: Revoke session, responses: { '204': { description: cleared } } }
+  /auth/password/reset:
+    post: { tags: [auth], summary: Reset password with OTP, responses: { '200': { description: done }, '400': { $ref: '#/components/responses/Err' } } }
+  /courses:
+    get:
+      tags: [public]
+      summary: List published courses
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+        - { name: category, in: query, schema: { type: string } }
+        - { name: level, in: query, schema: { type: string, enum: [beginner, intermediate, advanced] } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: sort, in: query, schema: { type: string, enum: [newest, popular, price_asc, price_desc] } }
+      responses:
+        '200':
+          description: paginated courses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Course' } }
+                  meta: { $ref: '#/components/schemas/Meta' }
+  /courses/{slug}:
+    get:
+      tags: [public]
+      summary: Course detail (curriculum, instructor, rating, ownership flag)
+      parameters: [{ name: slug, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: detail, content: { application/json: { schema: { $ref: '#/components/schemas/CourseDetail' } } } }
+        '404': { $ref: '#/components/responses/Err' }
+  /coupons/validate:
+    post:
+      tags: [learner]
+      summary: Preview coupon for a course
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, course_id]
+              properties: { code: { type: string }, course_id: { type: string, format: uuid } }
+      responses:
+        '200': { description: discount preview }
+        '400': { $ref: '#/components/responses/Err' }
+  /checkout:
+    post:
+      tags: [learner]
+      summary: Create order for one course (v1) with optional coupon
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [course_id]
+              properties: { course_id: { type: string, format: uuid }, coupon_code: { type: string } }
+      responses:
+        '201': { description: order created, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } }
+        '400': { $ref: '#/components/responses/Err' }
+  /checkout/{order_id}/pay:
+    post:
+      tags: [learner]
+      summary: Initiate gateway payment for an order
+      parameters: [{ name: order_id, in: path, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [gateway]
+              properties: { gateway: { type: string, enum: [zarinpal, digipay, snappay, mock] } }
+      responses:
+        '200':
+          description: redirect payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { redirect_url: { type: string }, payment_id: { type: string, format: uuid } }
+        '409': { $ref: '#/components/responses/Err' }
+  /payments/callback/{gateway}:
+    post:
+      tags: [learner]
+      summary: Gateway return/callback target; server-side verification, idempotent
+      parameters: [{ name: gateway, in: path, required: true, schema: { type: string } }]
+      responses:
+        '302': { description: redirect to result page (paid / failed) }
+        '400': { $ref: '#/components/responses/Err' }
+  /me/orders:
+    get:
+      tags: [learner]
+      summary: My orders
+      security: [{ cookieAuth: [] }]
+      parameters: [$ref: '#/components/parameters/page']
+      responses: { '200': { description: paginated orders } }
+  /me/courses:
+    get:
+      tags: [learner]
+      summary: My entitlements with progress
+      security: [{ cookieAuth: [] }]
+      responses: { '200': { description: list } }
+  /playback/lessons/{lesson_id}:
+    get:
+      tags: [learner]
+      summary: Authorized short-lived signed playback URL (HLS)
+      security: [{ cookieAuth: [] }]
+      parameters: [{ name: lesson_id, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        '200':
+          description: playback session
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  playback_url: { type: string }
+                  expires_at: { type: string, format: date-time }
+        '403': { $ref: '#/components/responses/Err' }
+  /admin/analytics/summary:
+    get:
+      tags: [admin]
+      summary: Revenue/orders/users KPIs
+      security: [{ cookieAuth: [] }]
+      parameters: [{ name: range, in: query, schema: { type: string, enum: [today, '7d', '30d', all] } }]
+      responses: { '200': { description: KPI aggregate } }
+  /admin/courses:
+    get:
+      tags: [admin]
+      summary: List all courses (incl. drafts)
+      security: [{ cookieAuth: [] }]
+      parameters: [$ref: '#/components/parameters/page']
+      responses: { '200': { description: paginated } }
+    post:
+      tags: [admin]
+      summary: Create course (draft)
+      security: [{ cookieAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Course' } } } }
+      responses: { '201': { description: created }, '400': { $ref: '#/components/responses/Err' } }
+  /admin/courses/{id}/publish:
+    post:
+      tags: [admin]
+      summary: Publish course (requires ≥1 ready lesson)
+      security: [{ cookieAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses: { '200': { description: published } }
+  /admin/media/presign:
+    post:
+      tags: [admin]
+      summary: Presigned PUT for direct browser→storage upload
+      security: [{ cookieAuth: [] }]
+      responses: { '200': { description: upload URL + storage key } }
+  /admin/orders/{id}/refund:
+    post:
+      tags: [admin]
+      summary: Refund payment (gateway reverse or manual record)
+      security: [{ cookieAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses: { '200': { description: refund result }, '409': { $ref: '#/components/responses/Err' } }
+  /admin/audit-logs:
+    get:
+      tags: [admin]
+      summary: Audit trail (owner/admin)
+      security: [{ cookieAuth: [] }]
+      responses: { '200': { description: paginated audit rows } }
+  /healthz:
+    get: { tags: [ops], summary: Liveness, responses: { '200': { description: ok } } }
+  /readyz:
+    get: { tags: [ops], summary: Readiness (db/redis/storage), responses: { '200': { description: ok }, '503': { description: deps down } } }
+# Admin CRUD for sections, lessons, coupons, users, posts, pages, faqs, testimonials,
+# settings, messages follows the same list/create/get/patch/delete template as
+# /admin/courses — omitted here for brevity, fully expanded at implementation time.

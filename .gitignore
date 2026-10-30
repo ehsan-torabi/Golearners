@@ -1,0 +1,24 @@
+# env & secrets — never commit
+.env
+.env.*.local
+
+# personal tooling config (not part of the product)
+/.zcode/
+/.claude/
+/.agents/
+/skills-lock.json
+
+# build artifacts & coverage
+/backend/bin/
+/dist/
+coverage.out
+*.test
+
+# frontend (added in later phases)
+node_modules/
+.next/
+/frontend/lib/api/schema.d.ts
+
+# misc
+.DS_Store
+*.log
