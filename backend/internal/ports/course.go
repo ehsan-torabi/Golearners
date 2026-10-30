@@ -6,14 +6,15 @@ import (
 
 	"github.com/google/uuid"
 
-	"golearn/backend/internal/domain/course")
+	"golearn/backend/internal/domain/course"
+)
 
 // CourseFilter shapes public/admin course lists.
 type CourseFilter struct {
-	CategorySlug string
-	Level        string
-	Q            string
-	Sort         string // newest | popular | price_asc | price_desc
+	CategorySlug  string
+	Level         string
+	Q             string
+	Sort          string // newest | popular | price_asc | price_desc
 	Page, PerPage int
 }
 

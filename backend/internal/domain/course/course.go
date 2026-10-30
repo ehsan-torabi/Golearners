@@ -53,10 +53,10 @@ type MediaStatus string
 
 // Media statuses.
 const (
-	MediaUploaded    MediaStatus = "uploaded"
-	MediaProcessing  MediaStatus = "processing"
-	MediaReady       MediaStatus = "ready"
-	MediaFailed      MediaStatus = "failed"
+	MediaUploaded   MediaStatus = "uploaded"
+	MediaProcessing MediaStatus = "processing"
+	MediaReady      MediaStatus = "ready"
+	MediaFailed     MediaStatus = "failed"
 )
 
 // ReviewStatus is the moderation status of a course review.
@@ -74,35 +74,35 @@ type EntitlementSource string
 
 // Entitlement sources.
 const (
-	EntitlementPurchase EntitlementSource = "purchase"
-	EntitlementGrant    EntitlementSource = "grant"
+	EntitlementPurchase       EntitlementSource = "purchase"
+	EntitlementGrant          EntitlementSource = "grant"
 	EntitlementRefundReversed EntitlementSource = "refund_reversed"
 )
 
 // Course is the aggregate root of the catalog.
 type Course struct {
-	ID           uuid.UUID
-	Slug         string
-	InstructorID uuid.UUID
-	Title        string
-	Summary      string
-	DescriptionHTML string
-	CoverMediaID    *uuid.UUID
-	PromoVideoMediaID *uuid.UUID
-	Level        Level
-	Status       Status
-	PriceRial    int64
+	ID                 uuid.UUID
+	Slug               string
+	InstructorID       uuid.UUID
+	Title              string
+	Summary            string
+	DescriptionHTML    string
+	CoverMediaID       *uuid.UUID
+	PromoVideoMediaID  *uuid.UUID
+	Level              Level
+	Status             Status
+	PriceRial          int64
 	CompareAtPriceRial *int64
-	IsFeatured   bool
-	PrerequisitesHTML string
-	Outcomes     []string
-	PublishedAt  *time.Time
-	MetaTitle    *string
-	MetaDescription *string
-	OGImageMediaID  *uuid.UUID
-	DeletedAt    *time.Time
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	IsFeatured         bool
+	PrerequisitesHTML  string
+	Outcomes           []string
+	PublishedAt        *time.Time
+	MetaTitle          *string
+	MetaDescription    *string
+	OGImageMediaID     *uuid.UUID
+	DeletedAt          *time.Time
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
 }
 
 // Section groups lessons within a course.
