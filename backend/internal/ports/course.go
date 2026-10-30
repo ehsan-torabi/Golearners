@@ -98,3 +98,9 @@ type MediaRepo interface {
 
 // Entitlement is defined in the course domain to keep commerce decoupled.
 type Entitlement = course.Entitlement
+
+// InstructorRepo — the public teacher profile (Primary = the single v1 instructor).
+type InstructorRepo interface {
+	Primary(ctx context.Context) (*course.Instructor, error)
+	Upsert(ctx context.Context, i *course.Instructor) error
+}

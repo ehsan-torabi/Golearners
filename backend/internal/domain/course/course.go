@@ -176,3 +176,12 @@ type Entitlement struct {
 	OrderID   *uuid.UUID
 	RevokedAt *time.Time
 }
+
+// Instructor is the public teacher profile (single row in v1).
+type Instructor struct {
+	UserID        uuid.UUID
+	Headline      string
+	BioHTML       string
+	AvatarMediaID *uuid.UUID
+	Socials       map[string]string
+}
