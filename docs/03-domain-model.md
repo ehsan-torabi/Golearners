@@ -62,7 +62,7 @@ where stated. Money columns `*_rial BIGINT` (Rials). Enums are Postgres enums.
 
 ### identity
 - **users**: `mobile varchar(11) UNIQUE`, `email NULL UNIQUE`, `full_name`, `password_hash NULL` (Argon2id; null until password set), `status enum(active, blocked, deleted)`, `mobile_verified_at`, `last_login_at`
-- **roles**: `name enum(owner, admin, instructor, learner)`; **user_roles**(user_id, role_id) — multi-role ready
+- **user_roles**: (user_id, role) with role as Postgres enum `user_role` — multi-role ready (refined from a separate roles table during implementation)
 - **refresh_tokens**: `user_id`, `token_hash sha256`, `family_id uuid` (rotation family), `expires_at`, `revoked_at NULL`, `replaced_by NULL`, `ip`, `user_agent`
 - **otp_codes**: `mobile`, `code_hash`, `purpose enum(verify, login, reset)`, `expires_at (2 min)`, `attempts int (max 5)`, `consumed_at NULL`
 - **audit_logs**: `actor_user_id`, `action text`, `entity_type`, `entity_id`, `before jsonb NULL`, `after jsonb NULL`, `ip`, `user_agent`

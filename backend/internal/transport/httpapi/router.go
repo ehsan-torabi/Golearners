@@ -15,15 +15,20 @@ import (
 
 	"golearn/backend/internal/platform/config"
 	"golearn/backend/internal/platform/storage"
+	"golearn/backend/internal/ports"
+	idsvc "golearn/backend/internal/service/identity"
 )
 
 // App carries the wired dependencies for HTTP handlers.
 type App struct {
-	Cfg     config.Config
-	Log     *slog.Logger
-	DB      *pgxpool.Pool
-	Redis   *goredis.Client
-	Storage *storage.Client
+	Cfg      config.Config
+	Log      *slog.Logger
+	DB       *pgxpool.Pool
+	Redis    *goredis.Client
+	Storage  *storage.Client
+	Auth     *idsvc.Service
+	Throttle ports.Throttler
+	Signer   ports.TokenSigner
 }
 
 // NewRouter builds the full middleware chain and routes.
@@ -38,6 +43,26 @@ func NewRouter(a *App) http.Handler {
 
 	r.Get("/healthz", handleHealthz)
 	r.Get("/readyz", a.handleReadyz)
+
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(a.csrf)
+
+		// pre-auth endpoints (individual per-IP limits)
+		r.With(a.rateLimit("register", 10, time.Hour)).Post("/auth/register", a.handleRegister)
+		r.With(a.rateLimit("otp-req", 30, time.Hour)).Post("/auth/otp/request", a.handleOTPRequest)
+		r.With(a.rateLimit("otp-verify", 20, time.Hour)).Post("/auth/otp/verify", a.handleOTPVerify)
+		r.With(a.rateLimit("login", 10, time.Minute)).Post("/auth/login", a.handleLogin)
+		r.With(a.rateLimit("refresh", 30, time.Minute)).Post("/auth/refresh", a.handleRefresh)
+		r.Post("/auth/logout", a.handleLogout)
+		r.With(a.rateLimit("pw-reset", 10, time.Hour)).Post("/auth/password/reset", a.handlePasswordReset)
+
+		// authenticated endpoints
+		r.Group(func(r chi.Router) {
+			r.Use(a.requireAuth)
+			r.Get("/me", a.handleMe)
+			r.Post("/auth/password/change", a.handlePasswordChange)
+		})
+	})
 
 	return r
 }

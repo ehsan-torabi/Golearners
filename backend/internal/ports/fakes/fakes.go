@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -330,8 +331,8 @@ func (StaticSigner) SignAccess(_ context.Context, userID uuid.UUID) (string, tim
 }
 
 func (StaticSigner) ParseAccess(_ context.Context, token string) (uuid.UUID, error) {
-	var id uuid.UUID
-	if _, err := fmt.Sscanf(token, "access:%s", &id); err != nil {
+	id, err := uuid.Parse(strings.TrimPrefix(token, "access:"))
+	if err != nil {
 		return uuid.Nil, errors.New("bad token")
 	}
 	return id, nil
@@ -380,4 +381,17 @@ func (f *UserRepo) SetStatusForTest(id uuid.UUID, status identity.Status) {
 	if u, ok := f.byID[id]; ok {
 		u.Status = status
 	}
+}
+
+// FindByMobileForTest returns the user with the given mobile, if present.
+func (f *UserRepo) FindByMobileForTest(mobile string) (*identity.User, bool) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for _, u := range f.byID {
+		if u.Mobile == mobile {
+			clone := *u
+			return &clone, true
+		}
+	}
+	return nil, false
 }

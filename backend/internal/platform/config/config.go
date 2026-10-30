@@ -27,7 +27,9 @@ type Config struct {
 	S3SecretKey string
 	S3UseSSL    bool
 
-	JWTSecret string // ≥ 32 bytes in production; signs access/refresh tokens from phase 3 on
+	JWTSecret string // ≥ 32 bytes in production; signs access tokens and peppers OTP hashes
+
+	SMSProvider string // mock | kavenegar
 }
 
 // Load reads the environment and fails fast on missing or invalid values.
@@ -45,6 +47,8 @@ func Load() (Config, error) {
 		S3AccessKey: os.Getenv("S3_ACCESS_KEY"),
 		S3SecretKey: os.Getenv("S3_SECRET_KEY"),
 		JWTSecret:   os.Getenv("JWT_SECRET"),
+
+		SMSProvider: envOr("SMS_PROVIDER", "mock"),
 	}
 
 	useSSL, err := strconv.ParseBool(envOr("S3_USE_SSL", "false"))

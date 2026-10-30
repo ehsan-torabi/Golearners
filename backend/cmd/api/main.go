@@ -10,13 +10,29 @@ import (
 	"syscall"
 	"time"
 
+	"golearn/backend/internal/adapter/passwordhasher"
+	"golearn/backend/internal/adapter/ratelimit"
+	"golearn/backend/internal/adapter/sms/kavenegar"
+	smsmock "golearn/backend/internal/adapter/sms/mock"
 	"golearn/backend/internal/platform/config"
+	"golearn/backend/internal/platform/jwt"
 	"golearn/backend/internal/platform/logger"
 	"golearn/backend/internal/platform/postgres"
 	"golearn/backend/internal/platform/redis"
 	"golearn/backend/internal/platform/storage"
+	"golearn/backend/internal/ports"
+	"golearn/backend/internal/repository"
+	idsvc "golearn/backend/internal/service/identity"
 	httpapi "golearn/backend/internal/transport/httpapi"
 )
+
+// buildSMS picks the SMS provider from config; unconfigured providers fail loudly.
+func buildSMS(cfg config.Config) ports.SMS {
+	if cfg.SMSProvider == "kavenegar" {
+		return kavenegar.NewFromEnv()
+	}
+	return smsmock.New()
+}
 
 func main() {
 	if err := run(); err != nil {
@@ -56,7 +72,23 @@ func run() error {
 		return err
 	}
 
-	app := &httpapi.App{Cfg: cfg, Log: log, DB: pool, Redis: rdb, Storage: st}
+	throttler := ratelimit.New(rdb)
+	signer := jwt.New(cfg.JWTSecret, 15*time.Minute)
+	authSvc := idsvc.NewService(idsvc.Deps{
+		Users:    repository.NewUserRepo(pool),
+		OTPs:     repository.NewOTPRepo(pool),
+		Tokens:   repository.NewTokenRepo(pool),
+		SMS:      buildSMS(cfg),
+		Throttle: throttler,
+		Hasher:   passwordhasher.New(),
+		Signer:   signer,
+		Pepper:   cfg.JWTSecret,
+	})
+
+	app := &httpapi.App{
+		Cfg: cfg, Log: log, DB: pool, Redis: rdb, Storage: st,
+		Auth: authSvc, Throttle: throttler, Signer: signer,
+	}
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.HTTPPort,

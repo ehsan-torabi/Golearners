@@ -22,7 +22,7 @@ The YAML is the source of truth; frontend types are generated from it
 |--------|------|-------|
 | POST | `/auth/register` | mobile, password, full_name → sends OTP (`verify`) |
 | POST | `/auth/otp/request` | {mobile, purpose: verify\|login\|reset} rate-limited |
-| POST | `/auth/otp/verify` | {mobile, code, purpose} → session; completes registration |
+| POST | `/auth/otp/verify` | {mobile, code, purpose: verify\|login} → session; completes registration. Password reset is one call: `/auth/password/reset` with its own code |
 | POST | `/auth/login` | {mobile, password} → session |
 | POST | `/auth/refresh` | rotates refresh token (reuse ⇒ family revoked) |
 | POST | `/auth/logout` | revokes tokens, clears cookies |

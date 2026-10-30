@@ -25,7 +25,7 @@ platform    → config/logger/db pool (leaf utilities)
 - Handlers: thin — validate DTO (go-playground/validator + custom rules), call service, map to JSON. Business rules never live in handlers.
 - Money: `type Rial int64`; arithmetic in domain package; never `float`.
 - Concurrency: asynq workers with idempotent handlers; DB transactions scoped and short; `SELECT … FOR UPDATE` for coupon/order transitions.
-- SQL: sqlc queries in `queries/*.sql`; migrations up **and** down; no string-built SQL (lint-enforced).
+- SQL: parameterized statements only (pgx), hand-written repositories; sqlc codegen deferred until the query surface stabilizes; migrations up **and** down; no string-built SQL (lint-enforced).
 - Logging: `slog` JSON; fields: `request_id, user_id, route, method, status, duration_ms`; sensitive values (tokens, OTP, passwords, card data) never logged; helper `logger.WithRequest(ctx)`.
 - Config: single typed `Config` from env; validation at boot; no `os.Getenv` outside `platform/config`.
 - Style: `gofmt`, `golangci-lint` (errcheck, govet, staticcheck, revive, gosec, gocritic, nonamedreturns, sqlclosecheck); table-driven tests; comments only for *why*.

@@ -21,6 +21,15 @@ Then:
 - Readiness (postgres/redis/storage checks): `curl -i http://localhost:8080/readyz`
 - Via the dev proxy: `http://api.localhost/healthz` (Caddy on :80)
 
+## Bootstrap the owner (admin) account
+
+```bash
+set -a; . ./.env; set +a
+cd backend && go run ./cmd/bootstrap -mobile 09121234567 -password 'StrongPass123' -name 'استاد'
+```
+
+Idempotent — safe to re-run (updates the password and re-grants the owner role).
+
 ## Commands
 
 | Command | Purpose |
