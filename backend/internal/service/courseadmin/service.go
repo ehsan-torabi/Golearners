@@ -163,8 +163,7 @@ func (s *Service) UpdateCourse(ctx context.Context, actor Actor, id uuid.UUID, i
 	if err != nil {
 		return nil, err
 	}
-	old.Slug = old.Slug // keep for audit copy
-	before := *old
+	before := *old // audit copy carries the original slug
 	old.Slug = slug
 	old.Title = in.Title
 	old.Summary = in.Summary

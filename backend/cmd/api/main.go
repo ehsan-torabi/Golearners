@@ -12,6 +12,7 @@ import (
 
 	"golearn/backend/internal/adapter/passwordhasher"
 	"golearn/backend/internal/adapter/ratelimit"
+	"golearn/backend/internal/adapter/sanitizer"
 	"golearn/backend/internal/adapter/sms/kavenegar"
 	smsmock "golearn/backend/internal/adapter/sms/mock"
 	"golearn/backend/internal/platform/config"
@@ -22,6 +23,9 @@ import (
 	"golearn/backend/internal/platform/storage"
 	"golearn/backend/internal/ports"
 	"golearn/backend/internal/repository"
+	"golearn/backend/internal/service/catalog"
+	"golearn/backend/internal/service/contentadmin"
+	"golearn/backend/internal/service/courseadmin"
 	idsvc "golearn/backend/internal/service/identity"
 	httpapi "golearn/backend/internal/transport/httpapi"
 )
@@ -85,9 +89,48 @@ func run() error {
 		Pepper:   cfg.JWTSecret,
 	})
 
+	// content/catalog services (repos share the pool; ctx-carried tx for audit)
+	courses := repository.NewCourseRepo(pool)
+	sections := repository.NewSectionRepo(pool)
+	lessons := repository.NewLessonRepo(pool)
+	categories := repository.NewCategoryRepo(pool)
+	reviews := repository.NewReviewRepo(pool)
+	entitlements := repository.NewEntitlementRepo(pool)
+	instructors := repository.NewInstructorRepo(pool)
+	posts := repository.NewBlogPostRepo(pool)
+	taxonomy := repository.NewTaxonomyRepo(pool)
+	pages := repository.NewPageRepo(pool)
+	faqs := repository.NewFAQRepo(pool)
+	testimonials := repository.NewTestimonialRepo(pool)
+	contacts := repository.NewContactRepo(pool)
+	audit := repository.NewAuditRepo(pool)
+	txr := repository.NewTransactor(pool)
+	cleanHTML := sanitizer.New().SanitizeHTML
+
+	catalogSvc := catalog.NewService(catalog.Deps{
+		Courses: courses, Sections: sections, Lessons: lessons,
+		Categories: categories, Reviews: reviews, Entitlements: entitlements,
+		Instructors: instructors,
+	})
+	courseAdminSvc := courseadmin.NewService(courseadmin.Deps{
+		Courses: courses, Sections: sections, Lessons: lessons,
+		Categories: categories, Reviews: reviews, Audit: audit,
+		TX: txr, Sanitize: cleanHTML,
+	})
+	contentAdminSvc := contentadmin.NewService(contentadmin.Deps{
+		Posts: posts, Taxonomy: taxonomy, Pages: pages, FAQs: faqs,
+		Testimonials: testimonials, Contact: contacts, Audit: audit,
+		TX: txr, Sanitize: cleanHTML,
+	})
+
 	app := &httpapi.App{
 		Cfg: cfg, Log: log, DB: pool, Redis: rdb, Storage: st,
 		Auth: authSvc, Throttle: throttler, Signer: signer,
+		Catalog: catalogSvc, CourseAdmin: courseAdminSvc, Content: contentAdminSvc,
+		Instructors: instructors, Media: repository.NewMediaRepo(pool), Audit: audit,
+		CoursesRepo: courses, Sections: sections, Lessons: lessons, Categories: categories,
+		Posts: posts, Taxonomy: taxonomy, Pages: pages, FAQs: faqs,
+		Testimonials: testimonials, Contacts: contacts,
 	}
 
 	srv := &http.Server{

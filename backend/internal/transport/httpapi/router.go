@@ -13,9 +13,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	goredis "github.com/redis/go-redis/v9"
 
+	"golearn/backend/internal/domain/identity"
 	"golearn/backend/internal/platform/config"
 	"golearn/backend/internal/platform/storage"
 	"golearn/backend/internal/ports"
+	"golearn/backend/internal/service/catalog"
+	"golearn/backend/internal/service/contentadmin"
+	"golearn/backend/internal/service/courseadmin"
 	idsvc "golearn/backend/internal/service/identity"
 )
 
@@ -29,6 +33,24 @@ type App struct {
 	Auth     *idsvc.Service
 	Throttle ports.Throttler
 	Signer   ports.TokenSigner
+
+	Catalog     *catalog.Service
+	CourseAdmin *courseadmin.Service
+	Content     *contentadmin.Service
+	Instructors ports.InstructorRepo
+	Media       ports.MediaRepo
+	Audit       ports.AuditRepo
+
+	CoursesRepo  ports.CourseRepo
+	Sections     ports.SectionRepo
+	Lessons      ports.LessonRepo
+	Categories   ports.CategoryRepo
+	Posts        ports.BlogPostRepo
+	Taxonomy     ports.TaxonomyRepo
+	Pages        ports.PageRepo
+	FAQs         ports.FAQRepo
+	Testimonials ports.TestimonialRepo
+	Contacts     ports.ContactRepo
 }
 
 // NewRouter builds the full middleware chain and routes.
@@ -61,6 +83,62 @@ func NewRouter(a *App) http.Handler {
 			r.Use(a.requireAuth)
 			r.Get("/me", a.handleMe)
 			r.Post("/auth/password/change", a.handlePasswordChange)
+			r.With(a.rateLimit("review", 10, time.Hour)).Post("/courses/{slug}/reviews", a.handleReviewSubmit)
+		})
+
+		// public reads (ISR-cacheable)
+		r.Get("/courses", a.handleCourseList)
+		r.Get("/courses/{slug}", a.handleCourseDetail)
+		r.Get("/categories", a.handleCategoryList)
+		r.Get("/instructor", a.handleInstructor)
+		r.Get("/blog/posts", a.handleBlogList)
+		r.Get("/blog/posts/{slug}", a.handleBlogDetail)
+		r.Get("/blog/categories", a.handleBlogCategories)
+		r.Get("/blog/tags", a.handleBlogTags)
+		r.Get("/pages/{slug}", a.handlePage)
+		r.Get("/faqs", a.handleFAQs)
+		r.Get("/testimonials", a.handleTestimonials)
+		r.With(a.rateLimit("contact", 5, time.Hour)).Post("/contact", a.handleContact)
+
+		// admin (RBAC at the boundary; mutations audited in services)
+		r.Group(func(r chi.Router) {
+			r.Use(a.requireAuth)
+			r.Use(a.requireRoles(identity.RoleAdmin, identity.RoleOwner))
+
+			r.Post("/admin/courses", a.handleAdminCourseCreate)
+			r.Get("/admin/courses", a.handleAdminCourseList)
+			r.Put("/admin/courses/{id}", a.handleAdminCourseUpdate)
+			r.Delete("/admin/courses/{id}", a.handleAdminCourseDelete)
+			r.Post("/admin/courses/{id}/publish", a.handleAdminCoursePublish(true))
+			r.Post("/admin/courses/{id}/unpublish", a.handleAdminCoursePublish(false))
+			r.Get("/admin/courses/{id}/curriculum", a.handleAdminCurriculum)
+			r.Post("/admin/courses/{id}/sections", a.handleAdminSectionCreate)
+			r.Post("/admin/courses/{id}/sections/reorder", a.handleAdminSectionReorder)
+			r.Post("/admin/sections/{id}/lessons", a.handleAdminLessonCreate)
+			r.Post("/admin/sections/{id}/lessons/reorder", a.handleAdminLessonReorder)
+			r.Put("/admin/sections/{id}", a.handleAdminSectionUpdate)
+			r.Delete("/admin/sections/{id}", a.handleAdminSectionDelete)
+			r.Put("/admin/lessons/{id}", a.handleAdminLessonUpdate)
+			r.Delete("/admin/lessons/{id}", a.handleAdminLessonDelete)
+
+			r.Post("/admin/categories", a.handleAdminCategoryCreate)
+			r.Put("/admin/categories/{id}", a.handleAdminCategoryUpdate)
+			r.Delete("/admin/categories/{id}", a.handleAdminCategoryDelete)
+
+			r.Post("/admin/posts", a.handleAdminPostCreate)
+			r.Get("/admin/posts", a.handleAdminPostList)
+			r.Put("/admin/posts/{id}", a.handleAdminPostUpdate)
+			r.Delete("/admin/posts/{id}", a.handleAdminPostDelete)
+			r.Post("/admin/posts/{id}/publish", a.handleAdminPostPublish(true))
+			r.Post("/admin/posts/{id}/unpublish", a.handleAdminPostPublish(false))
+
+			r.Post("/admin/pages", a.handleAdminPageUpsert)
+			r.Post("/admin/faqs", a.handleAdminFAQUpsert)
+			r.Post("/admin/testimonials", a.handleAdminTestimonialUpsert)
+			r.Get("/admin/messages", a.handleAdminMessages)
+			r.Post("/admin/messages/{id}/status", a.handleAdminMessageStatus)
+			r.Post("/admin/reviews/{id}/moderate", a.handleAdminReviewModerate)
+			r.Get("/admin/audit-logs", a.handleAdminAuditLogs)
 		})
 	})
 
