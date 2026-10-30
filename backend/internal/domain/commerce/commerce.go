@@ -4,8 +4,6 @@ package commerce
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // OrderStatus is the order lifecycle (docs/03 §4).
