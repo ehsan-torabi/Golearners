@@ -1,0 +1,12 @@
+DROP TABLE IF EXISTS refunds;
+DROP TABLE IF EXISTS payment_events;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS coupon_redemptions;
+DROP TABLE IF EXISTS coupons;
+DROP TYPE IF EXISTS refund_status;
+DROP TYPE IF EXISTS refund_kind;
+DROP TYPE IF EXISTS payment_gateway;
+DROP TYPE IF EXISTS payment_status;
+DROP TYPE IF EXISTS order_status;

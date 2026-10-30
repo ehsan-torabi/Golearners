@@ -15,7 +15,7 @@ CREATE TABLE blog_categories (
 CREATE TABLE blog_tags (
     id         UUID PRIMARY KEY,
     slug       TEXT NOT NULL UNIQUE,
-    title      TEXT NOT NULL,
+    title      TEXT NOT NULL UNIQUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
