@@ -70,6 +70,10 @@ type CategoryRepo interface {
 	Update(ctx context.Context, c *course.Category) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	List(ctx context.Context) ([]*course.Category, error)
+	// SetForCourse replaces the course's category links.
+	SetForCourse(ctx context.Context, courseID uuid.UUID, categoryIDs []uuid.UUID) error
+	// ForCourse lists categories of one course.
+	ForCourse(ctx context.Context, courseID uuid.UUID) ([]*course.Category, error)
 }
 
 // ReviewRepo — moderated course reviews.

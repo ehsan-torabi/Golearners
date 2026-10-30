@@ -269,3 +269,40 @@ func (r *CategoryRepo) List(ctx context.Context) ([]*course.Category, error) {
 	}
 	return out, rows.Err()
 }
+
+func (r *CategoryRepo) SetForCourse(ctx context.Context, courseID uuid.UUID, categoryIDs []uuid.UUID) error {
+	_, err := querierOf(ctx, r.pool).Exec(ctx,
+		`DELETE FROM course_category_courses WHERE course_id=$1`, courseID)
+	if err != nil {
+		return fmt.Errorf("clear course categories: %w", err)
+	}
+	for _, id := range categoryIDs {
+		_, err := querierOf(ctx, r.pool).Exec(ctx,
+			`INSERT INTO course_category_courses (course_id, category_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
+			courseID, id)
+		if err != nil {
+			return fmt.Errorf("link course category: %w", err)
+		}
+	}
+	return nil
+}
+
+func (r *CategoryRepo) ForCourse(ctx context.Context, courseID uuid.UUID) ([]*course.Category, error) {
+	rows, err := querierOf(ctx, r.pool).Query(ctx,
+		`SELECT c.id, c.slug, c.title, c.position FROM course_categories c
+		 JOIN course_category_courses cc ON cc.category_id = c.id
+		 WHERE cc.course_id = $1 ORDER BY c.position`, courseID)
+	if err != nil {
+		return nil, fmt.Errorf("categories of course: %w", err)
+	}
+	defer rows.Close()
+	var out []*course.Category
+	for rows.Next() {
+		c, err := scanCategory(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
