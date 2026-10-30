@@ -1,0 +1,15 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    # schema reads the migrations dir; down files are written defensively
+    # (DROP TABLE IF EXISTS) so the lexical-order parse stays valid.
+    queries: "queries"
+    schema: "migrations"
+    gen:
+      go:
+        package: "repository"
+        out: "internal/repository"
+        sql_package: "pgx/v5"
+        overrides:
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
