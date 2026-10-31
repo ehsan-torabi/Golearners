@@ -20,8 +20,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fa" dir="rtl">
       <head>
-        {/* TODO(deploy): self-host fonts via next/font/local in the deployment phase */}
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" />
+        {/* display font (Noto Kufi Arabic) — weights only used for headings */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@600&display=swap"
           rel="stylesheet"

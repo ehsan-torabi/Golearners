@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+/* Vazirmatn — self-hosted (public/fonts) */
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/Vazirmatn-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/Vazirmatn-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/Vazirmatn-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
 /* فیروزه (turquoise) — VibeFarsi theme: glass surfaces over deep teal.
    Tokens copied from the VibeFarsi registry; components read shape/line/depth/motion. */
 :root,
