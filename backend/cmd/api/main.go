@@ -31,6 +31,7 @@ import (
 	"golearn/backend/internal/service/contentadmin"
 	"golearn/backend/internal/service/courseadmin"
 	idsvc "golearn/backend/internal/service/identity"
+	learningsvc "golearn/backend/internal/service/learning"
 	mediasvc "golearn/backend/internal/service/media"
 	"golearn/backend/internal/service/playback"
 	httpapi "golearn/backend/internal/transport/httpapi"
@@ -135,6 +136,12 @@ func run() error {
 		Throttle: throttler, TTL: cfg.PlaybackTTL,
 	})
 
+	learningSvc := learningsvc.NewService(learningsvc.Deps{
+		Entitlements: entitlements,
+		Progress:     repository.NewLearningRepo(pool),
+		Courses:      courses, Sections: sections, Lessons: lessons,
+	})
+
 	catalogSvc := catalog.NewService(catalog.Deps{
 		Courses: courses, Sections: sections, Lessons: lessons,
 		Categories: categories, Reviews: reviews, Entitlements: entitlements,
@@ -156,6 +163,7 @@ func run() error {
 		Auth: authSvc, Throttle: throttler, Signer: signer,
 		Catalog: catalogSvc, CourseAdmin: courseAdminSvc, Content: contentAdminSvc,
 		MediaService: mediaSvc, Playback: playbackSvc, StoragePort: st,
+		Learning:    learningSvc,
 		Attachments: repository.NewAttachmentRepo(pool), Entitlements: entitlements,
 		Instructors: instructors, Media: repository.NewMediaRepo(pool), Audit: audit,
 		CoursesRepo: courses, Sections: sections, Lessons: lessons, Categories: categories,

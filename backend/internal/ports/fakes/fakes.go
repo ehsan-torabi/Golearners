@@ -1052,3 +1052,19 @@ func (f *CatalogCourses) ByID(_ context.Context, id uuid.UUID) (*course.Course, 
 func (f *CatalogCourses) BySlug(context.Context, string) (*course.Course, error) {
 	return nil, ports.ErrNotFound
 }
+
+// ListForUser returns the fake's active entitlements for a user.
+func (f *EntitlementRepo) ListForUser(_ context.Context, userID uuid.UUID) ([]*course.Entitlement, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	var out []*course.Entitlement
+	for key := range f.active {
+		if key[0] == userID {
+			out = append(out, &course.Entitlement{
+				UserID: key[0], CourseID: key[1],
+				Source: course.EntitlementPurchase,
+			})
+		}
+	}
+	return out, nil
+}

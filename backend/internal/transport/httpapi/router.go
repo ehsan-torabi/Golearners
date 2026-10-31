@@ -22,6 +22,7 @@ import (
 	"golearn/backend/internal/service/contentadmin"
 	"golearn/backend/internal/service/courseadmin"
 	idsvc "golearn/backend/internal/service/identity"
+	learningsvc "golearn/backend/internal/service/learning"
 	mediasvc "golearn/backend/internal/service/media"
 	"golearn/backend/internal/service/playback"
 )
@@ -43,6 +44,7 @@ type App struct {
 	MediaService *mediasvc.Service
 	Playback     *playback.Service
 	Checkout     *checkoutsvc.Service
+	Learning     *learningsvc.Service
 	Instructors  ports.InstructorRepo
 	Media        ports.MediaRepo
 	Audit        ports.AuditRepo
@@ -99,6 +101,9 @@ func NewRouter(a *App) http.Handler {
 			r.Post("/coupons/validate", a.handleCouponValidate)
 			r.Get("/me/orders", a.handleMyOrders)
 			r.Get("/me/orders/{id}", a.handleMyOrder)
+			r.Get("/me/courses", a.handleMyCourses)
+			r.Get("/me/courses/{slug}/curriculum", a.handleMyCurriculum)
+			r.Put("/me/progress/{lesson_id}", a.handleSetProgress)
 		})
 
 		// playback: optional auth, anonymous previews legal, per-IP issuance limit

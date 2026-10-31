@@ -204,3 +204,13 @@ type LessonAttachment struct {
 	Title         string
 	AllowDownload bool
 }
+
+// LessonProgress tracks watch position + completion per user/lesson.
+type LessonProgress struct {
+	ID              uuid.UUID
+	UserID          uuid.UUID
+	LessonID        uuid.UUID
+	PositionSeconds int
+	CompletedAt     *time.Time
+	UpdatedAt       time.Time
+}

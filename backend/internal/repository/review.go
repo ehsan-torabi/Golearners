@@ -130,3 +130,28 @@ func (r *EntitlementRepo) RevokeByOrder(ctx context.Context, orderID uuid.UUID) 
 	}
 	return nil
 }
+
+// ListForUser returns the user's active entitlements (newest first).
+func (r *EntitlementRepo) ListForUser(ctx context.Context, userID uuid.UUID) ([]*course.Entitlement, error) {
+	rows, err := querierOf(ctx, r.pool).Query(ctx,
+		`SELECT id, user_id, course_id, source, granted_at, expires_at, order_id, revoked_at
+		 FROM entitlements WHERE user_id = $1 AND revoked_at IS NULL
+		 AND (expires_at IS NULL OR expires_at > now())
+		 ORDER BY granted_at DESC`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list entitlements: %w", err)
+	}
+	defer rows.Close()
+	var out []*course.Entitlement
+	for rows.Next() {
+		e := &course.Entitlement{}
+		var source string
+		if err := rows.Scan(&e.ID, &e.UserID, &e.CourseID, &source, &e.GrantedAt,
+			&e.ExpiresAt, &e.OrderID, &e.RevokedAt); err != nil {
+			return nil, fmt.Errorf("scan entitlement: %w", err)
+		}
+		e.Source = course.EntitlementSource(source)
+		out = append(out, e)
+	}
+	return out, rows.Err()
+}

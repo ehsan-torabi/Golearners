@@ -89,6 +89,7 @@ type ReviewRepo interface {
 // EntitlementRepo — access grants (commerce consumes this in phase 6).
 type EntitlementRepo interface {
 	HasActive(ctx context.Context, userID, courseID uuid.UUID) (bool, error)
+	ListForUser(ctx context.Context, userID uuid.UUID) ([]*course.Entitlement, error)
 	Grant(ctx context.Context, e *course.Entitlement) error
 	// RevokeByOrder revokes entitlements created by an order (refunds).
 	RevokeByOrder(ctx context.Context, orderID uuid.UUID) error
@@ -111,4 +112,12 @@ type Entitlement = course.Entitlement
 type InstructorRepo interface {
 	Primary(ctx context.Context) (*course.Instructor, error)
 	Upsert(ctx context.Context, i *course.Instructor) error
+}
+
+// ProgressRepo — watch position + completion tracking.
+type ProgressRepo interface {
+	// Upsert stores position; completedAt optional.
+	Upsert(ctx context.Context, p *course.LessonProgress) error
+	ForCourse(ctx context.Context, userID, courseID uuid.UUID) ([]*course.LessonProgress, error)
+	ForLesson(ctx context.Context, userID, lessonID uuid.UUID) (*course.LessonProgress, error)
 }
