@@ -51,7 +51,20 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl">پنل مدیریت</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-2xl">پنل مدیریت</h1>
+        <nav className="flex gap-2 text-sm" aria-label="بخش‌های مدیریت">
+          {[
+            ["/admin/courses", "دوره‌ها"],
+            ["/admin/orders", "سفارش‌ها"],
+            ["/admin/users", "کاربران"],
+          ].map(([href, label]) => (
+            <a key={href} href={href} className="glass rounded-control px-4 py-2 transition-colors duration-(--motion) ease-motion hover:bg-accent">
+              {label}
+            </a>
+          ))}
+        </nav>
+      </div>
       {summary && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
