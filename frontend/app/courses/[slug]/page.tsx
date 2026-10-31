@@ -86,11 +86,11 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
             )}
           </header>
 
-          {d.outcomes.length > 0 && (
+          {(d.outcomes ?? []).length > 0 && (
             <Card className="p-6">
               <h2 className="font-display text-base">در این دوره یاد می‌گیرید</h2>
               <ul className="mt-3 list-inside list-disc space-y-1.5 text-sm leading-7 text-muted-foreground">
-                {d.outcomes.map((o, i) => (
+                {(d.outcomes ?? []).map((o, i) => (
                   <li key={i}>{o}</li>
                 ))}
               </ul>

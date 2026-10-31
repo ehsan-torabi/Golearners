@@ -116,6 +116,9 @@ func (s *Service) CreateCourse(ctx context.Context, actor Actor, in CourseInput,
 	if err != nil {
 		return nil, err
 	}
+	if in.Outcomes == nil {
+		in.Outcomes = []string{}
+	}
 	c := &course.Course{
 		ID: uuid.Must(uuid.NewV7()), Slug: slug, InstructorID: instructorID,
 		Title: in.Title, Summary: in.Summary,
@@ -173,6 +176,9 @@ func (s *Service) UpdateCourse(ctx context.Context, actor Actor, id uuid.UUID, i
 	old.CompareAtPriceRial = in.CompareAtPriceRial
 	old.IsFeatured = in.IsFeatured
 	old.PrerequisitesHTML = s.d.Sanitize(in.PrerequisitesHTML)
+	if in.Outcomes == nil {
+		in.Outcomes = []string{}
+	}
 	old.Outcomes = in.Outcomes
 	old.MetaTitle = in.MetaTitle
 	old.MetaDescription = in.MetaDescription

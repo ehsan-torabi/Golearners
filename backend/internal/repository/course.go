@@ -43,7 +43,12 @@ func scanCourse(row pgx.Row) (*course.Course, error) {
 	}
 	c.Level = course.Level(level)
 	c.Status = course.Status(status)
-	_ = json.Unmarshal(outcomes, &c.Outcomes)
+	if len(outcomes) > 0 && json.Unmarshal(outcomes, &c.Outcomes) != nil {
+		c.Outcomes = []string{}
+	}
+	if c.Outcomes == nil {
+		c.Outcomes = []string{} // JSONB null must never leak to clients as nil
+	}
 	return c, nil
 }
 
