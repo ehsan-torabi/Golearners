@@ -39,21 +39,21 @@ type Actor struct {
 
 // CourseInput is the full admin payload (PUT-style; partial updates later).
 type CourseInput struct {
-	Title              string
-	Slug               string
-	Summary            string
-	DescriptionHTML    string
-	Level              course.Level
-	PriceRial          int64
-	CompareAtPriceRial *int64
-	PrerequisitesHTML  string
-	Outcomes           []string
-	MetaTitle          *string
-	MetaDescription    *string
-	CoverMediaID       *uuid.UUID
-	PromoVideoMediaID  *uuid.UUID
-	IsFeatured         bool
-	CategoryIDs        []uuid.UUID
+	Title              string       `json:"title"`
+	Slug               string       `json:"slug"`
+	Summary            string       `json:"summary"`
+	DescriptionHTML    string       `json:"description_html"`
+	Level              course.Level `json:"level"`
+	PriceRial          int64        `json:"price_rial"`
+	CompareAtPriceRial *int64       `json:"compare_at_price_rial"`
+	PrerequisitesHTML  string       `json:"prerequisites_html"`
+	Outcomes           []string     `json:"outcomes"`
+	MetaTitle          *string      `json:"meta_title"`
+	MetaDescription    *string      `json:"meta_description"`
+	CoverMediaID       *uuid.UUID   `json:"cover_media_id"`
+	PromoVideoMediaID  *uuid.UUID   `json:"promo_video_media_id"`
+	IsFeatured         bool         `json:"is_featured"`
+	CategoryIDs        []uuid.UUID  `json:"category_ids"`
 }
 
 func (s *Service) validateCourse(in *CourseInput) error {

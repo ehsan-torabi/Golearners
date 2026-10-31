@@ -102,6 +102,9 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) error {
 	if err := s.deps.Users.Create(ctx, user); err != nil {
 		return err
 	}
+	if err := s.deps.Users.AddRole(ctx, user.ID, identity.RoleLearner); err != nil {
+		return err
+	}
 	return s.sendOTP(ctx, mobile, identity.PurposeVerify)
 }
 

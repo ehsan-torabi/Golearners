@@ -14,8 +14,8 @@ import (
 
 // SectionInput for create/update.
 type SectionInput struct {
-	Title    string
-	Position int
+	Title    string `json:"title"`
+	Position int    `json:"position"`
 }
 
 func (s *Service) CreateSection(ctx context.Context, actor Actor, courseID uuid.UUID, in SectionInput) (*course.Section, error) {
@@ -73,15 +73,17 @@ func (s *Service) ReorderSections(ctx context.Context, actor Actor, courseID uui
 	})
 }
 
-// LessonInput for create/update.
+// LessonInput for create/update. SectionID is required on create; on update
+// it is optional (omit to keep the lesson in its current section).
 type LessonInput struct {
-	Title           string
-	ContentHTML     string
-	Position        int
-	IsPreview       bool
-	DurationSeconds int
-	Status          course.LessonStatus
-	MediaID         *uuid.UUID
+	SectionID       *uuid.UUID          `json:"section_id"`
+	Title           string              `json:"title"`
+	ContentHTML     string              `json:"content_html"`
+	Position        int                 `json:"position"`
+	IsPreview       bool                `json:"is_preview"`
+	DurationSeconds int                 `json:"duration_seconds"`
+	Status          course.LessonStatus `json:"status"`
+	MediaID         *uuid.UUID          `json:"media_id"`
 }
 
 func (s *Service) CreateLesson(ctx context.Context, actor Actor, sectionID uuid.UUID, in LessonInput) (*course.Lesson, error) {
@@ -115,8 +117,19 @@ func (s *Service) UpdateLesson(ctx context.Context, actor Actor, id uuid.UUID, i
 	if len(in.Title) < 1 || len(in.Title) > 200 {
 		return apperr.ErrValidation
 	}
+	existing, err := s.d.Lessons.ByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, ports.ErrNotFound) {
+			return apperr.ErrNotFound
+		}
+		return err
+	}
+	sectionID := existing.SectionID
+	if in.SectionID != nil {
+		sectionID = *in.SectionID
+	}
 	l := &course.Lesson{
-		ID: id, Title: in.Title, ContentHTML: s.d.Sanitize(in.ContentHTML),
+		ID: id, SectionID: sectionID, Title: in.Title, ContentHTML: s.d.Sanitize(in.ContentHTML),
 		Position: in.Position, IsPreview: in.IsPreview,
 		DurationSeconds: in.DurationSeconds, Status: in.Status, MediaID: in.MediaID,
 	}

@@ -107,44 +107,44 @@ type Course struct {
 
 // Section groups lessons within a course.
 type Section struct {
-	ID       uuid.UUID
-	CourseID uuid.UUID
-	Title    string
-	Position int
+	ID       uuid.UUID `json:"id"`
+	CourseID uuid.UUID `json:"course_id"`
+	Title    string    `json:"title"`
+	Position int       `json:"position"`
 }
 
 // Lesson is a single unit of the curriculum.
 type Lesson struct {
-	ID              uuid.UUID
-	SectionID       uuid.UUID
-	Title           string
-	ContentHTML     string
-	Position        int
-	IsPreview       bool
-	DurationSeconds int
-	Status          LessonStatus
-	MediaID         *uuid.UUID
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	ID              uuid.UUID    `json:"id"`
+	SectionID       uuid.UUID    `json:"section_id"`
+	Title           string       `json:"title"`
+	ContentHTML     string       `json:"content_html"`
+	Position        int          `json:"position"`
+	IsPreview       bool         `json:"is_preview"`
+	DurationSeconds int          `json:"duration_seconds"`
+	Status          LessonStatus `json:"status"`
+	MediaID         *uuid.UUID   `json:"media_id"`
+	CreatedAt       time.Time    `json:"created_at"`
+	UpdatedAt       time.Time    `json:"updated_at"`
 }
 
 // Category is a course taxonomy term.
 type Category struct {
-	ID       uuid.UUID
-	Slug     string
-	Title    string
-	Position int
+	ID       uuid.UUID `json:"id"`
+	Slug     string    `json:"slug"`
+	Title    string    `json:"title"`
+	Position int       `json:"position"`
 }
 
 // Review is a moderated learner rating.
 type Review struct {
-	ID         uuid.UUID
-	CourseID   uuid.UUID
-	UserID     uuid.UUID
-	Rating     int
-	Body       string
-	Status     ReviewStatus
-	ApprovedAt *time.Time
+	ID         uuid.UUID    `json:"id"`
+	CourseID   uuid.UUID    `json:"course_id"`
+	UserID     uuid.UUID    `json:"user_id"`
+	Rating     int          `json:"rating"`
+	Body       string       `json:"body"`
+	Status     ReviewStatus `json:"status"`
+	ApprovedAt *time.Time   `json:"approved_at"`
 }
 
 // MediaAsset is a stored file (video/image/pdf) with pipeline status.
@@ -198,11 +198,11 @@ type PlaybackSession struct {
 
 // LessonAttachment is a downloadable file attached to a lesson.
 type LessonAttachment struct {
-	ID            uuid.UUID
-	LessonID      uuid.UUID
-	MediaID       uuid.UUID
-	Title         string
-	AllowDownload bool
+	ID            uuid.UUID `json:"id"`
+	LessonID      uuid.UUID `json:"lesson_id"`
+	MediaID       uuid.UUID `json:"media_id"`
+	Title         string    `json:"title"`
+	AllowDownload bool      `json:"allow_download"`
 }
 
 // LessonProgress tracks watch position + completion per user/lesson.

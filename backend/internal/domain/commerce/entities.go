@@ -83,16 +83,16 @@ const (
 
 // Refund records a repayment to the buyer.
 type Refund struct {
-	ID         uuid.UUID
-	PaymentID  uuid.UUID
-	AmountRial int64
-	Kind       RefundKind
-	Reason     string
-	Status     RefundStatus
-	GatewayRef *string
-	ActedBy    *uuid.UUID
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	ID         uuid.UUID    `json:"id"`
+	PaymentID  uuid.UUID    `json:"payment_id"`
+	AmountRial int64        `json:"amount_rial"`
+	Kind       RefundKind   `json:"kind"`
+	Reason     string       `json:"reason"`
+	Status     RefundStatus `json:"status"`
+	GatewayRef *string      `json:"gateway_ref"`
+	ActedBy    *uuid.UUID   `json:"acted_by"`
+	CreatedAt  time.Time    `json:"created_at"`
+	UpdatedAt  time.Time    `json:"updated_at"`
 }
 
 // CouponType selects percent vs fixed-amount discounts.

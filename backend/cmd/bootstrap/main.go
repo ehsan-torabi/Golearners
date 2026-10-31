@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 
 	"golearn/backend/internal/adapter/passwordhasher"
+	"golearn/backend/internal/domain/course"
 	"golearn/backend/internal/domain/identity"
 	"golearn/backend/internal/platform/config"
 	"golearn/backend/internal/platform/postgres"
@@ -100,6 +101,14 @@ func run() error {
 	if err := users.SetMobileVerified(ctx, user.ID); err != nil {
 		return err
 	}
-	fmt.Println("owner role granted; mobile marked verified")
+
+	// the owner is also the (single) instructor: course creation requires the profile
+	instructors := repository.NewInstructorRepo(pool)
+	if err := instructors.Upsert(ctx, &course.Instructor{
+		UserID: user.ID, Headline: "مدرس دوره‌های برنامه‌نویسی",
+	}); err != nil {
+		return err
+	}
+	fmt.Println("owner role granted; mobile marked verified; instructor profile ready")
 	return nil
 }

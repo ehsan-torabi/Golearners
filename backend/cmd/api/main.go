@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +15,9 @@ import (
 
 	"golearn/backend/internal/adapter/jobqueue"
 	"golearn/backend/internal/adapter/passwordhasher"
+	"golearn/backend/internal/adapter/payment"
+	mockgw "golearn/backend/internal/adapter/payment/mock"
+	"golearn/backend/internal/adapter/payment/zarinpal"
 	"golearn/backend/internal/adapter/ratelimit"
 	"golearn/backend/internal/adapter/sanitizer"
 	"golearn/backend/internal/adapter/sms/kavenegar"
@@ -28,6 +32,7 @@ import (
 	"golearn/backend/internal/ports"
 	"golearn/backend/internal/repository"
 	"golearn/backend/internal/service/catalog"
+	checkoutsvc "golearn/backend/internal/service/checkout"
 	"golearn/backend/internal/service/contentadmin"
 	"golearn/backend/internal/service/courseadmin"
 	idsvc "golearn/backend/internal/service/identity"
@@ -38,11 +43,11 @@ import (
 )
 
 // buildSMS picks the SMS provider from config; unconfigured providers fail loudly.
-func buildSMS(cfg config.Config) ports.SMS {
+func buildSMS(cfg config.Config, log *slog.Logger) ports.SMS {
 	if cfg.SMSProvider == "kavenegar" {
 		return kavenegar.NewFromEnv()
 	}
-	return smsmock.New()
+	return smsmock.NewWithLogger(log)
 }
 
 func main() {
@@ -89,7 +94,7 @@ func run() error {
 		Users:    repository.NewUserRepo(pool),
 		OTPs:     repository.NewOTPRepo(pool),
 		Tokens:   repository.NewTokenRepo(pool),
-		SMS:      buildSMS(cfg),
+		SMS:      buildSMS(cfg, log),
 		Throttle: throttler,
 		Hasher:   passwordhasher.New(),
 		Signer:   signer,
@@ -136,6 +141,28 @@ func run() error {
 		Throttle: throttler, TTL: cfg.PlaybackTTL,
 	})
 
+	// gateway registry (mock always; ZarinPal when configured)
+	registry := payment.NewRegistry()
+	registry.Register(mockgw.NewFromEnv())
+	if cfg.ZarinpalMerchantID != "" {
+		registry.Register(zarinpal.New(zarinpal.Config{
+			MerchantID: cfg.ZarinpalMerchantID, Sandbox: cfg.ZarinpalSandbox,
+		}))
+	}
+	checkoutSvc := checkoutsvc.NewService(checkoutsvc.Deps{
+		Orders:       repository.NewOrderRepo(pool),
+		Coupons:      repository.NewCouponRepo(pool),
+		Payments:     repository.NewPaymentRepo(pool),
+		Events:       repository.NewPaymentEventRepo(pool),
+		Refunds:      repository.NewRefundRepo(pool),
+		Courses:      courses,
+		Entitlements: entitlements,
+		Gateways:     registry,
+		TX:           txr,
+		Audit:        audit,
+		BaseURL:      cfg.BaseURL,
+	})
+
 	learningSvc := learningsvc.NewService(learningsvc.Deps{
 		Entitlements: entitlements,
 		Progress:     repository.NewLearningRepo(pool),
@@ -158,12 +185,18 @@ func run() error {
 		TX: txr, Sanitize: cleanHTML,
 	})
 
+	orders := repository.NewOrderRepo(pool)
+	analyticsRepo := repository.NewAnalyticsRepo(pool)
+	settingsRepo := repository.NewSettingsRepo(pool)
+	userAdminRepo := repository.NewUserAdminRepo(pool)
+
 	app := &httpapi.App{
 		Cfg: cfg, Log: log, DB: pool, Redis: rdb, Storage: st,
 		Auth: authSvc, Throttle: throttler, Signer: signer,
 		Catalog: catalogSvc, CourseAdmin: courseAdminSvc, Content: contentAdminSvc,
 		MediaService: mediaSvc, Playback: playbackSvc, StoragePort: st,
-		Learning:    learningSvc,
+		Learning: learningSvc, Checkout: checkoutSvc,
+		Orders: orders, Analytics: analyticsRepo, SettingsRepo: settingsRepo, UserAdmin: userAdminRepo,
 		Attachments: repository.NewAttachmentRepo(pool), Entitlements: entitlements,
 		Instructors: instructors, Media: repository.NewMediaRepo(pool), Audit: audit,
 		CoursesRepo: courses, Sections: sections, Lessons: lessons, Categories: categories,

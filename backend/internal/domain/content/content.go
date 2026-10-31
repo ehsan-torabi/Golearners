@@ -72,35 +72,35 @@ type BlogTag struct {
 
 // Page is an editable static page (about, privacy, ...).
 type Page struct {
-	ID              uuid.UUID
-	Slug            string
-	Title           string
-	BodyHTML        string
-	MetaTitle       *string
-	MetaDescription *string
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	ID              uuid.UUID `json:"id"`
+	Slug            string    `json:"slug"`
+	Title           string    `json:"title"`
+	BodyHTML        string    `json:"body_html"`
+	MetaTitle       *string   `json:"meta_title"`
+	MetaDescription *string   `json:"meta_description"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 // FAQ is a question/answer entry.
 type FAQ struct {
-	ID          uuid.UUID
-	Question    string
-	Answer      string
-	Position    int
-	IsPublished bool
+	ID          uuid.UUID `json:"id"`
+	Question    string    `json:"question"`
+	Answer      string    `json:"answer"`
+	Position    int       `json:"position"`
+	IsPublished bool      `json:"is_published"`
 }
 
 // Testimonial is a displayed social proof quote.
 type Testimonial struct {
-	ID            uuid.UUID
-	AuthorName    string
-	AuthorRole    string
-	Body          string
-	Rating        *int
-	AvatarMediaID *uuid.UUID
-	Position      int
-	IsPublished   bool
+	ID            uuid.UUID  `json:"id"`
+	AuthorName    string     `json:"author_name"`
+	AuthorRole    string     `json:"author_role"`
+	Body          string     `json:"body"`
+	Rating        *int       `json:"rating"`
+	AvatarMediaID *uuid.UUID `json:"avatar_media_id"`
+	Position      int        `json:"position"`
+	IsPublished   bool       `json:"is_published"`
 }
 
 // ContactMessage is an inbox entry from the public contact form.

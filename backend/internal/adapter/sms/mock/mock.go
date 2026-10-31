@@ -4,12 +4,15 @@ package mock
 
 import (
 	"context"
+	"log/slog"
+	"os"
 	"sync"
 )
 
 type SMS struct {
 	mu       sync.Mutex
 	messages []Message
+	log      *slog.Logger
 }
 
 type Message struct {
@@ -19,10 +22,17 @@ type Message struct {
 
 func New() *SMS { return &SMS{} }
 
+// NewWithLogger logs every (mock) send — development only, so OTP E2E flows
+// can read codes from the API log. Production uses the kavenegar adapter.
+func NewWithLogger(l *slog.Logger) *SMS { return &SMS{log: l} }
+
 func (m *SMS) Send(_ context.Context, mobile, text string) error {
 	m.mu.Lock()
-	defer m.mu.Unlock()
 	m.messages = append(m.messages, Message{Mobile: mobile, Text: text})
+	m.mu.Unlock()
+	if m.log != nil && os.Getenv("APP_ENV") == "development" {
+		m.log.Info("mock sms sent", "to", mobile, "text", text)
+	}
 	return nil
 }
 

@@ -24,9 +24,9 @@ migrate-down:
 migrate-status:
 	cd backend && DATABASE_URL="$(DATABASE_URL)" MIGRATIONS_DIR=migrations go run ./cmd/migrate version
 
-## seed: dev-only fixture data (psql)
+## seed: dev-only fixture data (via the postgres container; no host psql needed)
 seed:
-	psql "$(DATABASE_URL)" -f backend/migrations/seeds/dev.sql
+	docker compose -f deploy/docker-compose.yml exec -T postgres psql -U $${POSTGRES_USER:-golearn} -d $${POSTGRES_DB:-golearn} < backend/migrations/seeds/dev.sql
 
 ## sqlc: generate typed repositories from queries/*.sql
 sqlc:

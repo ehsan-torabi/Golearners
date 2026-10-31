@@ -58,16 +58,16 @@ func jsonMarshal(v any) (b []byte, err error) { return json.Marshal(v) }
 
 // PostInput is the admin payload; slug optional (derived from title).
 type PostInput struct {
-	Title           string
-	Slug            string
-	Excerpt         string
-	BodyHTML        string
-	CoverMediaID    *uuid.UUID
-	CategoryID      *uuid.UUID
-	MetaTitle       *string
-	MetaDescription *string
-	TagTitles       []string
-	ReadingMinutes  int
+	Title           string     `json:"title"`
+	Slug            string     `json:"slug"`
+	Excerpt         string     `json:"excerpt"`
+	BodyHTML        string     `json:"body_html"`
+	CoverMediaID    *uuid.UUID `json:"cover_media_id"`
+	CategoryID      *uuid.UUID `json:"category_id"`
+	MetaTitle       *string    `json:"meta_title"`
+	MetaDescription *string    `json:"meta_description"`
+	TagTitles       []string   `json:"tag_titles"`
+	ReadingMinutes  int        `json:"reading_minutes"`
 }
 
 func (s *Service) validatePost(in *PostInput) error {
