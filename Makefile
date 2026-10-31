@@ -14,6 +14,14 @@ infra:
 dev:
 	set -a; . ./.env; set +a; cd backend && go run ./cmd/api
 
+## worker: background jobs (media ingest, order expiry, payment reconcile)
+worker:
+	set -a; . ./.env; set +a; cd backend && go run ./cmd/worker
+
+## mockgateway: fake payment gateway for dev/tests (never expose publicly)
+mockgateway:
+	set -a; . ./.env; set +a; cd backend && go run ./cmd/mockgateway
+
 ## migrations (bundled golang-migrate; no external CLI needed)
 migrate-up:
 	cd backend && DATABASE_URL="$(DATABASE_URL)" MIGRATIONS_DIR=migrations go run ./cmd/migrate up
