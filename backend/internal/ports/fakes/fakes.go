@@ -41,7 +41,7 @@ func (f *UserRepo) Create(_ context.Context, u *identity.User) error {
 	}
 	clone := *u
 	f.byID[u.ID] = &clone
-	f.roles[u.ID] = []identity.Role{identity.RoleLearner}
+	// NOTE: no implicit learner role — identity service grants it (single source of truth)
 	return nil
 }
 
