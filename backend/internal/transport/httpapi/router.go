@@ -54,6 +54,10 @@ type App struct {
 	Lessons      ports.LessonRepo
 	Categories   ports.CategoryRepo
 	Orders       ports.OrderRepo
+	Analytics    ports.AnalyticsRepo
+	SettingsRepo ports.SettingsRepo
+	UserAdmin    ports.UserAdminRepo
+	Coupons      ports.CouponRepo
 	Attachments  ports.AttachmentRepo
 	Entitlements ports.EntitlementRepo
 	StoragePort  ports.Storage
@@ -175,6 +179,16 @@ func NewRouter(a *App) http.Handler {
 			r.Post("/admin/messages/{id}/status", a.handleAdminMessageStatus)
 			r.Post("/admin/reviews/{id}/moderate", a.handleAdminReviewModerate)
 			r.Get("/admin/audit-logs", a.handleAdminAuditLogs)
+			r.Get("/admin/analytics/summary", a.handleAnalyticsSummary)
+			r.Get("/admin/analytics/courses", a.handleAnalyticsCourses)
+			r.Get("/admin/settings", a.handleAdminSettings)
+			r.Patch("/admin/settings", a.handleAdminSettingsPatch)
+			r.Get("/admin/users", a.handleAdminUsers)
+			r.Patch("/admin/users/{id}", a.handleAdminUserPatch)
+			r.Get("/admin/coupons", a.handleAdminCouponList)
+			r.Post("/admin/coupons", a.handleAdminCouponCreate)
+			r.Patch("/admin/coupons/{id}", a.handleAdminCouponUpdate)
+			r.Delete("/admin/coupons/{id}", a.handleAdminCouponDelete)
 			r.Get("/admin/orders", a.handleAdminOrders)
 			r.Get("/admin/orders/{id}", a.handleAdminOrder)
 			r.Post("/admin/orders/{id}/refund", a.handleAdminOrderRefund)
