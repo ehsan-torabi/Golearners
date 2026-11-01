@@ -113,8 +113,8 @@ export const LEVEL_FA: Record<CourseSummary["level"], string> = {
   advanced: "پیشرفته",
 };
 
-export const LEVEL_COLORS: Record<CourseSummary["level"], string> = {
-  beginner: "bg-success/15 text-success",
-  intermediate: "bg-warning/15 text-warning",
-  advanced: "bg-destructive/15 text-destructive",
+export const LEVEL_COLORS: Record<CourseSummary["level"], "success" | "warning" | "destructive"> = {
+  beginner: "success",
+  intermediate: "warning",
+  advanced: "destructive",
 };

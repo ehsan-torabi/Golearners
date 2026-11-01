@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import type { Metadata, Viewport } from "next";
+import { SiteHeader, type NavItem } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,58 +10,33 @@ export const metadata: Metadata = {
   openGraph: { locale: "fa_IR", siteName: "گوLearn", type: "website" },
 };
 
-const nav = [
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f9f5ec" },
+    { media: "(prefers-color-scheme: dark)", color: "#151b24" },
+  ],
+};
+
+const nav: NavItem[] = [
   { href: "/courses", label: "دوره‌ها" },
   { href: "/blog", label: "وبلاگ" },
   { href: "/instructor", label: "درباره مدرس" },
   { href: "/contact", label: "تماس" },
 ];
 
+/* runs before first paint: stored theme wins, else system preference, else light */
+const themeInit = `(function(){try{var t=localStorage.getItem("gl-theme");if(t!=="dark"&&t!=="light"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="light";}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fa" dir="rtl">
+    <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
-        {/* display font (Noto Kufi Arabic) — weights only used for headings */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@600&display=swap"
-          rel="stylesheet"
-        />
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body className="min-h-dvh antialiased">
-        <header className="glass sticky top-0 z-40 border-x-0 border-t-0">
-          <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
-            <Link href="/" className="font-display text-lg text-foreground">
-              گو<span className="text-primary">Learn</span>
-            </Link>
-            <nav className="ms-4 flex flex-1 items-center gap-1 text-sm" aria-label="ناوبری اصلی">
-              {nav.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-control px-3 py-2 text-muted-foreground transition-colors duration-(--motion) ease-motion hover:bg-muted hover:text-foreground"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-            <Link
-              href="/dashboard"
-              className="rounded-control border-line bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-control transition-transform duration-(--motion) ease-motion active:[transform:var(--press)]"
-            >
-              ورود / داشبورد
-            </Link>
-          </div>
-        </header>
-        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-        <footer className="mx-auto max-w-6xl px-4 py-10 text-sm text-muted-foreground">
-          <div className="glass rounded-surface p-6">
-            <p className="font-medium text-foreground">گوLearn — آموزش برنامه‌نویسی به فارسی</p>
-            <p className="mt-2">تمام حقوق محفوظ است. پشتیبانی: {""}
-              <span dir="ltr">support@golearn.ir</span>
-            </p>
-          </div>
-        </footer>
+        <SiteHeader nav={nav} />
+        <main className="mx-auto w-full max-w-6xl px-4 py-10">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );
