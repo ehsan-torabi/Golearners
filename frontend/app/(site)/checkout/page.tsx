@@ -3,7 +3,7 @@
 import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
@@ -20,6 +20,9 @@ function CheckoutInner() {
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [paying, setPaying] = React.useState<string | null>(null);
+  const [owned, setOwned] = React.useState(false);
+  const [guest, setGuest] = React.useState(false);
+  const [courseTitle, setCourseTitle] = React.useState("");
 
   const createOrder = React.useCallback(async () => {
     if (!slug) return;
@@ -27,15 +30,29 @@ function CheckoutInner() {
     setBusy(true);
     try {
       // single-course lookup (the old page fetched 50 courses to find one)
-      const detail = await api<{ course: { id: string; title: string } }>(
+      const detail = await api<{ course: { id: string; title: string }; owned_by_viewer: boolean }>(
         `/courses/${encodeURIComponent(slug)}`,
       );
+      setCourseTitle(detail.course.title);
+      if (detail.owned_by_viewer) {
+        // already bought: never create a second order
+        setOwned(true);
+        return;
+      }
       const o = await api<Order>("/checkout", {
         method: "POST",
         body: JSON.stringify({ course_id: detail.course.id, coupon_code: coupon || undefined }),
       });
       setOrder(o);
     } catch (err) {
+      if (err instanceof ApiError && err.code === "ALREADY_OWNED") {
+        setOwned(true);
+        return;
+      }
+      if (err instanceof ApiError && err.status === 401) {
+        setGuest(true);
+        return;
+      }
       setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
     } finally {
       setBusy(false);
@@ -74,6 +91,43 @@ function CheckoutInner() {
   return (
     <div className="mx-auto max-w-md space-y-5">
       <h1 className="font-semibold text-3xl">تسویه حساب</h1>
+      {guest && (
+        <Card className="p-8 text-center">
+          <h2 className="font-semibold text-2xl text-foreground">برای خرید ابتدا وارد شو</h2>
+          <p className="mt-2 text-sm leading-7 text-muted-foreground">
+            پرداخت و دسترسی به درس‌ها به حساب کاربری شما گره خورده است.
+          </p>
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <ButtonLink href={`/login?next=${encodeURIComponent(`/checkout?course=${slug}`)}`} size="lg">
+              ورود به حساب
+            </ButtonLink>
+            <ButtonLink href="/courses" size="lg" variant="outline">
+              بازگشت به دوره‌ها
+            </ButtonLink>
+          </div>
+        </Card>
+      )}
+
+      {owned && (
+        <Card className="p-8 text-center">
+          <h2 className="font-semibold text-2xl text-foreground">این دوره را خریده‌اید</h2>
+          <p className="mt-2 text-sm leading-7 text-muted-foreground">
+            {courseTitle
+              ? `«${courseTitle}» در دوره‌های شماست و دسترسی‌تان به همه درس‌ها باز است.`
+              : "این دوره در دوره‌های شماست و دسترسی‌تان به همه درس‌ها باز است."}
+          </p>
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <ButtonLink href={`/dashboard/courses/${encodeURIComponent(slug)}`} size="lg">
+              ادامه یادگیری
+            </ButtonLink>
+            <ButtonLink href="/courses" size="lg" variant="outline">
+              بازگشت به دوره‌ها
+            </ButtonLink>
+          </div>
+        </Card>
+      )}
+
+      {!owned && !guest && (
       <Card className="p-8">
         {order ? (
           <div className="space-y-3 text-sm">
@@ -135,6 +189,7 @@ function CheckoutInner() {
           <p className="text-center text-xs text-muted-foreground">درگاه آزمایشی فقط برای تست نصب است.</p>
         </div>
       </Card>
+      )}
     </div>
   );
 }

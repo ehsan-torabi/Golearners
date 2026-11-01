@@ -48,6 +48,23 @@ async function detail(slug: string): Promise<Detail | null> {
   }
 }
 
+/** the same detail, but with the viewer's cookie so owned_by_viewer is real */
+async function detailForViewer(slug: string): Promise<Detail | null> {
+  const jar = await cookies();
+  const access = jar.get("gl_at")?.value ?? "";
+  if (!access) return detail(slug);
+  try {
+    const res = await fetch(
+      `${process.env.API_INTERNAL ?? "http://localhost:8080"}/api/v1/courses/${encodeURIComponent(slug)}`,
+      { headers: { Cookie: `gl_at=${access}` }, cache: "no-store" },
+    );
+    if (!res.ok) return null;
+    return (await res.json()) as Detail;
+  } catch {
+    return null;
+  }
+}
+
 /** lesson progress for a buyer: completed, accessible and the playback position */
 async function ownerCurriculum(slug: string): Promise<OwnerLesson[] | null> {
   const jar = await cookies();
@@ -87,7 +104,7 @@ function formatClock(seconds: number): string {
 
 export default async function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const d = await detail(decodeURIComponent(slug));
+  const d = await detailForViewer(decodeURIComponent(slug));
   if (!d) notFound();
 
   const jsonLd = {

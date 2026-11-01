@@ -100,6 +100,20 @@ export default async function DashboardPage() {
         </dl>
       </Card>
 
+      {me.roles?.includes("admin") && (
+        <Card className="flex flex-wrap items-center justify-between gap-3 border-ink p-5">
+          <div>
+            <p className="text-sm font-medium text-foreground">پنل مدیریت در دسترس است</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              دوره‌ها، سفارش‌ها، کاربران و محتوای سایت را از کنسول مدیریت ببین.
+            </p>
+          </div>
+          <ButtonLink href="/admin" size="sm">
+            رفتن به مدیریت
+          </ButtonLink>
+        </Card>
+      )}
+
       <section aria-labelledby="my-courses">
         <div className="mb-4 flex items-end justify-between gap-4">
           <h2 id="my-courses" className="text-xl leading-7 text-foreground">
