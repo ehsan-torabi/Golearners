@@ -29,7 +29,9 @@ func setSessionCookies(w http.ResponseWriter, cfg config.Config, s *identity.Ses
 		HttpOnly: true, Secure: secure, SameSite: http.SameSiteLaxMode,
 	})
 	http.SetCookie(w, &http.Cookie{
-		Name: cookieCSRF, Value: s.CSRFToken, Path: "/api/v1",
+		// CSRF cookie must be readable by document.cookie on every page that
+		// sends client-side mutations (/checkout, /admin, ...), not just /api/v1.
+		Name: cookieCSRF, Value: s.CSRFToken, Path: "/",
 		HttpOnly: false, Secure: secure, SameSite: http.SameSiteLaxMode,
 	})
 }
@@ -38,5 +40,7 @@ func clearSessionCookies(w http.ResponseWriter, cfg config.Config) {
 	secure := cfg.Env == "production"
 	http.SetCookie(w, &http.Cookie{Name: cookieAccess, Value: "", Path: "/api/v1", MaxAge: -1, HttpOnly: true, Secure: secure, SameSite: http.SameSiteLaxMode})
 	http.SetCookie(w, &http.Cookie{Name: cookieRefresh, Value: "", Path: "/api/v1/auth", MaxAge: -1, HttpOnly: true, Secure: secure, SameSite: http.SameSiteLaxMode})
+	http.SetCookie(w, &http.Cookie{Name: cookieCSRF, Value: "", Path: "/", MaxAge: -1, Secure: secure, SameSite: http.SameSiteLaxMode})
+	// also clear the old /api/v1-scoped value from sessions issued before the path fix
 	http.SetCookie(w, &http.Cookie{Name: cookieCSRF, Value: "", Path: "/api/v1", MaxAge: -1, Secure: secure, SameSite: http.SameSiteLaxMode})
 }

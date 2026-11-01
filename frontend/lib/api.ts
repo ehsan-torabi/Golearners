@@ -99,7 +99,7 @@ export interface Payment {
   card_masked: string | null;
 }
 
-/** Amount in toman (Rial/10) — lives here to keep one formatting story. */
+/** Amount in toman (Rial/10), lives here to keep one formatting story. */
 export function formatTomanFromRial(rial: number): string {
   const FA_DIGITS = ["۰","۱","۲","۳","۴","۵","۶","۷","۸","۹"];
   const grouped = Math.round(rial / 10).toLocaleString("en-US").replace(/,/g, "٬");

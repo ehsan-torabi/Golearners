@@ -66,6 +66,11 @@ export default function RegisterPage() {
           <OtpField onComplete={verify} disabled={busy} />
         </div>
         {error && <Alert className="mt-4">{error}</Alert>}
+        {process.env.NODE_ENV !== "production" && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            در حالت توسعه کد پیامک در لاگ سرور چاپ می‌شود.
+          </p>
+        )}
       </Card>
     );
   }

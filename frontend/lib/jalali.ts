@@ -1,4 +1,4 @@
-/** Jalali (شمسی) calendar formatting — Borkowski algorithm, dependency-free. */
+/** Jalali (شمسی) calendar formatting, Borkowski algorithm, dependency-free. */
 export type JalaliDate = { jy: number; jm: number; jd: number };
 
 const div = (a: number, b: number) => Math.trunc(a / b);

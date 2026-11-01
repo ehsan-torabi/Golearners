@@ -13,16 +13,29 @@ import { cn, fa } from "@/lib/utils";
 
 type Mode = "password" | "otp";
 type Step = "phone" | "code";
+type OtpPurpose = "login" | "verify";
 
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = React.useState<Mode>("password");
   const [step, setStep] = React.useState<Step>("phone");
+  /* unverified accounts cannot log in until the mobile is confirmed;
+     MOBILE_NOT_VERIFIED switches this to purpose=verify automatically */
+  const [otpPurpose, setOtpPurpose] = React.useState<OtpPurpose>("login");
   const [mobile, setMobile] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [resent, setResent] = React.useState(0);
+
+  async function requestOtp(purpose: OtpPurpose) {
+    await api("/auth/otp/request", {
+      method: "POST",
+      body: JSON.stringify({ mobile, purpose }),
+    });
+    setOtpPurpose(purpose);
+    setStep("code");
+  }
 
   async function submitPhone(e: React.FormEvent) {
     e.preventDefault();
@@ -30,17 +43,22 @@ export default function LoginPage() {
     setBusy(true);
     try {
       if (mode === "otp") {
-        await api("/auth/otp/request", {
-          method: "POST",
-          body: JSON.stringify({ mobile, purpose: "login" }),
-        });
-        setStep("code");
+        await requestOtp(otpPurpose);
       } else {
         await api("/auth/login", { method: "POST", body: JSON.stringify({ mobile, password }) });
         router.push("/dashboard");
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
+      if (err instanceof ApiError && err.code === "MOBILE_NOT_VERIFIED") {
+        try {
+          await requestOtp("verify");
+          setError("");
+        } catch {
+          setError("ارسال کد تأیید ممکن نشد؛ کمی بعد تلاش کن.");
+        }
+      } else {
+        setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
+      }
     } finally {
       setBusy(false);
     }
@@ -52,7 +70,7 @@ export default function LoginPage() {
     try {
       await api("/auth/otp/verify", {
         method: "POST",
-        body: JSON.stringify({ mobile, code, purpose: "login" }),
+        body: JSON.stringify({ mobile, code, purpose: otpPurpose }),
       });
       router.push("/dashboard");
     } catch (err) {
@@ -65,7 +83,9 @@ export default function LoginPage() {
   if (step === "code") {
     return (
       <Card className="reveal mx-auto max-w-sm p-8 text-center">
-        <h1 className="font-display text-2xl">کد تأیید را وارد کن</h1>
+        <h1 className="font-display text-2xl">
+          {otpPurpose === "verify" ? "تأیید شماره و ورود" : "کد تأیید را وارد کن"}
+        </h1>
         <p className="mt-2 text-sm leading-7 text-muted-foreground">
           کد ۶ رقمی به شماره <span dir="ltr">{fa(mobile)}</span> پیامک شد.
         </p>
@@ -73,13 +93,21 @@ export default function LoginPage() {
           <OtpField onComplete={submitCode} disabled={busy} />
         </div>
         {error && <Alert className="mt-4">{error}</Alert>}
+        {process.env.NODE_ENV !== "production" && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            در حالت توسعه کد پیامک در لاگ سرور چاپ می‌شود.
+          </p>
+        )}
         <button
           type="button"
           className="mt-5 text-xs text-muted-foreground underline underline-offset-4 disabled:opacity-50"
           disabled={resent > 0}
           onClick={async () => {
             try {
-              await api("/auth/otp/request", { method: "POST", body: JSON.stringify({ mobile, purpose: "login" }) });
+              await api("/auth/otp/request", {
+                method: "POST",
+                body: JSON.stringify({ mobile, purpose: otpPurpose }),
+              });
               setResent(60);
               const t = setInterval(() => {
                 setResent((s) => {

@@ -3,7 +3,7 @@
 /* dark mode is an explicit attribute on <html>, set by the theme toggle */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* Vazirmatn (body) + Lalezar (display) — self-hosted, public/fonts */
+/* Vazirmatn (body) + Lalezar (display), self-hosted, public/fonts */
 @font-face {
   font-family: "Vazirmatn";
   src: url("/fonts/Vazirmatn-Regular.woff2") format("woff2");

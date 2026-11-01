@@ -83,11 +83,11 @@ func (s *Service) Categories(ctx context.Context) ([]*course.Category, error) {
 
 // InstructorProfile is the public about-the-teacher payload.
 type InstructorProfile struct {
-	UserID        uuid.UUID
-	Headline      string
-	BioHTML       string
-	AvatarMediaID *uuid.UUID
-	Socials       map[string]string
+	UserID        uuid.UUID         `json:"user_id"`
+	Headline      string            `json:"headline"`
+	BioHTML       string            `json:"bio_html"`
+	AvatarMediaID *uuid.UUID        `json:"avatar_media_id"`
+	Socials       map[string]string `json:"socials"`
 }
 
 func (s *Service) InstructorProfile(ctx context.Context) (*InstructorProfile, error) {
