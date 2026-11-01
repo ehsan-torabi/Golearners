@@ -1,0 +1,13 @@
+{"type":"receive","time":1793577296956.355,"opcode":1,"data":"{\"action\":\"sync\",\"hash\":\"a54401e07f6196a7\",\"errors\":[],\"warnings\":[],\"versionInfo\":{\"staleness\":\"stale-major\",\"expected\":\"16.4.3\",\"installed\":\"15.5.28\"},\"debug\":{},\"devIndicator\":{\"disabledUntil\":0},\"devToolsConfig\":{}}"}
+{"type":"send","time":1793577296957.073,"opcode":1,"data":"{\"event\":\"client-success\",\"clientId\":1793577296900}"}
+{"type":"receive","time":1793577296966.959,"opcode":1,"data":"{\"action\":\"isrManifest\",\"data\":{\"/login\":true}}"}
+{"type":"receive","time":1793577297850.747,"opcode":1,"data":"{\"action\":\"building\"}"}
+{"type":"receive","time":1793577299343.2861,"opcode":1,"data":"{\"action\":\"serverComponentChanges\",\"hash\":\"e88cecf057fba66a78c1d461140a5055633457081244afec\"}"}
+{"type":"send","time":1793577299343.4731,"opcode":1,"data":"{\"event\":\"server-component-reload-page\",\"clientId\":1793577296900,\"hash\":\"e88cecf057fba66a78c1d461140a5055633457081244afec\"}"}
+{"type":"receive","time":1793577299347.402,"opcode":1,"data":"{\"action\":\"built\",\"hash\":\"e88cecf057fba66a\",\"warnings\":[],\"errors\":[]}"}
+{"type":"send","time":1793577299347.5051,"opcode":1,"data":"{\"event\":\"client-success\",\"clientId\":1793577296900}"}
+{"type":"send","time":1793577299385.798,"opcode":1,"data":"{\"event\":\"ping\",\"tree\":[\"\",{\"children\":[\"(site)\",{\"children\":[\"(auth)\",{\"children\":[\"login\",{\"children\":[\"__PAGE__\",{},\"/login\",\"refresh\"]}]}]}]},null,null,true],\"appDirRoute\":true}"}
+{"type":"receive","time":1793577299478.564,"opcode":1,"data":"{\"action\":\"isrManifest\",\"data\":{\"/login\":true}}"}
+{"type":"send","time":1793577299553.861,"opcode":1,"data":"{\"event\":\"client-hmr-latency\",\"startTime\":1793577297851,\"endTime\":1793577299553,\"page\":\"/login\",\"updatedModules\":[],\"isPageHidden\":false}"}
+{"type":"receive","time":1793577299619.319,"opcode":1,"data":"{\"action\":\"isrManifest\",\"data\":{\"/login\":true}}"}
+{"type":"receive","time":1793577300090.611,"opcode":1,"data":"{\"action\":\"building\"}"}

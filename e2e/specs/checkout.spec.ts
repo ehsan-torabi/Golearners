@@ -1,16 +1,16 @@
 import {
-  ADMIN_STATE,
   API_URL,
   COUPON_CODE,
+  credentials,
   createPublishedCourse,
   expect,
   expectNoClientErrors,
-  LEARNER_STATE,
+  sessionCookies,
   test,
 } from "../lib/helpers";
 
 test.describe("checkout and payment", () => {
-  test.use({ storageState: LEARNER_STATE });
+  test.use({ sessionRole: "learner" });
 
   test("a guest is asked to sign in before paying", async ({ page, diag }) => {
     await page.context().clearCookies();
@@ -26,11 +26,12 @@ test.describe("checkout and payment", () => {
     diag,
     playwright,
   }) => {
-    const adminCtx = await playwright.request.newContext({
-      baseURL: API_URL,
-      storageState: ADMIN_STATE,
-    });
-    const course = await createPublishedCourse(adminCtx, `دورهٔ خرید تست ${Date.now()}`);
+    const adminCtx = await playwright.request.newContext({ baseURL: API_URL });
+    const course = await createPublishedCourse(
+      adminCtx,
+      `دورهٔ خرید تست ${Date.now()}`,
+      await sessionCookies(playwright, "admin"),
+    );
     await adminCtx.dispose();
 
     await page.goto(`/checkout?course=${course.slug}`);
@@ -56,11 +57,13 @@ test.describe("checkout and payment", () => {
   });
 
   test("buying the same course twice is refused", async ({ page, diag, playwright }) => {
-    const adminCtx = await playwright.request.newContext({
-      baseURL: API_URL,
-      storageState: ADMIN_STATE,
-    });
-    const course = await createPublishedCourse(adminCtx, `دورهٔ تکراری تست ${Date.now()}`);
+    const adminCtx = await playwright.request.newContext({ baseURL: API_URL });
+    await adminCtx.storageState;
+    const course = await createPublishedCourse(
+      adminCtx,
+      `دورهٔ تکراری تست ${Date.now()}`,
+      await sessionCookies(playwright, "admin"),
+    );
     await adminCtx.dispose();
 
     await page.goto(`/checkout?course=${course.slug}`);
@@ -82,11 +85,13 @@ test.describe("checkout and payment", () => {
     diag,
     playwright,
   }) => {
-    const adminCtx = await playwright.request.newContext({
-      baseURL: API_URL,
-      storageState: ADMIN_STATE,
-    });
-    const course = await createPublishedCourse(adminCtx, `دورهٔ لغوشده تست ${Date.now()}`);
+    const adminCtx = await playwright.request.newContext({ baseURL: API_URL });
+    await adminCtx.storageState;
+    const course = await createPublishedCourse(
+      adminCtx,
+      `دورهٔ لغوشده تست ${Date.now()}`,
+      await sessionCookies(playwright, "admin"),
+    );
     await adminCtx.dispose();
 
     await page.goto(`/checkout?course=${course.slug}`);
@@ -115,11 +120,13 @@ test.describe("checkout and payment", () => {
   });
 
   test("a coupon lowers the payable amount", async ({ page, diag, playwright }) => {
-    const adminCtx = await playwright.request.newContext({
-      baseURL: API_URL,
-      storageState: ADMIN_STATE,
-    });
-    const course = await createPublishedCourse(adminCtx, `دورهٔ تخفیف تست ${Date.now()}`);
+    const adminCtx = await playwright.request.newContext({ baseURL: API_URL });
+    await adminCtx.storageState;
+    const course = await createPublishedCourse(
+      adminCtx,
+      `دورهٔ تخفیف تست ${Date.now()}`,
+      await sessionCookies(playwright, "admin"),
+    );
     await adminCtx.dispose();
 
     await page.goto(`/checkout?course=${course.slug}`);
@@ -136,6 +143,18 @@ test.describe("checkout and payment", () => {
     await page.goto("/checkout");
 
     await expect(page.getByText("دوره‌ای انتخاب نشده است")).toBeVisible();
+    expectNoClientErrors(diag);
+  });
+
+  test("the learner can sign in again after the session is lost", async ({ page, diag }) => {
+    await page.context().clearCookies();
+    await page.goto("/login");
+    await page.getByLabel("شماره موبایل").fill(credentials().learner.mobile);
+    await page.getByLabel("رمز عبور").fill(credentials().learner.password);
+    await page.getByRole("button", { name: "ورود", exact: true }).click();
+    await page.waitForURL("**/dashboard", { timeout: 20000 });
+
+    await expect(page.getByRole("heading", { name: "دوره‌های من" })).toBeVisible();
     expectNoClientErrors(diag);
   });
 });

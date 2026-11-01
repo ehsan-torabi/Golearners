@@ -1,4 +1,11 @@
-import { expect, test as base, type APIRequestContext, type Page } from "@playwright/test";
+import {
+  expect,
+  test as base,
+  type APIRequestContext,
+  type Cookie,
+  type Page,
+  type Playwright,
+} from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -6,17 +13,36 @@ export const API_URL = process.env.E2E_API_URL ?? "http://localhost:8080";
 export const WEB_URL = process.env.E2E_WEB_URL ?? "http://localhost:3000";
 export const API_LOG = process.env.E2E_API_LOG ?? "/tmp/golearn-api.log";
 
-export const OWNER = { mobile: "09121234567", password: "GoLearn2026!" };
-export const LEARNER = { mobile: "09190000001", password: "Learner2026!" };
+/** Credentials the global setup makes sure exist; the file is written by it. */
+interface Credentials {
+  learner: { mobile: string; password: string };
+  admin: { mobile: string; password: string };
+}
+const DEFAULT_CREDENTIALS: Credentials = {
+  learner: { mobile: "09190000001", password: "Learner2026!" },
+  admin: { mobile: "09121234567", password: "GoLearn2026!" },
+};
+const CREDENTIAL_FILE = path.join(__dirname, "..", "report", "state", "credentials.json");
+
+/** Reads the credentials the global setup prepared (falls back to the defaults). */
+export function credentials(): Credentials {
+  if (!fs.existsSync(CREDENTIAL_FILE)) return DEFAULT_CREDENTIALS;
+  try {
+    return {
+      ...DEFAULT_CREDENTIALS,
+      ...(JSON.parse(fs.readFileSync(CREDENTIAL_FILE, "utf8")) as Credentials),
+    };
+  } catch {
+    return DEFAULT_CREDENTIALS;
+  }
+}
 
 /** A published course that exists in every environment (created by the seed/admin flow). */
 export const COURSE_SLUG = process.env.E2E_COURSE_SLUG ?? "go-from-zero";
 /** Coupon created by the global setup so the checkout spec can test discounts. */
 export const COUPON_CODE = process.env.E2E_COUPON_CODE ?? "E2E10";
 
-/** Playwright storage states written by the global setup. */
-export const LEARNER_STATE = path.join(__dirname, "..", "report", "state", "learner.json");
-export const ADMIN_STATE = path.join(__dirname, "..", "report", "state", "admin.json");
+export type Role = "guest" | "learner" | "admin";
 
 export interface Diagnostics {
   consoleErrors: string[];
@@ -27,23 +53,59 @@ export interface Diagnostics {
   apiCalls: string[];
 }
 
-const diagnostics = new Map<string, Diagnostics>();
+/**
+ * Sessions live 15 minutes, so the suite logs in again when the cached
+ * access token is about to expire instead of reusing a stale storage state.
+ */
+const sessionCache = new Map<Role, { cookies: Cookie[]; exp: number }>();
 
-export function diagnosticsOf(testId: string): Diagnostics {
-  return (
-    diagnostics.get(testId) ?? {
-      consoleErrors: [],
-      pageErrors: [],
-      failedRequests: [],
-      serverErrors: [],
-      clientErrors: [],
-      apiCalls: [],
+export async function sessionCookies(
+  playwright: Playwright,
+  role: Exclude<Role, "guest">,
+): Promise<Cookie[]> {
+  const cached = sessionCache.get(role);
+  if (cached && cached.exp - 60 > Date.now() / 1000) return cached.cookies;
+
+  const api = await playwright.request.newContext({ baseURL: API_URL });
+  try {
+    const creds = role === "admin" ? credentials().admin : credentials().learner;
+    const res = await api.post("/api/v1/auth/login", {
+      data: { mobile: creds.mobile, password: creds.password },
+    });
+    if (!res.ok()) {
+      throw new Error(`login as ${role} failed: ${res.status()} ${await res.text()}`);
     }
-  );
+    const state = await api.storageState();
+    const access = state.cookies.find((c) => c.name === "gl_at");
+    sessionCache.set(role, { cookies: state.cookies, exp: access ? jwtExp(access.value) : 0 });
+    return state.cookies;
+  } finally {
+    await api.dispose();
+  }
+}
+
+/** Reads the expiry out of a JWT without verifying it. */
+function jwtExp(token: string): number {
+  try {
+    const payload = token.split(".")[1];
+    return Number(JSON.parse(Buffer.from(payload, "base64url").toString()).exp) || 0;
+  } catch {
+    return 0;
+  }
 }
 
 /** Collects console errors, page exceptions and failed/4xx/5xx requests per test. */
-export const test = base.extend<{ diag: Diagnostics }>({
+export const test = base.extend<{ sessionRole: Role; session: void; diag: Diagnostics }>({
+  sessionRole: ["guest", { option: true }],
+  session: [
+    async ({ context, playwright, sessionRole }, use) => {
+      if (sessionRole !== "guest") {
+        await context.addCookies(await sessionCookies(playwright, sessionRole));
+      }
+      await use(undefined);
+    },
+    { auto: true },
+  ],
   diag: async ({ page }, use, testInfo) => {
     const d: Diagnostics = {
       consoleErrors: [],
@@ -53,7 +115,6 @@ export const test = base.extend<{ diag: Diagnostics }>({
       clientErrors: [],
       apiCalls: [],
     };
-    diagnostics.set(testInfo.testId, d);
     page.on("console", (m) => {
       if (m.type() === "error") d.consoleErrors.push(m.text().slice(0, 400));
     });
@@ -134,11 +195,11 @@ export function uniqueMobile(): string {
 }
 const USED_MOBILES = new Set<string>();
 
-/** Reads the gl_csrf cookie so API mutations can pass the double-submit header. */
-export async function csrfToken(ctx: APIRequestContext): Promise<string> {
-  const state = await ctx.storageState();
-  const cookie = state.cookies.find((c) => c.name === "gl_csrf");
-  return cookie?.value ?? "";
+/** Cookie header + CSRF token so an API context can act as a signed-in user. */
+export function authHeaders(cookies: Cookie[]): Record<string, string> {
+  const csrf = cookies.find((c) => c.name === "gl_csrf")?.value ?? "";
+  const cookie = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
+  return { "X-CSRF-Token": csrf, Cookie: cookie };
 }
 
 /** Fills the six separate OTP boxes and waits for the auto-submit. */
@@ -160,8 +221,9 @@ export async function uploadMedia(
   ctx: APIRequestContext,
   filePath: string,
   mime: string,
+  cookies: Cookie[],
 ): Promise<{ id: string; storage_key: string }> {
-  const csrf = await csrfToken(ctx);
+  const csrf = authHeaders(cookies)["X-CSRF-Token"];
   const bytes = fs.readFileSync(filePath);
 
   const presign = await ctx.post(`${API_URL}/api/v1/admin/media/presign`, {
@@ -237,10 +299,10 @@ export async function loginThroughUi(page: Page, mobile: string, password: strin
 export async function createPublishedCourse(
   ctx: APIRequestContext,
   title: string,
+  cookies: Cookie[],
 ): Promise<{ id: string; slug: string }> {
-  const csrf = await csrfToken(ctx);
   const slug = `e2e-${Date.now().toString(36)}`;
-  const headers = { "X-CSRF-Token": csrf };
+  const headers = authHeaders(cookies);
 
   const course = await ctx.post(`${API_URL}/api/v1/admin/courses`, {
     headers,

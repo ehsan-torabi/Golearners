@@ -1,15 +1,21 @@
 import { expect, expectNoClientErrors, test } from "../lib/helpers";
 
 test.describe("public site", () => {
-  test("home page renders hero, course sections and FAQ", async ({ page, diag }) => {
+  test("home page renders hero, course sections and FAQ", async ({ page, diag, request }) => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { name: "برنامه‌نویسی را درست یاد بگیر" })).toBeVisible();
     await expect(page.getByRole("link", { name: "دیدن دوره‌ها" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "دوره‌های پربازدید" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "مسیر یادگیری" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "سوال‌های پرتکرار" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "دوره‌ات را انتخاب کن" })).toBeVisible();
+
+    // the FAQ block only renders when the site actually has questions
+    const faqs = await request.get("http://localhost:8080/api/v1/faqs");
+    const count = faqs.ok() ? ((await faqs.json()) as { data: unknown[] }).data?.length ?? 0 : 0;
+    const faqHeading = page.getByRole("heading", { name: "سوال‌های پرتکرار" });
+    if (count > 0) await expect(faqHeading).toBeVisible();
+    else await expect(faqHeading).toHaveCount(0);
 
     expectNoClientErrors(diag);
   });
@@ -139,10 +145,10 @@ test.describe("public site", () => {
   test("theme toggle switches the colour scheme", async ({ page, diag }) => {
     await page.goto("/");
     const html = page.locator("html");
-    const before = await html.getAttribute("class");
+    const before = await html.getAttribute("data-theme");
 
     await page.getByRole("button", { name: "تغییر تم روشن و تاریک" }).click();
-    await expect(html).not.toHaveClass(before ?? "");
+    await expect(html).not.toHaveAttribute("data-theme", before ?? "");
 
     expectNoClientErrors(diag);
   });

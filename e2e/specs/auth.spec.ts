@@ -2,7 +2,7 @@ import {
   expect,
   expectNoClientErrors,
   fillOtp,
-  LEARNER,
+  credentials,
   loginThroughUi,
   readOtpFromLog,
   test,
@@ -46,7 +46,7 @@ test.describe("authentication", () => {
     diag,
   }) => {
     await page.goto("/login");
-    await page.getByLabel("شماره موبایل").fill(LEARNER.mobile);
+    await page.getByLabel("شماره موبایل").fill(credentials().learner.mobile);
     await page.getByLabel("رمز عبور").fill("wrong-password-1");
     await page.getByRole("button", { name: "ورود", exact: true }).click();
 
@@ -57,7 +57,7 @@ test.describe("authentication", () => {
   });
 
   test("login with the correct password opens the learner dashboard", async ({ page, diag }) => {
-    await loginThroughUi(page, LEARNER.mobile, LEARNER.password);
+    await loginThroughUi(page, credentials().learner.mobile, credentials().learner.password);
 
     await expect(page.getByRole("heading", { name: "دانشجو تست" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "دوره‌های من" })).toBeVisible();
@@ -67,11 +67,11 @@ test.describe("authentication", () => {
   test("login with an SMS code opens the learner dashboard", async ({ page, diag }) => {
     await page.goto("/login");
     await page.getByRole("button", { name: "کد پیامکی" }).click();
-    await page.getByLabel("شماره موبایل").fill(LEARNER.mobile);
+    await page.getByLabel("شماره موبایل").fill(credentials().learner.mobile);
     await page.getByRole("button", { name: "ارسال کد تأیید" }).click();
 
     await expect(page.getByRole("heading", { name: "کد تأیید را وارد کن" })).toBeVisible();
-    await fillOtp(page, readOtpFromLog(LEARNER.mobile));
+    await fillOtp(page, readOtpFromLog(credentials().learner.mobile));
     await page.waitForURL("**/dashboard", { timeout: 20000 });
 
     await expect(page.getByRole("heading", { name: "دانشجو تست" })).toBeVisible();
@@ -79,7 +79,7 @@ test.describe("authentication", () => {
   });
 
   test("logout clears the session and returns to the login page", async ({ page, diag }) => {
-    await loginThroughUi(page, LEARNER.mobile, LEARNER.password);
+    await loginThroughUi(page, credentials().learner.mobile, credentials().learner.password);
 
     await page.getByRole("button", { name: "خروج از حساب" }).click();
     await page.waitForURL("**/login", { timeout: 20000 });
@@ -97,7 +97,7 @@ test.describe("authentication", () => {
   });
 
   test("a signed-in learner sees the dashboard entry in the navbar", async ({ page, diag }) => {
-    await loginThroughUi(page, LEARNER.mobile, LEARNER.password);
+    await loginThroughUi(page, credentials().learner.mobile, credentials().learner.password);
 
     const nav = page.getByRole("navigation", { name: "ناوبری اصلی" });
     await expect(nav.getByRole("link", { name: "داشبورد" })).toBeVisible();

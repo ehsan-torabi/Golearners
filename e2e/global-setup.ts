@@ -1,81 +1,65 @@
 import { request, type APIRequestContext } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
-import { API_URL, COUPON_CODE, LEARNER, OWNER, readOtpFromLog } from "./lib/helpers";
+import { API_URL, COUPON_CODE, credentials, readOtpFromLog } from "./lib/helpers";
+
+const STATE_DIR = path.join(process.cwd(), "report", "state");
+const CREDENTIAL_FILE = path.join(STATE_DIR, "credentials.json");
 
 /**
  * Prepares the fixtures every spec relies on:
- *   - a learner account (register + OTP verify, or log in when it already exists)
+ *   - a learner account (log in when it exists, otherwise register + verify)
  *   - the owner account
  *   - a coupon so the checkout spec can assert a discount
- * Session cookies are written as Playwright storage states.
  */
 export default async function globalSetup(): Promise<void> {
-  const stateDir = path.join(process.cwd(), "report", "state");
-  fs.mkdirSync(stateDir, { recursive: true });
+  fs.mkdirSync(STATE_DIR, { recursive: true });
+
+  const creds = { ...credentials() };
 
   const learnerCtx = await request.newContext({ baseURL: API_URL });
   try {
-    await ensureLearner(learnerCtx);
-    await fs.promises.writeFile(
-      path.join(stateDir, "learner.json"),
-      JSON.stringify(await learnerCtx.storageState(), null, 2),
-    );
-
-    const adminCtx = await request.newContext({ baseURL: API_URL });
-    try {
-      await login(adminCtx, OWNER.mobile, OWNER.password);
-      await fs.promises.writeFile(
-        path.join(stateDir, "admin.json"),
-        JSON.stringify(await adminCtx.storageState(), null, 2),
-      );
-      await ensureCoupon(adminCtx);
-    } finally {
-      await adminCtx.dispose();
+    if (!(await login(learnerCtx, creds.learner.mobile, creds.learner.password))) {
+      const mobile = `0919${String(Date.now()).slice(-8)}`;
+      const password = "Learner2026!";
+      const registered = await learnerCtx.post("/api/v1/auth/register", {
+        data: { full_name: "دانشجو تست", mobile, password },
+      });
+      if (!registered.ok()) {
+        throw new Error(
+          `cannot prepare the learner account: register failed with ${registered.status()}. ` +
+            `The register endpoint is rate limited to 10/hour per IP — clear the redis keys "rl:*" and retry.`,
+        );
+      }
+      const verified = await learnerCtx.post("/api/v1/auth/otp/verify", {
+        data: { mobile, code: readOtpFromLog(mobile), purpose: "verify" },
+      });
+      if (!verified.ok()) {
+        throw new Error(`learner OTP verify failed: ${verified.status()} ${await verified.text()}`);
+      }
+      creds.learner = { mobile, password };
     }
   } finally {
     await learnerCtx.dispose();
   }
-}
 
-async function ensureLearner(ctx: APIRequestContext): Promise<void> {
-  const registered = await ctx.post("/api/v1/auth/register", {
-    data: { full_name: "دانشجو تست", mobile: LEARNER.mobile, password: LEARNER.password },
-  });
-
-  if (registered.ok()) {
-    const code = readOtpFromLog(LEARNER.mobile);
-    const verified = await ctx.post("/api/v1/auth/otp/verify", {
-      data: { mobile: LEARNER.mobile, code, purpose: "verify" },
-    });
-    if (!verified.ok()) {
-      throw new Error(`learner OTP verify failed: ${verified.status()} ${await verified.text()}`);
+  const adminCtx = await request.newContext({ baseURL: API_URL });
+  try {
+    if (!(await login(adminCtx, creds.admin.mobile, creds.admin.password))) {
+      throw new Error(
+        `the owner account ${creds.admin.mobile} could not be logged in. ` +
+          `Bootstrap it with: cd backend && go run ./cmd/bootstrap -mobile ${creds.admin.mobile} -password '<password>' -name 'استاد'`,
+      );
     }
-    return;
+    await ensureCoupon(adminCtx);
+  } finally {
+    await adminCtx.dispose();
   }
 
-  // Already registered (or throttled): log in instead.
-  const logged = await login(ctx, LEARNER.mobile, LEARNER.password);
-  if (logged) return;
-
-  const body = await ctx.post("/api/v1/auth/otp/request", {
-    data: { mobile: LEARNER.mobile, purpose: "verify" },
-  });
-  if (!body.ok()) {
-    throw new Error(
-      `cannot prepare the learner account: register=${registered.status()} login failed. ` +
-        `The API rate limit may be exhausted — clear redis keys "rl:*" and retry.`,
-    );
-  }
-  const code = readOtpFromLog(LEARNER.mobile);
-  const verified = await ctx.post("/api/v1/auth/otp/verify", {
-    data: { mobile: LEARNER.mobile, code, purpose: "verify" },
-  });
-  if (!verified.ok()) {
-    throw new Error(`learner OTP verify failed: ${verified.status()} ${await verified.text()}`);
-  }
+  fs.writeFileSync(CREDENTIAL_FILE, JSON.stringify(creds, null, 2));
 }
 
+/** Logs in; returns false when the account exists but the mobile is unverified. */
 async function login(ctx: APIRequestContext, mobile: string, password: string): Promise<boolean> {
   const res = await ctx.post("/api/v1/auth/login", { data: { mobile, password } });
   if (res.ok()) return true;

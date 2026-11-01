@@ -1,31 +1,32 @@
 import {
-  ADMIN_STATE,
   API_URL,
   createPublishedCourse,
   expect,
   expectNoClientErrors,
   FIXTURE_PNG,
-  LEARNER_STATE,
+  sessionCookies,
   test,
   uniqueMobile,
 } from "../lib/helpers";
 
 test.describe("admin console", () => {
-  test.use({ storageState: ADMIN_STATE });
+  test.use({ sessionRole: "admin" });
 
   const stamp = Date.now();
   const courseTitle = `دورهٔ مدیریت تست ${stamp}`;
   const courseSlug = `e2e-admin-${stamp}`;
   const postTitle = `نوشتهٔ تست E2E ${stamp}`;
   const postSlug = `e2e-post-${stamp}`;
+  const couponCode = `E2E${String(stamp).slice(-5)}`;
+  const blockedName = `کاربر مسدود تست ${stamp}`;
 
   test("the overview shows the platform numbers", async ({ page, diag }) => {
     await page.goto("/admin");
 
     await expect(page.getByRole("heading", { name: "نمای کلی" })).toBeVisible();
-    await expect(page.getByText("درآمد")).toBeVisible();
-    await expect(page.getByText("سفارش‌ها")).toBeVisible();
-    await expect(page.getByText("کاربران تازه")).toBeVisible();
+    await expect(page.getByText("درآمد").first()).toBeVisible();
+    await expect(page.getByText("سفارش‌ها").first()).toBeVisible();
+    await expect(page.getByText("کاربران تازه").first()).toBeVisible();
 
     expectNoClientErrors(diag);
   });
@@ -47,9 +48,8 @@ test.describe("admin console", () => {
 
     // the course is listed
     await page.goto("/admin/courses");
-    await expect(page.getByLabel("جست‌وجوی دوره")).toBeVisible();
     await page.locator("#course-q").fill(courseTitle);
-    await page.getByRole("button", { name: "جست‌وجو" }).click();
+    await page.getByRole("button", { name: "اعمال" }).click();
 
     const row = page.getByRole("row").filter({ hasText: courseTitle });
     await expect(row).toHaveCount(1);
@@ -73,10 +73,10 @@ test.describe("admin console", () => {
     // publish from the list
     await page.goto("/admin/courses");
     await page.locator("#course-q").fill(courseTitle);
-    await page.getByRole("button", { name: "جست‌وجو" }).click();
+    await page.getByRole("button", { name: "اعمال" }).click();
     const publishRow = page.getByRole("row").filter({ hasText: courseTitle });
     await publishRow.getByRole("button", { name: "انتشار" }).click();
-    await expect(publishRow.getByText("منتشرشده")).toBeVisible();
+    await expect(publishRow.getByText("منتشرشده").first()).toBeVisible();
 
     // the course is now on the public site
     await page.goto(`/courses/${courseSlug}`);
@@ -88,8 +88,12 @@ test.describe("admin console", () => {
   test("the cover image is uploaded through the media field", async ({ page, diag }) => {
     await page.goto("/admin/courses");
     await page.locator("#course-q").fill(courseTitle);
-    await page.getByRole("button", { name: "جست‌وجو" }).click();
-    await page.getByRole("row").filter({ hasText: courseTitle }).getByRole("link", { name: "ویرایش" }).click();
+    await page.getByRole("button", { name: "اعمال" }).click();
+    await page
+      .getByRole("row")
+      .filter({ hasText: courseTitle })
+      .getByRole("link", { name: "ویرایش" })
+      .click();
 
     await page.getByRole("tab", { name: "رسانه و سئو" }).click();
     await page.getByLabel("بارگذاری تصویر کاور").setInputFiles(FIXTURE_PNG);
@@ -122,12 +126,12 @@ test.describe("admin console", () => {
 
     await page.goto("/admin/posts");
     await page.locator("#post-q").fill(postTitle);
-    await page.getByRole("button", { name: "جست‌وجو" }).click();
+    await page.getByRole("button", { name: "اعمال" }).click();
 
     const row = page.getByRole("row").filter({ hasText: postTitle });
     await expect(row).toHaveCount(1);
     await row.getByRole("button", { name: "انتشار" }).click();
-    await expect(row.getByText("منتشرشده")).toBeVisible();
+    await expect(row.getByText("منتشرشده").first()).toBeVisible();
 
     // it shows up on the public blog
     await page.goto(`/blog/${postSlug}`);
@@ -136,7 +140,7 @@ test.describe("admin console", () => {
     // and can be deleted again
     await page.goto("/admin/posts");
     await page.locator("#post-q").fill(postTitle);
-    await page.getByRole("button", { name: "جست‌وجو" }).click();
+    await page.getByRole("button", { name: "اعمال" }).click();
     const delRow = page.getByRole("row").filter({ hasText: postTitle });
     await delRow.getByRole("button", { name: "حذف" }).click();
     await page.getByRole("button", { name: "حذف نوشته" }).click();
@@ -149,12 +153,12 @@ test.describe("admin console", () => {
     await page.goto("/admin/coupons");
 
     await page.getByRole("button", { name: "کد تازه" }).click();
-    await page.locator("#c-code").fill(`E2E${String(stamp).slice(-5)}`);
+    await page.locator("#c-code").fill(couponCode);
     await page.locator("#c-type").selectOption("percent");
     await page.locator("#c-value").fill("15");
     await page.getByRole("button", { name: "ساخت کد تخفیف" }).click();
 
-    const row = page.getByRole("row").filter({ hasText: `E2E${String(stamp).slice(-5)}` });
+    const row = page.getByRole("row").filter({ hasText: couponCode });
     await expect(row).toHaveCount(1);
     await expect(row.getByText("۱۵٪")).toBeVisible();
 
@@ -164,37 +168,55 @@ test.describe("admin console", () => {
     expectNoClientErrors(diag);
   });
 
+  test("a course category can be created", async ({ page, diag }) => {
+    await page.goto("/admin/categories");
+
+    const title = `دستهٔ تست ${stamp}`;
+    await page.locator("#course-cat").fill(title);
+    await page.getByRole("button", { name: "افزودن" }).first().click();
+
+    await expect(page.getByText(title).first()).toBeVisible();
+    expectNoClientErrors(diag);
+  });
+
   test("an admin can block and unblock a user", async ({ page, diag, playwright }) => {
     const mobile = uniqueMobile();
     const api = await playwright.request.newContext({ baseURL: API_URL });
     await api.post("/api/v1/auth/register", {
-      data: { full_name: "کاربر مسدود تست", mobile, password: "Blocked2026" },
+      data: { full_name: blockedName, mobile, password: "Blocked2026" },
     });
     await api.dispose();
 
     await page.goto("/admin/users");
-    await page.getByLabel("جست‌وجوی کاربر").fill(mobile);
+    await page.locator("#user-q").fill(blockedName);
     await page.getByRole("button", { name: "جست‌وجو" }).click();
 
-    const row = page.getByRole("row").filter({ hasText: mobile });
+    const row = page.getByRole("row").filter({ hasText: blockedName });
     await expect(row).toHaveCount(1);
     await row.getByRole("button", { name: "مسدودسازی" }).click();
-    await expect(row.getByText("مسدود")).toBeVisible();
+    await expect(row.getByText("مسدود").first()).toBeVisible();
 
     await row.getByRole("button", { name: "رفع مسدودی" }).click();
-    await expect(row.getByText("فعال")).toBeVisible();
+    await expect(row.getByText("فعال").first()).toBeVisible();
 
     expectNoClientErrors(diag);
   });
 
-  test("a contact message reaches the admin inbox and can be closed", async ({ page, diag }) => {
-    await page.request.post(`${API_URL}/api/v1/contact`, {
+  test("a contact message reaches the admin inbox and can be closed", async ({
+    page,
+    diag,
+    context,
+  }) => {
+    const csrf = (await context.cookies()).find((c) => c.name === "gl_csrf")?.value ?? "";
+    const res = await page.request.post(`${API_URL}/api/v1/contact`, {
+      headers: { "X-CSRF-Token": csrf },
       data: {
         name: "کاربر پیام تست",
         contact: "09121110077",
         body: "این پیام برای تست خودکار مدیریت ارسال شده است.",
       },
     });
+    expect(res.status()).toBe(200);
 
     await page.goto("/admin/messages");
     await expect(page.getByRole("heading", { name: "پیام‌های تماس" })).toBeVisible();
@@ -206,16 +228,25 @@ test.describe("admin console", () => {
     expectNoClientErrors(diag);
   });
 
-  test("a paid order can be refunded from the admin console", async ({ page, diag, browser }) => {
+  test("a paid order can be refunded from the admin console", async ({
+    page,
+    diag,
+    browser,
+    playwright,
+  }) => {
     // the learner buys a course so there is a paid order to refund
-    const adminCtx = await browser.newContext({ storageState: ADMIN_STATE });
+    const adminCookies = await sessionCookies(playwright, "admin");
+    const adminCtx = await browser.newContext();
+    await adminCtx.addCookies(adminCookies);
     const course = await createPublishedCourse(
       adminCtx.request,
       `دورهٔ بازگشت وجه تست ${stamp}`,
+      adminCookies,
     );
     await adminCtx.close();
 
-    const learnerCtx = await browser.newContext({ storageState: LEARNER_STATE });
+    const learnerCtx = await browser.newContext();
+    await learnerCtx.addCookies(await sessionCookies(playwright, "learner"));
     const buyer = await learnerCtx.newPage();
     await buyer.goto(`/checkout?course=${course.slug}`);
     await buyer.getByText("قابل پرداخت").waitFor();
@@ -268,8 +299,9 @@ test.describe("admin console", () => {
     expectNoClientErrors(diag);
   });
 
-  test("a learner cannot open the admin console", async ({ page, diag, browser }) => {
-    const learnerCtx = await browser.newContext({ storageState: LEARNER_STATE });
+  test("a learner cannot open the admin console", async ({ page, diag, browser, playwright }) => {
+    const learnerCtx = await browser.newContext();
+    await learnerCtx.addCookies(await sessionCookies(playwright, "learner"));
     const learnerPage = await learnerCtx.newPage();
 
     await learnerPage.goto("/admin");

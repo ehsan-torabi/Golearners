@@ -1,0 +1,8 @@
+{"type":"receive","time":1793577306850.1191,"opcode":1,"data":"{\"action\":\"sync\",\"hash\":\"5e2dfded2a9226af\",\"errors\":[],\"warnings\":[],\"versionInfo\":{\"staleness\":\"stale-major\",\"expected\":\"16.4.3\",\"installed\":\"15.5.28\"},\"debug\":{},\"devIndicator\":{\"disabledUntil\":0},\"devToolsConfig\":{}}"}
+{"type":"send","time":1793577306851.03,"opcode":1,"data":"{\"event\":\"client-success\",\"clientId\":1793577306699}"}
+{"type":"receive","time":1793577306861.321,"opcode":1,"data":"{\"action\":\"isrManifest\",\"data\":{\"/login\":true}}"}
+{"type":"receive","time":1793577307261.538,"opcode":1,"data":"{\"action\":\"isrManifest\",\"data\":{\"/login\":true}}"}
+{"type":"receive","time":1793577307783.2231,"opcode":1,"data":"{\"action\":\"isrManifest\",\"data\":{}}"}
+{"type":"receive","time":1793577307812.099,"opcode":1,"data":"{\"action\":\"isrManifest\",\"data\":{\"/login\":true}}"}
+{"type":"receive","time":1793577307833.162,"opcode":1,"data":"{\"action\":\"isrManifest\",\"data\":{}}"}
+{"type":"receive","time":1793577307873.396,"opcode":1,"data":"{\"action\":\"isrManifest\",\"data\":{\"/login\":true}}"}

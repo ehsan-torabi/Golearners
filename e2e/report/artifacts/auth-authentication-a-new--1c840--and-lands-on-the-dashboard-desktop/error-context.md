@@ -39,21 +39,19 @@ Call log:
     - link "تماس":
       - /url: /contact
   - button "تغییر تم روشن و تاریک"
-  - link "ورود":
-    - /url: /login
+  - button "باز کردن منو":
+    - img
 - main:
   - heading "ساخت حساب کاربری" [level=1]
   - text: نام و نام خانوادگی
-  - textbox "نام و نام خانوادگی": کاربر تازهٔ تست
+  - textbox "نام و نام خانوادگی"
   - text: شماره موبایل
   - textbox "شماره موبایل":
     - /placeholder: ۰۹xxxxxxxxx
-    - text: ۰۹۱۳۷۸۳۳۸۷۳۲
   - paragraph: برای ورود و اطلاع‌رسانی دوره‌ها استفاده می‌شود.
   - text: رمز عبور
-  - textbox "رمز عبور": E2Enewuser2026
+  - textbox "رمز عبور"
   - paragraph: حداقل ۸ کاراکتر شامل حرف و عدد.
-  - alert: اطلاعات ارسالی نامعتبر است.
   - button "ثبت‌نام"
   - paragraph:
     - text: حساب داری؟
@@ -74,7 +72,6 @@ Call log:
     - link "support@golearn.ir":
       - /url: mailto:support@golearn.ir
   - text: گوLearn ،۱۴۰۵. همه محتوا متعلق به این رسانه است.
-- alert
 ```
 
 # Test source
@@ -84,7 +81,7 @@ Call log:
   2   |   expect,
   3   |   expectNoClientErrors,
   4   |   fillOtp,
-  5   |   LEARNER,
+  5   |   credentials,
   6   |   loginThroughUi,
   7   |   readOtpFromLog,
   8   |   test,
@@ -129,7 +126,7 @@ Call log:
   46  |     diag,
   47  |   }) => {
   48  |     await page.goto("/login");
-  49  |     await page.getByLabel("شماره موبایل").fill(LEARNER.mobile);
+  49  |     await page.getByLabel("شماره موبایل").fill(credentials().learner.mobile);
   50  |     await page.getByLabel("رمز عبور").fill("wrong-password-1");
   51  |     await page.getByRole("button", { name: "ورود", exact: true }).click();
   52  | 
@@ -140,7 +137,7 @@ Call log:
   57  |   });
   58  | 
   59  |   test("login with the correct password opens the learner dashboard", async ({ page, diag }) => {
-  60  |     await loginThroughUi(page, LEARNER.mobile, LEARNER.password);
+  60  |     await loginThroughUi(page, credentials().learner.mobile, credentials().learner.password);
   61  | 
   62  |     await expect(page.getByRole("heading", { name: "دانشجو تست" })).toBeVisible();
   63  |     await expect(page.getByRole("heading", { name: "دوره‌های من" })).toBeVisible();
@@ -150,11 +147,11 @@ Call log:
   67  |   test("login with an SMS code opens the learner dashboard", async ({ page, diag }) => {
   68  |     await page.goto("/login");
   69  |     await page.getByRole("button", { name: "کد پیامکی" }).click();
-  70  |     await page.getByLabel("شماره موبایل").fill(LEARNER.mobile);
+  70  |     await page.getByLabel("شماره موبایل").fill(credentials().learner.mobile);
   71  |     await page.getByRole("button", { name: "ارسال کد تأیید" }).click();
   72  | 
   73  |     await expect(page.getByRole("heading", { name: "کد تأیید را وارد کن" })).toBeVisible();
-  74  |     await fillOtp(page, readOtpFromLog(LEARNER.mobile));
+  74  |     await fillOtp(page, readOtpFromLog(credentials().learner.mobile));
   75  |     await page.waitForURL("**/dashboard", { timeout: 20000 });
   76  | 
   77  |     await expect(page.getByRole("heading", { name: "دانشجو تست" })).toBeVisible();
@@ -162,7 +159,7 @@ Call log:
   79  |   });
   80  | 
   81  |   test("logout clears the session and returns to the login page", async ({ page, diag }) => {
-  82  |     await loginThroughUi(page, LEARNER.mobile, LEARNER.password);
+  82  |     await loginThroughUi(page, credentials().learner.mobile, credentials().learner.password);
   83  | 
   84  |     await page.getByRole("button", { name: "خروج از حساب" }).click();
   85  |     await page.waitForURL("**/login", { timeout: 20000 });
@@ -180,7 +177,7 @@ Call log:
   97  |   });
   98  | 
   99  |   test("a signed-in learner sees the dashboard entry in the navbar", async ({ page, diag }) => {
-  100 |     await loginThroughUi(page, LEARNER.mobile, LEARNER.password);
+  100 |     await loginThroughUi(page, credentials().learner.mobile, credentials().learner.password);
   101 | 
   102 |     const nav = page.getByRole("navigation", { name: "ناوبری اصلی" });
   103 |     await expect(nav.getByRole("link", { name: "داشبورد" })).toBeVisible();

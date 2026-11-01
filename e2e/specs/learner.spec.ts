@@ -1,12 +1,12 @@
 import {
-  ADMIN_STATE,
   API_URL,
+  authHeaders,
   createPublishedCourse,
   expect,
   expectNoClientErrors,
   FIXTURE_MP4,
-  LEARNER_STATE,
   readOtpFromLog,
+  sessionCookies,
   test,
   uniqueMobile,
   uploadMedia,
@@ -14,7 +14,7 @@ import {
 } from "../lib/helpers";
 
 test.describe("learner dashboard", () => {
-  test.use({ storageState: LEARNER_STATE });
+  test.use({ sessionRole: "learner" });
 
   const stamp = Date.now();
   let playableSlug = "";
@@ -22,17 +22,14 @@ test.describe("learner dashboard", () => {
   let plainSlug = "";
 
   test.beforeAll(async ({ playwright }) => {
-    const adminCtx = await playwright.request.newContext({
-      baseURL: API_URL,
-      storageState: ADMIN_STATE,
-    });
+    const adminCtx = await playwright.request.newContext({ baseURL: API_URL });
+    const adminCookies = await sessionCookies(playwright, "admin");
 
     // a course whose lesson carries real media so the player can sign a URL
-    const asset = await uploadMedia(adminCtx, FIXTURE_MP4, "video/mp4");
+    const asset = await uploadMedia(adminCtx, FIXTURE_MP4, "video/mp4", adminCookies);
     await waitForMediaReady(adminCtx, asset.storage_key);
 
-    const csrf = (await adminCtx.storageState()).cookies.find((c) => c.name === "gl_csrf")?.value ?? "";
-    const headers = { "X-CSRF-Token": csrf };
+    const headers = authHeaders(adminCookies);
     const title = `دورهٔ پخش تست ${stamp}`;
 
     const courseRes = await adminCtx.post("/api/v1/admin/courses", {
@@ -72,7 +69,9 @@ test.describe("learner dashboard", () => {
     playableSlug = course.slug;
 
     // a second, media-less course used by the orders test
-    plainSlug = (await createPublishedCourse(adminCtx, `دورهٔ سفارش تست ${stamp}`)).slug;
+    plainSlug = (
+      await createPublishedCourse(adminCtx, `دورهٔ سفارش تست ${stamp}`, adminCookies)
+    ).slug;
 
     await adminCtx.dispose();
   });

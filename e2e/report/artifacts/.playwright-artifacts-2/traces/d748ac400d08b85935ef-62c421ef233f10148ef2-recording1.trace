@@ -1,0 +1,1 @@
+{"version":10,"type":"context-options","origin":"library","browserName":"","playwrightVersion":"1.64.1","options":{},"platform":"linux","wallTime":1793577287425,"monotonicTime":47058.085,"sdkLanguage":"javascript","title":"auth.spec.ts:44 › authentication › login with a wrong password shows an error and stays on the login page"}
