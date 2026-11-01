@@ -160,6 +160,10 @@ func courseListWhere(f ports.CourseFilter, publicOnly bool) (string, []any) {
 		where = append(where, "c.level = $"+fmt.Sprint(len(args)+1))
 		args = append(args, f.Level)
 	}
+	if f.Status != "" {
+		where = append(where, "c.status = $"+fmt.Sprint(len(args)+1))
+		args = append(args, f.Status)
+	}
 	if f.Q != "" {
 		where = append(where, "(c.title ILIKE '%'||$"+fmt.Sprint(len(args)+1)+"||'%' OR c.summary ILIKE '%'||$"+fmt.Sprint(len(args)+1)+"||'%')")
 		args = append(args, f.Q)
@@ -216,11 +220,21 @@ func (r *CourseRepo) ListPublished(ctx context.Context, f ports.CourseFilter) ([
 	return list, total, nil
 }
 
-func (r *CourseRepo) ListAdmin(ctx context.Context, f ports.CourseFilter) ([]*course.Course, error) {
+func (r *CourseRepo) ListAdmin(ctx context.Context, f ports.CourseFilter) ([]*course.Course, int, error) {
 	where, args := courseListWhere(f, false)
 	q := `SELECT ` + courseColumns + ` FROM courses c WHERE ` + where +
 		` ORDER BY c.created_at DESC LIMIT $` + fmt.Sprint(len(args)+1) + ` OFFSET $` + fmt.Sprint(len(args)+2)
 	args = append(args, f.PerPage, (f.Page-1)*f.PerPage)
 	rows, err := querierOf(ctx, r.pool).Query(ctx, q, args...)
-	return collectCourses(rows, err)
+	list, err := collectCourses(rows, err)
+	if err != nil {
+		return nil, 0, err
+	}
+	var total int
+	err = querierOf(ctx, r.pool).QueryRow(ctx,
+		`SELECT count(*) FROM courses c WHERE `+where, args[:len(args)-2]...).Scan(&total)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count courses: %w", err)
+	}
+	return list, total, nil
 }

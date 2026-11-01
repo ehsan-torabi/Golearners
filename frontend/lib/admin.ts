@@ -1,7 +1,7 @@
 "use client";
 
 // Client-side admin mutations: CSRF + cookie session via the /api proxy.
-import { ApiError, api, csrfToken } from "@/lib/api";
+import { ApiError, api, csrfToken, type CourseSummary } from "@/lib/api";
 
 export { ApiError };
 
@@ -15,15 +15,62 @@ export async function fetchAdmin<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-export async function adminCreateCourse(input: {
+/** List envelope the admin list endpoints share. */
+export interface AdminList<T> {
+  data: T[];
+  meta: { page: number; per_page: number; total: number };
+}
+
+// ---------- courses ----------
+
+/** A course with every admin-editable field. */
+export interface AdminCourse extends CourseSummary {
+  cover_media_id: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  description_html: string;
+  prerequisites_html: string;
+  outcomes: string[];
+  promo_video_media_id: string | null;
+  category_ids: string[];
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** The admin course payload (PUT/POST body). */
+export interface CoursePayload {
   title: string;
   slug: string;
   summary: string;
   description_html: string;
   level: string;
   price_rial: number;
-}) {
+  compare_at_price_rial: number | null;
+  prerequisites_html: string;
+  outcomes: string[];
+  meta_title: string | null;
+  meta_description: string | null;
+  cover_media_id: string | null;
+  promo_video_media_id: string | null;
+  is_featured: boolean;
+  category_ids: string[];
+}
+
+export function adminGetCourse(id: string) {
+  return fetchAdmin<{ data: AdminCourse }>(`/admin/courses/${id}`);
+}
+
+export async function adminCreateCourse(input: CoursePayload) {
   return api("/admin/courses", { method: "POST", body: JSON.stringify(input) });
+}
+
+export async function adminUpdateCourse(id: string, input: CoursePayload) {
+  return api(`/admin/courses/${id}`, { method: "PUT", body: JSON.stringify(input) });
+}
+
+export async function adminDeleteCourse(id: string) {
+  return api(`/admin/courses/${id}`, { method: "DELETE" });
 }
 
 export async function adminPublishCourse(id: string, publish: boolean) {
@@ -38,10 +85,173 @@ export async function adminSetUserStatus(id: string, status: "active" | "blocked
   return api(`/admin/users/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
 }
 
-export async function adminPublishPost(id: string, publish: boolean) {
-  return api(`/admin/posts/${id}/${publish ? "publish" : "unpublish"}`, { method: "POST" });
+// ---------- curriculum ----------
+
+export interface AdminSection {
+  id: string;
+  course_id: string;
+  title: string;
+  position: number;
+}
+
+export interface AdminLesson {
+  id: string;
+  section_id: string;
+  title: string;
+  content_html: string;
+  position: number;
+  is_preview: boolean;
+  duration_seconds: number;
+  status: string;
+  media_id: string | null;
+}
+
+/** Lesson payload (POST/PUT body). */
+export interface LessonPayload {
+  section_id?: string;
+  title: string;
+  content_html: string;
+  position: number;
+  is_preview: boolean;
+  duration_seconds: number;
+  status: string;
+  media_id: string | null;
+}
+
+export function adminCurriculum(courseId: string) {
+  return fetchAdmin<{ sections: AdminSection[]; lessons: AdminLesson[] }>(
+    `/admin/courses/${courseId}/curriculum`,
+  );
+}
+
+export async function adminCreateSection(courseId: string, input: { title: string; position: number }) {
+  return api(`/admin/courses/${courseId}/sections`, { method: "POST", body: JSON.stringify(input) });
+}
+
+export async function adminUpdateSection(id: string, input: { title: string; position: number }) {
+  return api(`/admin/sections/${id}`, { method: "PUT", body: JSON.stringify(input) });
+}
+
+export async function adminDeleteSection(id: string) {
+  return api(`/admin/sections/${id}`, { method: "DELETE" });
+}
+
+export async function adminReorderSections(courseId: string, ids: string[]) {
+  return api(`/admin/courses/${courseId}/sections/reorder`, {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export async function adminCreateLesson(sectionId: string, input: LessonPayload) {
+  return api(`/admin/sections/${sectionId}/lessons`, { method: "POST", body: JSON.stringify(input) });
+}
+
+export async function adminUpdateLesson(id: string, input: LessonPayload) {
+  return api(`/admin/lessons/${id}`, { method: "PUT", body: JSON.stringify(input) });
+}
+
+export async function adminDeleteLesson(id: string) {
+  return api(`/admin/lessons/${id}`, { method: "DELETE" });
+}
+
+export async function adminReorderLessons(sectionId: string, ids: string[]) {
+  return api(`/admin/sections/${sectionId}/lessons/reorder`, {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+// ---------- posts ----------
+
+/** A blog post with every admin-editable field. */
+export interface AdminPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  body_html: string;
+  status: string;
+  cover_media_id: string | null;
+  category_id: string | null;
+  reading_minutes: number;
+  meta_title: string | null;
+  meta_description: string | null;
+  tag_titles: string[];
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** The admin post payload (PUT/POST body). */
+export interface PostPayload {
+  title: string;
+  slug: string;
+  excerpt: string;
+  body_html: string;
+  cover_media_id: string | null;
+  category_id: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  tag_titles: string[];
+  reading_minutes: number;
+}
+
+export function adminGetPost(id: string) {
+  return fetchAdmin<{ data: AdminPost }>(`/admin/posts/${id}`);
+}
+
+export async function adminCreatePost(input: PostPayload) {
+  return api("/admin/posts", { method: "POST", body: JSON.stringify(input) });
+}
+
+export async function adminUpdatePost(id: string, input: PostPayload) {
+  return api(`/admin/posts/${id}`, { method: "PUT", body: JSON.stringify(input) });
 }
 
 export async function adminDeletePost(id: string) {
   return api(`/admin/posts/${id}`, { method: "DELETE" });
 }
+
+export async function adminPublishPost(id: string, publish: boolean) {
+  return api(`/admin/posts/${id}/${publish ? "publish" : "unpublish"}`, { method: "POST" });
+}
+
+// ---------- taxonomy, categories, media ----------
+
+export interface TaxonomyItem {
+  id: string;
+  slug: string;
+  title: string;
+}
+
+export interface MediaAsset {
+  id: string;
+  kind: string;
+  storage_key: string;
+  mime: string;
+  size_bytes: number;
+  status: string;
+  duration_seconds: number | null;
+  created_at: string;
+}
+
+export function fetchCourseCategories() {
+  return api<{ data: TaxonomyItem[] }>("/categories");
+}
+
+export async function fetchBlogTaxonomy() {
+  const [categories, tags] = await Promise.all([
+    api<{ data: TaxonomyItem[] }>("/blog/categories"),
+    api<{ data: TaxonomyItem[] }>("/blog/tags"),
+  ]);
+  return { categories: categories.data ?? [], tags: tags.data ?? [] };
+}
+
+export function fetchMedia(kind: "image" | "video") {
+  return fetchAdmin<AdminList<MediaAsset>>(`/admin/media?status=ready&per_page=100`).then((res) => ({
+    ...res,
+    data: res.data.filter((m) => m.kind === kind),
+  }));
+}
+

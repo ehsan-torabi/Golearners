@@ -231,7 +231,7 @@ func (s *Service) PublishCourse(ctx context.Context, actor Actor, id uuid.UUID) 
 		return err
 	}
 	if ready == 0 {
-		return apperr.ErrValidation.Wrap(fmt.Errorf("publish requires at least one ready lesson"))
+		return apperr.ErrCourseNotReady
 	}
 	return s.d.TX.WithinTx(ctx, func(ctx context.Context) error {
 		if err := s.d.Courses.Publish(ctx, id); err != nil {

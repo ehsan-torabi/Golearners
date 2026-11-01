@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,7 +9,8 @@ import { api, LEVEL_FA, LEVEL_COLORS, formatTomanFromRial } from "@/lib/api";
 import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 import { fa } from "@/lib/utils";
 
-export const revalidate = 600;
+/* per-viewer state (owned, lesson progress) needs the session cookie */
+export const dynamic = "force-dynamic";
 
 interface Detail {
   course: {
@@ -21,14 +23,44 @@ interface Detail {
   outcomes: string[];
   sections: { id: string; title: string; position: number }[];
   lessons: { id: string; section_id: string; title: string; position: number; is_preview: boolean; duration_seconds: number }[];
+  owner_state?: OwnerLesson[];
   rating_avg: number | null;
   rating_count: number;
   owned_by_viewer: boolean;
 }
 
+interface OwnerLesson {
+  id: string;
+  title: string;
+  section_id: string;
+  position: number;
+  duration_seconds: number;
+  accessible: boolean;
+  completed: boolean;
+  position_seconds: number;
+}
+
 async function detail(slug: string): Promise<Detail | null> {
   try {
     return await api<Detail>(`/courses/${encodeURIComponent(slug)}`);
+  } catch {
+    return null;
+  }
+}
+
+/** lesson progress for a buyer: completed, accessible and the playback position */
+async function ownerCurriculum(slug: string): Promise<OwnerLesson[] | null> {
+  const jar = await cookies();
+  const access = jar.get("gl_at")?.value ?? "";
+  if (!access) return null;
+  try {
+    const res = await fetch(
+      `${process.env.API_INTERNAL ?? "http://localhost:8080"}/api/v1/me/courses/${encodeURIComponent(slug)}/curriculum`,
+      { headers: { Cookie: `gl_at=${access}` }, cache: "no-store" },
+    );
+    if (!res.ok) return null;
+    const body = (await res.json()) as { lessons: OwnerLesson[] };
+    return body.lessons ?? [];
   } catch {
     return null;
   }
@@ -44,6 +76,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     alternates: { canonical: `/courses/${slug}` },
     openGraph: { title: d.course.title, description: d.course.summary, type: "website", locale: "fa_IR" },
   };
+}
+
+/** seconds -> «۰۳:۲۰» */
+function formatClock(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${fa(String(m).padStart(2, "0"))}:${fa(String(s).padStart(2, "0"))}`;
 }
 
 export default async function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -64,6 +103,10 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   };
 
   const totalMinutes = Math.round(d.lessons.reduce((s, l) => s + l.duration_seconds, 0) / 60);
+  const jar = await cookies();
+  const loggedIn = Boolean(jar.get("gl_at")?.value);
+  const ownerLessons = d.owned_by_viewer ? await ownerCurriculum(d.course.slug) : null;
+  const owned = Boolean(d.owned_by_viewer);
 
   return (
     <div className="space-y-8">
@@ -124,16 +167,51 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                     <ul className="border-t border-line">
                       {d.lessons
                         .filter((l) => l.section_id === sec.id)
-                        .map((l) => (
-                          <li key={l.id} className="flex items-center justify-between gap-4 px-5 py-2.5 text-sm">
-                            <span className="text-foreground/90">{l.title}</span>
-                            {l.is_preview ? (
-                              <span className="shrink-0 text-xs font-medium text-success">پیش‌نمایش رایگان</span>
-                            ) : (
-                              <span className="shrink-0 text-xs text-muted-foreground">با خرید باز می‌شود</span>
-                            )}
-                          </li>
-                        ))}
+                        .map((l) => {
+                          const state = ownerLessons?.find((o) => o.id === l.id);
+                          const playable = Boolean(state?.accessible);
+                          const title = <span className="text-foreground/90">{l.title}</span>;
+                          return (
+                            <li
+                              key={l.id}
+                              className="flex items-center justify-between gap-4 px-5 py-2.5 text-sm"
+                            >
+                              {playable ? (
+                                <Link
+                                  href={`/dashboard/courses/${encodeURIComponent(d.course.slug)}?lesson=${l.id}`}
+                                  className="truncate transition-colors duration-150 hover:text-accent-strong"
+                                >
+                                  {title}
+                                </Link>
+                              ) : (
+                                title
+                              )}
+                              {state ? (
+                                state.completed ? (
+                                  <span className="shrink-0 text-xs font-medium text-success-text">
+                                    تمام‌شده
+                                  </span>
+                                ) : playable ? (
+                                  <span className="shrink-0 text-xs font-medium text-accent-strong">
+                                    {state.position_seconds > 0
+                                      ? `ادامه از ${formatClock(state.position_seconds)}`
+                                      : "پخش"}
+                                  </span>
+                                ) : (
+                                  <span className="shrink-0 text-xs text-muted-foreground">
+                                    با درس قبلی باز می‌شود
+                                  </span>
+                                )
+                              ) : l.is_preview ? (
+                                <span className="shrink-0 text-xs font-medium text-success-text">
+                                  پیش‌نمایش رایگان
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">با خرید باز می‌شود</span>
+                              )}
+                            </li>
+                          );
+                        })}
                     </ul>
                   </details>
                 </Card>
@@ -164,32 +242,68 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
         <aside className="h-fit lg:sticky lg:top-24">
           <Card className="border-ink p-6 shadow-raise">
-            <div className="flex items-baseline justify-between">
-              <span className="font-semibold text-3xl text-foreground">
-                {d.course.price_rial === 0 ? "رایگان" : formatTomanFromRial(d.course.price_rial)}
-              </span>
-              {d.course.compare_at_price_rial != null && d.course.compare_at_price_rial > d.course.price_rial && (
-                <span className="text-sm text-muted-foreground line-through">
-                  {formatTomanFromRial(d.course.compare_at_price_rial)}
-                </span>
-              )}
-            </div>
-            <div className="mt-5 space-y-3">
-              {d.owned_by_viewer ? (
-                <ButtonLink href={`/dashboard/courses/${encodeURIComponent(d.course.slug)}`} className="w-full" size="lg">
-                  ادامه دوره
-                </ButtonLink>
-              ) : (
-                <ButtonLink href={`/checkout?course=${encodeURIComponent(d.course.slug)}`} className="w-full" size="lg">
-                  خرید دوره
-                </ButtonLink>
-              )}
-              <ul className="space-y-1.5 text-xs leading-6 text-muted-foreground">
-                <li>دسترسی مادام‌العمر به همه درس‌ها</li>
-                <li>پرداخت امن با درگاه‌های بانکی ایران</li>
-                <li>بازگشت وجه تا ۳۰ دقیقه بعد از خرید</li>
-              </ul>
-            </div>
+            {owned ? (
+              <>
+                <p className="text-sm font-medium text-success-text">این دوره را خریده‌اید</p>
+                <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                  دسترسی شما به همه درس‌ها باز است و پیشرفت‌تان ذخیره می‌شود.
+                </p>
+                <div className="mt-5 space-y-3">
+                  <ButtonLink
+                    href={`/dashboard/courses/${encodeURIComponent(d.course.slug)}`}
+                    className="w-full"
+                    size="lg"
+                  >
+                    ادامه یادگیری
+                  </ButtonLink>
+                  <ButtonLink
+                    href={`/dashboard/courses/${encodeURIComponent(d.course.slug)}`}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    رفتن به فهرست درس‌ها
+                  </ButtonLink>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-baseline justify-between">
+                  <span className="font-semibold text-3xl text-foreground">
+                    {d.course.price_rial === 0 ? "رایگان" : formatTomanFromRial(d.course.price_rial)}
+                  </span>
+                  {d.course.compare_at_price_rial != null &&
+                    d.course.compare_at_price_rial > d.course.price_rial && (
+                      <span className="text-sm text-muted-foreground line-through">
+                        {formatTomanFromRial(d.course.compare_at_price_rial)}
+                      </span>
+                    )}
+                </div>
+                <div className="mt-5 space-y-3">
+                  {loggedIn ? (
+                    <ButtonLink
+                      href={`/checkout?course=${encodeURIComponent(d.course.slug)}`}
+                      className="w-full"
+                      size="lg"
+                    >
+                      خرید دوره
+                    </ButtonLink>
+                  ) : (
+                    <ButtonLink
+                      href={`/login?next=${encodeURIComponent(`/courses/${d.course.slug}`)}`}
+                      className="w-full"
+                      size="lg"
+                    >
+                      ورود برای خرید
+                    </ButtonLink>
+                  )}
+                  <ul className="space-y-1.5 text-xs leading-6 text-muted-foreground">
+                    <li>دسترسی مادام‌العمر به همه درس‌ها</li>
+                    <li>پرداخت امن با درگاه‌های بانکی ایران</li>
+                    <li>بازگشت وجه تا ۳۰ دقیقه بعد از خرید</li>
+                  </ul>
+                </div>
+              </>
+            )}
           </Card>
         </aside>
       </div>

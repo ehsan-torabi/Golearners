@@ -13,18 +13,20 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useSession } from "@/components/use-session";
 import { cn } from "@/lib/utils";
 
 export type NavLink = { href: string; label: string };
 
 /* navbar-02 block: sticky header, desktop links, sheet menu on mobile.
-   Links come from the caller, so every entry points at a real route. */
+   The dashboard CTA follows the session: guests get «ورود», learners get
+   «داشبورد», admins land on the management console. */
 export function SiteNavbar({ links }: { links: NavLink[] }) {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
+  const { status, session, isAdmin } = useSession();
 
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   const linkCls = (href: string) =>
     cn(
@@ -49,12 +51,7 @@ export function SiteNavbar({ links }: { links: NavLink[] }) {
         </nav>
         <div className="ms-auto flex items-center gap-2">
           <ThemeToggle />
-          <Button size="sm" variant="ghost" className="hidden sm:inline-flex" render={<Link href="/login" />}>
-            ورود
-          </Button>
-          <Button size="sm" className="hidden sm:inline-flex" render={<Link href="/dashboard" />}>
-            داشبورد
-          </Button>
+          <AuthActions status={status} isAdmin={isAdmin} loggedIn={Boolean(session)} />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger
               render={
@@ -85,17 +82,69 @@ export function SiteNavbar({ links }: { links: NavLink[] }) {
                 ))}
               </nav>
               <div className="mt-6 flex flex-col gap-2 px-1">
-                <Button variant="outline" className="w-full" render={<Link href="/login" />}>
-                  ورود
-                </Button>
-                <Button className="w-full" render={<Link href="/dashboard" />}>
-                  داشبورد
-                </Button>
+                <AuthActions status={status} isAdmin={isAdmin} loggedIn={Boolean(session)} stacked />
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
     </header>
+  );
+}
+
+function AuthActions({
+  status,
+  isAdmin,
+  loggedIn,
+  stacked = false,
+}: {
+  status: "loading" | "ready";
+  isAdmin: boolean;
+  loggedIn: boolean;
+  stacked?: boolean;
+}) {
+  if (status === "loading") {
+    /* reserve the slot so the header does not jump when the session lands */
+    return <span aria-hidden className="hidden h-8 w-24 sm:inline-block" />;
+  }
+
+  if (!loggedIn) {
+    return (
+      <Button size="sm" variant="ghost" className={stacked ? "w-full" : "hidden sm:inline-flex"} render={<Link href="/login" />}>
+        ورود
+      </Button>
+    );
+  }
+
+  if (isAdmin) {
+    return (
+      <>
+        <Button
+          size="sm"
+          variant="ghost"
+          className={cn("hidden sm:inline-flex", stacked && "w-full")}
+          render={<Link href="/dashboard" />}
+        >
+          داشبورد من
+        </Button>
+        <Button
+          size="sm"
+          className={cn("hidden sm:inline-flex", stacked && "w-full")}
+          render={<Link href="/admin" />}
+        >
+          پنل مدیریت
+        </Button>
+      </>
+    );
+  }
+
+  return (
+    <Button
+      size="sm"
+      className={cn("hidden sm:inline-flex", stacked && "w-full")}
+      render={<Link href="/dashboard" />}
+    >
+      داشبورد
+    </Button>
   );
 }

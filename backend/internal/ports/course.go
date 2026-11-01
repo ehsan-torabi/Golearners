@@ -13,6 +13,7 @@ import (
 type CourseFilter struct {
 	CategorySlug  string
 	Level         string
+	Status        string // admin only: draft | published | archived
 	Q             string
 	Sort          string // newest | popular | price_asc | price_desc
 	Page, PerPage int
@@ -27,7 +28,7 @@ type CourseRepo interface {
 	SoftDelete(ctx context.Context, id uuid.UUID) error
 	// ListPublished for the public catalog; ListAdmin includes drafts/archived.
 	ListPublished(ctx context.Context, f CourseFilter) ([]*course.Course, int, error)
-	ListAdmin(ctx context.Context, f CourseFilter) ([]*course.Course, error)
+	ListAdmin(ctx context.Context, f CourseFilter) ([]*course.Course, int, error)
 	// SlugExists reports whether a slug is taken (excluding excludeID).
 	SlugExists(ctx context.Context, slug string, excludeID uuid.UUID) (bool, error)
 	// Publish sets status=published + published_at atomically; requires a ready lesson (service checks).

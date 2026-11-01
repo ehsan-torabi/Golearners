@@ -72,4 +72,6 @@ var (
 	ErrCouponInvalid        = New(http.StatusBadRequest, "COUPON_INVALID", "کد تخفیف معتبر نیست یا شرایط آن برقرار نیست.")
 	ErrGatewayNotConfigured = New(http.StatusServiceUnavailable, "GATEWAY_NOT_CONFIGURED", "این درگاه پرداخت در دسترس نیست.")
 	ErrRefundFailed         = New(http.StatusConflict, "REFUND_FAILED", "استرداد پرداخت ممکن نشد؛ در پنل درگاه بررسی کنید.")
+
+	ErrCourseNotReady = New(http.StatusConflict, "COURSE_NOT_READY", "برای انتشار دوره باید دست‌کم یک درسِ آماده داشته باشید.")
 )

@@ -16,8 +16,8 @@ import (
 // stubCourseRepo satisfies ports.CourseRepo for list-only tests.
 type stubCourseRepo struct{ ports.CourseRepo }
 
-func (stubCourseRepo) ListAdmin(context.Context, ports.CourseFilter) ([]*course.Course, error) {
-	return nil, nil
+func (stubCourseRepo) ListAdmin(context.Context, ports.CourseFilter) ([]*course.Course, int, error) {
+	return nil, 0, nil
 }
 
 // stubAuditRepo satisfies ports.AuditRepo for list-only tests.

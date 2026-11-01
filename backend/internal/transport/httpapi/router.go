@@ -123,7 +123,9 @@ func NewRouter(a *App) http.Handler {
 
 		// public reads (ISR-cacheable)
 		r.Get("/courses", a.handleCourseList)
-		r.Get("/courses/{slug}", a.handleCourseDetail)
+		// optional auth: the viewer flag (owned_by_viewer) must reflect the
+		// session cookie, but anonymous readers are still served
+		r.With(a.optionalAuth).Get("/courses/{slug}", a.handleCourseDetail)
 		r.Get("/categories", a.handleCategoryList)
 		r.Get("/instructor", a.handleInstructor)
 		r.Get("/blog/posts", a.handleBlogList)
@@ -142,6 +144,7 @@ func NewRouter(a *App) http.Handler {
 
 			r.Post("/admin/courses", a.handleAdminCourseCreate)
 			r.Get("/admin/courses", a.handleAdminCourseList)
+			r.Get("/admin/courses/{id}", a.handleAdminCourseDetail)
 			r.Put("/admin/courses/{id}", a.handleAdminCourseUpdate)
 			r.Delete("/admin/courses/{id}", a.handleAdminCourseDelete)
 			r.Post("/admin/courses/{id}/publish", a.handleAdminCoursePublish(true))
@@ -167,6 +170,7 @@ func NewRouter(a *App) http.Handler {
 
 			r.Post("/admin/posts", a.handleAdminPostCreate)
 			r.Get("/admin/posts", a.handleAdminPostList)
+			r.Get("/admin/posts/{id}", a.handleAdminPostDetail)
 			r.Put("/admin/posts/{id}", a.handleAdminPostUpdate)
 			r.Delete("/admin/posts/{id}", a.handleAdminPostDelete)
 			r.Post("/admin/posts/{id}/publish", a.handleAdminPostPublish(true))

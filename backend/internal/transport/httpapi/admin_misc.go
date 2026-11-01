@@ -8,6 +8,7 @@ import (
 
 	"golearn/backend/internal/apperr"
 	"golearn/backend/internal/domain/content"
+	"golearn/backend/internal/ports"
 	"golearn/backend/internal/service/contentadmin"
 )
 
@@ -92,7 +93,11 @@ func (a *App) handleAdminPostPublish(publish bool) http.HandlerFunc {
 // GET /api/v1/admin/posts
 func (a *App) handleAdminPostList(w http.ResponseWriter, r *http.Request) {
 	page, perPage := pageParams(r)
-	list, total, err := a.Posts.ListAdmin(r.Context(), page, perPage)
+	list, total, err := a.Posts.ListAdmin(r.Context(), ports.PostFilter{
+		Page: page, PerPage: perPage,
+		Status: r.URL.Query().Get("status"),
+		Q:      r.URL.Query().Get("q"),
+	})
 	if err != nil {
 		a.writeError(w, r, err)
 		return
@@ -102,6 +107,36 @@ func (a *App) handleAdminPostList(w http.ResponseWriter, r *http.Request) {
 		items = append(items, postJSON(p))
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": items, "meta": map[string]any{"page": page, "per_page": perPage, "total": total}})
+}
+
+// GET /api/v1/admin/posts/{id} — the full editable payload.
+func (a *App) handleAdminPostDetail(w http.ResponseWriter, r *http.Request) {
+	id, err := uuidParam(r, "id")
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	p, err := a.Posts.ByID(r.Context(), id)
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	tags, err := a.Posts.TagsOf(r.Context(), id)
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	out := postJSON(p)
+	out["body_html"] = p.BodyHTML
+	out["status"] = p.Status
+	out["created_at"] = p.CreatedAt
+	out["updated_at"] = p.UpdatedAt
+	titles := make([]string, 0, len(tags))
+	for _, t := range tags {
+		titles = append(titles, t.Title)
+	}
+	out["tag_titles"] = titles
+	writeData(w, out)
 }
 
 // POST /api/v1/admin/pages — upsert by slug

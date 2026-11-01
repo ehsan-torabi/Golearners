@@ -57,17 +57,17 @@ type Taxonomy struct {
 
 // BlogCategory is a blog taxonomy term.
 type BlogCategory struct {
-	ID       uuid.UUID
-	Slug     string
-	Title    string
-	Position int
+	ID       uuid.UUID `json:"id"`
+	Slug     string    `json:"slug"`
+	Title    string    `json:"title"`
+	Position int       `json:"position"`
 }
 
 // BlogTag is a blog tag.
 type BlogTag struct {
-	ID    uuid.UUID
-	Slug  string
-	Title string
+	ID    uuid.UUID `json:"id"`
+	Slug  string    `json:"slug"`
+	Title string    `json:"title"`
 }
 
 // Page is an editable static page (about, privacy, ...).

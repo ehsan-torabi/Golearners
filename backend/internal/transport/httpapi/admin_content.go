@@ -106,10 +106,11 @@ func (a *App) handleAdminCoursePublish(publish bool) http.HandlerFunc {
 // GET /api/v1/admin/courses
 func (a *App) handleAdminCourseList(w http.ResponseWriter, r *http.Request) {
 	page, perPage := pageParams(r)
-	list, err := a.CoursesRepo.ListAdmin(r.Context(), ports.CourseFilter{
+	list, total, err := a.CoursesRepo.ListAdmin(r.Context(), ports.CourseFilter{
 		Page: page, PerPage: perPage,
 		CategorySlug: r.URL.Query().Get("category"),
 		Level:        r.URL.Query().Get("level"),
+		Status:       r.URL.Query().Get("status"),
 		Q:            r.URL.Query().Get("q"),
 	})
 	if err != nil {
@@ -120,7 +121,41 @@ func (a *App) handleAdminCourseList(w http.ResponseWriter, r *http.Request) {
 	for _, c := range list {
 		items = append(items, courseJSON(c))
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": items, "meta": map[string]any{"page": page, "per_page": perPage}})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"data": items,
+		"meta": map[string]any{"page": page, "per_page": perPage, "total": total},
+	})
+}
+
+// GET /api/v1/admin/courses/{id} — the full editable payload.
+func (a *App) handleAdminCourseDetail(w http.ResponseWriter, r *http.Request) {
+	id, err := uuidParam(r, "id")
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	c, err := a.CoursesRepo.ByID(r.Context(), id)
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	cats, err := a.Categories.ForCourse(r.Context(), id)
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	categoryIDs := make([]uuid.UUID, 0, len(cats))
+	for _, c := range cats {
+		categoryIDs = append(categoryIDs, c.ID)
+	}
+	out := courseJSON(c)
+	out["description_html"] = c.DescriptionHTML
+	out["prerequisites_html"] = c.PrerequisitesHTML
+	out["outcomes"] = c.Outcomes
+	out["promo_video_media_id"] = c.PromoVideoMediaID
+	out["category_ids"] = categoryIDs
+	out["updated_at"] = c.UpdatedAt
+	writeData(w, out)
 }
 
 var _ = json.Marshal

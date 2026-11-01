@@ -37,6 +37,14 @@ type Transactor interface {
 	WithinTx(ctx context.Context, fn func(ctx context.Context) error) error
 }
 
+// PostFilter shapes the admin blog list.
+type PostFilter struct {
+	Q          string // title/slug substring
+	Status     string // draft | published
+	Page       int
+	PerPage    int
+}
+
 // BlogPostRepo — blog article persistence.
 type BlogPostRepo interface {
 	Create(ctx context.Context, p *content.BlogPost) error
@@ -45,7 +53,7 @@ type BlogPostRepo interface {
 	Update(ctx context.Context, p *content.BlogPost) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	ListPublished(ctx context.Context, categorySlug, tagSlug, q string, page, perPage int) ([]*content.BlogPost, int, error)
-	ListAdmin(ctx context.Context, page, perPage int) ([]*content.BlogPost, int, error)
+	ListAdmin(ctx context.Context, f PostFilter) ([]*content.BlogPost, int, error)
 	// SlugExists checks slug uniqueness excluding excludeID.
 	SlugExists(ctx context.Context, slug string, excludeID uuid.UUID) (bool, error)
 	Publish(ctx context.Context, postID uuid.UUID) error

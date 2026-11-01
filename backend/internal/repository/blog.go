@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -170,17 +171,30 @@ func collectPosts(rows pgx.Rows, err error) ([]*content.BlogPost, error) {
 	return out, rows.Err()
 }
 
-func (r *BlogPostRepo) ListAdmin(ctx context.Context, page, perPage int) ([]*content.BlogPost, int, error) {
+func (r *BlogPostRepo) ListAdmin(ctx context.Context, f ports.PostFilter) ([]*content.BlogPost, int, error) {
+	where, args := []string{"1=1"}, []any{}
+	if f.Status != "" {
+		where = append(where, "p.status = $"+fmt.Sprint(len(args)+1))
+		args = append(args, f.Status)
+	}
+	if f.Q != "" {
+		where = append(where, "(p.title ILIKE $"+fmt.Sprint(len(args)+1)+" OR p.slug ILIKE $"+fmt.Sprint(len(args)+1)+")")
+		args = append(args, "%"+f.Q+"%")
+	}
+	cond := strings.Join(where, " AND ")
 	rows, err := querierOf(ctx, r.pool).Query(ctx,
-		`SELECT `+postColumns+` FROM blog_posts p ORDER BY p.created_at DESC LIMIT $1 OFFSET $2`,
-		perPage, (page-1)*perPage)
+		`SELECT `+postColumns+` FROM blog_posts p WHERE `+cond+` ORDER BY p.created_at DESC LIMIT $`+fmt.Sprint(len(args)+1)+` OFFSET $`+fmt.Sprint(len(args)+2),
+		append(append([]any{}, args...), f.PerPage, (f.Page-1)*f.PerPage)...)
 	list, err := collectPosts(rows, err)
 	if err != nil {
 		return nil, 0, err
 	}
 	var total int
-	err = querierOf(ctx, r.pool).QueryRow(ctx, `SELECT count(*) FROM blog_posts`).Scan(&total)
-	return list, total, err
+	err = querierOf(ctx, r.pool).QueryRow(ctx, `SELECT count(*) FROM blog_posts p WHERE `+cond, args...).Scan(&total)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count posts: %w", err)
+	}
+	return list, total, nil
 }
 
 func (r *BlogPostRepo) SetTags(ctx context.Context, postID uuid.UUID, tagIDs []uuid.UUID) error {
