@@ -110,7 +110,7 @@ export default function AdminOrdersPage() {
 
   const load = React.useCallback(async () => {
     try {
-      const res = await fetchAdmin<{ data: OrderRow[] }>("/orders?per_page=50");
+      const res = await fetchAdmin<{ data: OrderRow[] }>("/admin/orders?per_page=50");
       setOrders(res.data ?? []);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "خطا در دریافت سفارش‌ها");

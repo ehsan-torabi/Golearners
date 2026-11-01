@@ -34,7 +34,7 @@ export default function AdminCoursesPage() {
   const load = React.useCallback(async () => {
     setError("");
     try {
-      const res = await fetchAdmin<{ data: CourseSummary[] }>("/courses?per_page=50");
+      const res = await fetchAdmin<{ data: CourseSummary[] }>("/admin/courses?per_page=50");
       setCourses(res.data ?? []);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "خطا در دریافت فهرست");

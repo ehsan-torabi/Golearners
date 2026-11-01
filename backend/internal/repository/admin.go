@@ -26,18 +26,18 @@ func (r *AnalyticsRepo) Summary(ctx context.Context, days int) (*ports.Analytics
 		return r.pool.QueryRow(ctx, query, days).Scan(dst...)
 	}
 	if err := q(`SELECT coalesce(sum(total_rial),0), count(*) FILTER (WHERE status='paid'), count(*)
-		FROM orders WHERE created_at > now() - ($1 || ' days')::interval`,
+		FROM orders WHERE created_at > now() - make_interval(days => $1::int)`,
 		&s.RevenueRial, &s.PaidOrders, &s.OrdersCount); err != nil {
 		return nil, fmt.Errorf("orders summary: %w", err)
 	}
-	if err := q(`SELECT count(*) FROM users WHERE created_at > now() - ($1 || ' days')::interval`,
+	if err := q(`SELECT count(*) FROM users WHERE created_at > now() - make_interval(days => $1::int)`,
 		&s.NewUsers); err != nil {
 		return nil, fmt.Errorf("users summary: %w", err)
 	}
 	// payment success rate over all attempts in the window
 	var verified, failed int
 	if err := q(`SELECT count(*) FILTER (WHERE status='verified'), count(*) FILTER (WHERE status='failed')
-		FROM payments WHERE created_at > now() - ($1 || ' days')::interval`, &verified, &failed); err != nil {
+		FROM payments WHERE created_at > now() - make_interval(days => $1::int)`, &verified, &failed); err != nil {
 		return nil, fmt.Errorf("payments summary: %w", err)
 	}
 	if verified+failed > 0 {

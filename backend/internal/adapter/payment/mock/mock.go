@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"golearn/backend/internal/domain/commerce"
@@ -48,7 +49,13 @@ func (g *Gateway) Initiate(ctx context.Context, req ports.InitiateRequest) (port
 	if err != nil {
 		return ports.InitiateResult{}, err
 	}
-	return ports.InitiateResult{RedirectURL: out.RedirectURL, GatewayRef: req.OrderID.String()}, nil
+	// the mock app answers with a relative /start URL; make it absolute or the
+	// browser resolves it against the storefront origin and 404s
+	redirect := out.RedirectURL
+	if redirect != "" && strings.HasPrefix(redirect, "/") {
+		redirect = g.base + redirect
+	}
+	return ports.InitiateResult{RedirectURL: redirect, GatewayRef: req.OrderID.String()}, nil
 }
 
 // Verify asks the mock app to confirm ref+amount (server-side, mandatory).

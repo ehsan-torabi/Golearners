@@ -29,7 +29,7 @@ export default function AdminUsersPage() {
 
   const load = React.useCallback(async (query: string) => {
     try {
-      const res = await fetchAdmin<{ data: UserRow[] }>(`/users?per_page=50&q=${encodeURIComponent(query)}`);
+      const res = await fetchAdmin<{ data: UserRow[] }>(`/admin/users?per_page=50&q=${encodeURIComponent(query)}`);
       setUsers(res.data ?? []);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "خطا در دریافت کاربران");
