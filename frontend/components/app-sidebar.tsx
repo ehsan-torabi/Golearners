@@ -28,11 +28,13 @@ export function AppSidebar({
   title,
   subtitle,
   user,
+  footer,
 }: {
   groups: SidebarGroupItem[];
   title: string;
   subtitle?: string;
   user?: { name: string; mobile: string } | null;
+  footer?: React.ReactNode;
 }) {
   const pathname = usePathname();
   const isActive = (href: string, exact?: boolean) =>
@@ -77,14 +79,17 @@ export function AppSidebar({
           </SidebarGroup>
         ))}
       </SidebarContent>
-      {user && (
-        <SidebarFooter className="border-t border-sidebar-border px-4 py-3">
-          <p className="truncate text-sm font-medium text-sidebar-foreground">{user.name}</p>
-          <p className="mt-0.5 text-xs text-sidebar-foreground/60" dir="ltr">
-            {user.mobile}
-          </p>
-        </SidebarFooter>
-      )}
+      <SidebarFooter className="border-t border-sidebar-border px-4 py-3">
+        {footer}
+        {user && (
+          <>
+            <p className="truncate text-sm font-medium text-sidebar-foreground">{user.name}</p>
+            <p className="mt-0.5 text-xs text-sidebar-foreground/60" dir="ltr">
+              {user.mobile}
+            </p>
+          </>
+        )}
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

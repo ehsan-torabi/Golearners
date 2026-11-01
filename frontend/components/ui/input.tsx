@@ -109,7 +109,7 @@ function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLSelectEl
   return (
     <select
       className={cn(
-        "h-8 w-full appearance-none rounded-lg border border-input bg-field px-2.5 text-sm text-foreground transition-colors outline-none focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50",
+        "h-8 w-full rounded-lg border border-input bg-field px-2.5 text-sm text-foreground transition-colors outline-none focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
       {...props}

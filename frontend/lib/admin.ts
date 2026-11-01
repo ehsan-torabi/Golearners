@@ -37,3 +37,11 @@ export async function adminRefundOrder(id: string, reason: string) {
 export async function adminSetUserStatus(id: string, status: "active" | "blocked") {
   return api(`/admin/users/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
 }
+
+export async function adminPublishPost(id: string, publish: boolean) {
+  return api(`/admin/posts/${id}/${publish ? "publish" : "unpublish"}`, { method: "POST" });
+}
+
+export async function adminDeletePost(id: string) {
+  return api(`/admin/posts/${id}`, { method: "DELETE" });
+}

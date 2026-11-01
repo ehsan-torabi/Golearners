@@ -5,6 +5,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { api, LEVEL_FA, LEVEL_COLORS, formatTomanFromRial } from "@/lib/api";
+import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 import { fa } from "@/lib/utils";
 
 export const revalidate = 600;
@@ -67,11 +68,13 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   return (
     <div className="space-y-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <nav aria-label="مسیر" className="text-sm text-muted-foreground">
-        <Link href="/courses" className="hover:text-foreground">دوره‌ها</Link>
-        <span className="mx-2" aria-hidden>/</span>
-        <span className="text-foreground">{d.course.title}</span>
-      </nav>
+      <SiteBreadcrumb
+        items={[
+          { label: "خانه", href: "/" },
+          { label: "دوره‌ها", href: "/courses" },
+          { label: d.course.title },
+        ]}
+      />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
         <div className="space-y-10">

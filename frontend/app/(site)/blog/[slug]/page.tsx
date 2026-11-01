@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatJalali } from "@/lib/jalali";
 import { fa } from "@/lib/utils";
+import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 
 export const revalidate = 600;
 
@@ -48,6 +49,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   return (
     <article className="mx-auto max-w-2xl">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <SiteBreadcrumb
+        items={[
+          { label: "خانه", href: "/" },
+          { label: "وبلاگ", href: "/blog" },
+          { label: p.title },
+        ]}
+      />
       <header className="border-b border-line pb-6">
         <h1 className="font-semibold text-3xl leading-[1.35]">{p.title}</h1>
         <p className="mt-3 text-sm text-muted-foreground">

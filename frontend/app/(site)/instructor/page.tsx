@@ -1,3 +1,4 @@
+import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/ui/empty-state";
 import { api } from "@/lib/api";

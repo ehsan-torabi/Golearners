@@ -1,3 +1,4 @@
+import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -27,6 +28,7 @@ export default async function BlogPage() {
   }
   return (
     <div className="space-y-8">
+      <SiteBreadcrumb items={[{ label: "خانه", href: "/" }, { label: "وبلاگ" }]} />
       <header className="reveal border-b border-line pb-8">
         <h1 className="font-semibold text-3xl">وبلاگ</h1>
         <p className="mt-2 max-w-xl text-sm leading-7 text-muted-foreground">

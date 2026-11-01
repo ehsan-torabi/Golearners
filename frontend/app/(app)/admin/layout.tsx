@@ -1,23 +1,51 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell";
+import { LogoutButton } from "@/components/logout-button";
 import { getMe } from "@/lib/me-server";
 
 export const metadata: Metadata = { robots: { index: false } };
 export const dynamic = "force-dynamic";
 
+/* the admin console has its own structure: reporting first, then the content
+   and commerce sections, then the technical ones (media, audit log). */
 const groups = [
   {
     label: "گزارش‌ها",
     items: [{ href: "/admin", label: "نمای کلی", exact: true }],
   },
   {
-    label: "مدیریت",
+    label: "محتوا",
     items: [
       { href: "/admin/courses", label: "دوره‌ها" },
-      { href: "/admin/orders", label: "سفارش‌ها" },
-      { href: "/admin/users", label: "کاربران" },
+      { href: "/admin/posts", label: "نوشته‌های وبلاگ" },
+      { href: "/admin/media", label: "رسانه‌ها" },
     ],
+  },
+  {
+    label: "فروش",
+    items: [
+      { href: "/admin/orders", label: "سفارش‌ها" },
+      { href: "/admin/coupons", label: "کدهای تخفیف" },
+    ],
+  },
+  {
+    label: "کاربران",
+    items: [
+      { href: "/admin/users", label: "کاربران" },
+      { href: "/admin/messages", label: "پیام‌های تماس" },
+    ],
+  },
+  {
+    label: "سیستم",
+    items: [
+      { href: "/admin/settings", label: "تنظیمات" },
+      { href: "/admin/audit-logs", label: "گزارش رویدادها" },
+    ],
+  },
+  {
+    label: "عمومی",
+    items: [{ href: "/", label: "خانهٔ سایت" }],
   },
 ];
 
@@ -29,6 +57,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       title="مدیریت"
       subtitle="گوLearn"
       user={me ? { name: me.full_name, mobile: me.mobile } : null}
+      footer={
+        <LogoutButton className="mb-3 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
+      }
     >
       {children}
     </AppShell>

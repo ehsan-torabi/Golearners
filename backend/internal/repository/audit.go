@@ -27,7 +27,7 @@ func (r *AuditRepo) Insert(ctx context.Context, e *ports.AuditEntry) error {
 
 func (r *AuditRepo) List(ctx context.Context, page, perPage int) ([]*ports.AuditEntry, int, error) {
 	rows, err := querierOf(ctx, r.pool).Query(ctx,
-		`SELECT id, actor_user_id, action, entity_type, entity_id, before, after, ip, user_agent, created_at
+		`SELECT id, actor_user_id, action, entity_type, entity_id, before, after, ip::text, user_agent, created_at
 		 FROM audit_logs ORDER BY created_at DESC LIMIT $1 OFFSET $2`, perPage, (page-1)*perPage)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list audit: %w", err)

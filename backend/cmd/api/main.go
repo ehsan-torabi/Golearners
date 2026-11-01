@@ -202,6 +202,7 @@ func run() error {
 		CoursesRepo: courses, Sections: sections, Lessons: lessons, Categories: categories,
 		Posts: posts, Taxonomy: taxonomy, Pages: pages, FAQs: faqs,
 		Testimonials: testimonials, Contacts: contacts,
+		Coupons: repository.NewCouponRepo(pool),
 	}
 
 	srv := &http.Server{

@@ -14,17 +14,19 @@ export function AppShell({
   title,
   subtitle,
   user,
+  footer,
   children,
 }: {
   groups: SidebarGroupItem[];
   title: string;
   subtitle?: string;
   user?: { name: string; mobile: string } | null;
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <SidebarProvider>
-      <AppSidebar groups={groups} title={title} subtitle={subtitle} user={user} />
+      <AppSidebar groups={groups} title={title} subtitle={subtitle} user={user} footer={footer} />
       <SidebarInset className="min-h-svh bg-background">
         <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-card px-4">
           <SidebarTrigger className="-ms-1" />

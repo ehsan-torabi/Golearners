@@ -1,3 +1,4 @@
+import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 import type { Metadata } from "next";
 import { CourseCard } from "@/components/course-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -44,6 +45,7 @@ export default async function CoursesPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-8">
+      <SiteBreadcrumb items={[{ label: "خانه", href: "/" }, { label: "دوره‌ها" }]} />
       <header className="reveal">
         <h1 className="font-semibold text-3xl">دوره‌ها</h1>
         <p className="mt-2 max-w-xl text-sm leading-7 text-muted-foreground">
