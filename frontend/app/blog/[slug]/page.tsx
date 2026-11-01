@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { formatJalali } from "@/lib/jalali";
+import { fa } from "@/lib/utils";
 
 export const revalidate = 600;
 
@@ -46,18 +46,19 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   };
 
   return (
-    <article className="mx-auto max-w-2xl space-y-5">
+    <article className="mx-auto max-w-2xl">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <h1 className="font-display text-2xl leading-snug">{p.title}</h1>
-      <p className="text-sm text-muted-foreground">
-        {p.published_at ? formatJalali(new Date(p.published_at)) : ""}
-        {p.reading_minutes > 0 && ` • ${fa(p.reading_minutes)} دقیقه مطالعه`}
-      </p>
-      <Card className="p-8 text-sm leading-8 [&_a]:text-primary [&_h2]:font-display [&_h2]:text-lg [&_pre]:overflow-x-auto [&_code]:text-xs">
-        <div dangerouslySetInnerHTML={{ __html: p.body_html }} />
-      </Card>
+      <header className="border-b border-line pb-6">
+        <h1 className="font-display text-3xl leading-[1.35]">{p.title}</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {p.published_at ? formatJalali(new Date(p.published_at)) : ""}
+          {p.reading_minutes > 0 && ` · ${fa(p.reading_minutes)} دقیقه مطالعه`}
+        </p>
+      </header>
+      <div
+        className="prose-fa mt-8 text-[0.95rem] leading-9 [&_a]:text-accent-strong [&_a]:underline [&_blockquote]:border-e-2 [&_blockquote]:border-accent-display [&_blockquote]:ps-4 [&_blockquote]:text-muted-foreground [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-2xl [&_h3]:mt-6 [&_h3]:font-display [&_h3]:text-xl [&_li]:my-1 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:ps-6 [&_p]:my-4 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-field [&_pre]:bg-invert [&_pre]:p-4 [&_pre]:text-invert-foreground [&_code]:text-xs [&_ul]:my-4 [&_ul]:list-disc [&_ul]:ps-6"
+        dangerouslySetInnerHTML={{ __html: p.body_html }}
+      />
     </article>
   );
 }
-
-const fa = (n: number) => String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);

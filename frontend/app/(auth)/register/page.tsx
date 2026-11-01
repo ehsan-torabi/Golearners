@@ -2,11 +2,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
 import { OtpField } from "@/components/ui/otp-field";
+import { Alert } from "@/components/ui/alert";
 import { ApiError, api } from "@/lib/api";
+import { fa } from "@/lib/utils";
 
 type Step = "form" | "verify";
 
@@ -54,24 +57,22 @@ export default function RegisterPage() {
 
   if (step === "verify") {
     return (
-      <Card className="mx-auto max-w-sm p-8 text-center">
-        <h1 className="font-display text-lg">تأیید شماره موبایل</h1>
-        <p className="mt-2 text-sm text-muted-foreground">کد ۶ رقمی پیامک‌شده را وارد کنید.</p>
+      <Card className="reveal mx-auto max-w-sm p-8 text-center">
+        <h1 className="font-display text-2xl">تأیید شماره موبایل</h1>
+        <p className="mt-2 text-sm leading-7 text-muted-foreground">
+          کد ۶ رقمی به شماره <span dir="ltr">{fa(mobile)}</span> پیامک شد.
+        </p>
         <div className="mt-6 flex justify-center">
           <OtpField onComplete={verify} disabled={busy} />
         </div>
-        {error && (
-          <p role="alert" className="mt-4 text-sm text-destructive">
-            {error}
-          </p>
-        )}
+        {error && <Alert className="mt-4">{error}</Alert>}
       </Card>
     );
   }
 
   return (
-    <Card className="mx-auto max-w-sm p-8">
-      <h1 className="text-center font-display text-lg">ساخت حساب کاربری</h1>
+    <Card className="reveal mx-auto max-w-sm p-8">
+      <h1 className="text-center font-display text-2xl">ساخت حساب کاربری</h1>
       <form onSubmit={register} className="mt-6 space-y-4">
         <Field label="نام و نام خانوادگی" htmlFor="full_name" required>
           <Input
@@ -108,20 +109,16 @@ export default function RegisterPage() {
             required
           />
         </Field>
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
-        <Button type="submit" className="w-full" disabled={busy}>
-          {busy ? "لطفاً صبر کنید…" : "ثبت‌نام"}
+        {error && <Alert>{error}</Alert>}
+        <Button type="submit" className="w-full" loading={busy}>
+          ثبت‌نام
         </Button>
       </form>
       <p className="mt-5 text-center text-sm text-muted-foreground">
-        حساب دارید؟{" "}
-        <a href="/login" className="text-primary underline underline-offset-4">
+        حساب داری؟{" "}
+        <Link href="/login" className="text-accent-strong underline underline-offset-4">
           ورود
-        </a>
+        </Link>
       </p>
     </Card>
   );

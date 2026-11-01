@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Card } from "@/components/ui/card";
+import Link from "next/link";
+import { EmptyState } from "@/components/ui/empty-state";
 import { api } from "@/lib/api";
 import { formatJalali } from "@/lib/jalali";
 import { fa } from "@/lib/utils";
@@ -25,25 +26,41 @@ export default async function BlogPage() {
     posts = [];
   }
   return (
-    <div className="space-y-6">
-      <h1 className="font-display text-2xl">وبلاگ</h1>
+    <div className="space-y-8">
+      <header className="reveal border-b border-line pb-8">
+        <h1 className="font-display text-3xl">وبلاگ</h1>
+        <p className="mt-2 max-w-xl text-sm leading-7 text-muted-foreground">
+          یادداشت‌های آموزشی درباره برنامه‌نویسی، از مقدمات تا نکته‌های حرفه‌ای.
+        </p>
+      </header>
+
       {posts.length === 0 ? (
-        <Card className="p-10 text-center text-muted-foreground">هنوز مقاله‌ای منتشر نشده است.</Card>
+        <EmptyState
+          title="هنوز مقاله‌ای منتشر نشده است"
+          body="نوشته‌های تازه به‌زودی همین‌جا منتشر می‌شوند."
+        />
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        /* editorial dated list, deliberately not a card grid (RHYTHM 3) */
+        <ul className="divide-y divide-line">
           {posts.map((p) => (
-            <Card key={p.slug} className="p-6">
-              <a href={`/blog/${encodeURIComponent(p.slug)}`} className="group block">
-                <h2 className="font-display text-base group-hover:text-primary">{p.title}</h2>
-                <p className="mt-2 line-clamp-2 text-sm leading-7 text-muted-foreground">{p.excerpt}</p>
-                <p className="mt-3 text-xs text-muted-foreground">
+            <li key={p.slug}>
+              <Link href={`/blog/${encodeURIComponent(p.slug)}`} className="group flex flex-col gap-2 py-6 sm:flex-row sm:items-baseline sm:gap-8">
+                <time className="w-32 shrink-0 text-xs text-muted-foreground" dateTime={p.published_at ?? undefined}>
                   {p.published_at ? formatJalali(new Date(p.published_at)) : ""}
-                  {p.reading_minutes > 0 && ` • ${fa(p.reading_minutes)} دقیقه مطالعه`}
-                </p>
-              </a>
-            </Card>
+                </time>
+                <div>
+                  <h2 className="font-display text-xl leading-9 text-foreground transition-colors duration-(--motion) ease-motion group-hover:text-accent-strong">
+                    {p.title}
+                  </h2>
+                  <p className="mt-1 line-clamp-2 text-sm leading-7 text-muted-foreground">{p.excerpt}</p>
+                  {p.reading_minutes > 0 && (
+                    <p className="mt-2 text-xs text-muted-foreground">{fa(p.reading_minutes)} دقیقه مطالعه</p>
+                  )}
+                </div>
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

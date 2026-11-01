@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
+import { Alert } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/section-head";
 import { ApiError, api, formatTomanFromRial, type Order } from "@/lib/api";
 import { fa } from "@/lib/utils";
 
@@ -17,20 +18,20 @@ function CheckoutInner() {
   const [order, setOrder] = React.useState<Order | null>(null);
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+  const [paying, setPaying] = React.useState<string | null>(null);
 
   const createOrder = React.useCallback(async () => {
     if (!slug) return;
     setError("");
     setBusy(true);
     try {
-      const courses = await api<{ data: { id: string; slug: string }[] }>(
-        `/courses?per_page=50`,
+      // single-course lookup (the old page fetched 50 courses to find one)
+      const detail = await api<{ course: { id: string; title: string } }>(
+        `/courses/${encodeURIComponent(slug)}`,
       );
-      const course = courses.data.find((c) => c.slug === decodeURIComponent(slug));
-      if (!course) throw new ApiError(404, "NOT_FOUND", "دوره پیدا نشد.");
       const o = await api<Order>("/checkout", {
         method: "POST",
-        body: JSON.stringify({ course_id: course.id, coupon_code: coupon || undefined }),
+        body: JSON.stringify({ course_id: detail.course.id, coupon_code: coupon || undefined }),
       });
       setOrder(o);
     } catch (err) {
@@ -43,17 +44,12 @@ function CheckoutInner() {
   React.useEffect(() => {
     void createOrder();
     // initial order creation does not depend on the coupon input
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug]);
+  }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function applyCoupon() {
-    await createOrder();
-  }
-
-  async function pay(gateway: "zarinpal" | "digipay" | "mock") {
+  async function pay(gateway: "zarinpal" | "mock") {
     if (!order) return;
     setError("");
-    setBusy(true);
+    setPaying(gateway);
     try {
       const res = await api<{ redirect_url: string }>(`/checkout/${order.id}/pay`, {
         method: "POST",
@@ -62,24 +58,28 @@ function CheckoutInner() {
       window.location.href = res.redirect_url;
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
-      setBusy(false);
+      setPaying(null);
     }
   }
 
   if (!slug) {
-    return <Card className="mx-auto max-w-md p-8 text-center text-muted-foreground">دوره‌ای انتخاب نشده است.</Card>;
+    return (
+      <Card className="mx-auto max-w-md p-8 text-center text-muted-foreground">
+        دوره‌ای انتخاب نشده است؛ از صفحهٔ دوره خرید را شروع کن.
+      </Card>
+    );
   }
 
   return (
     <div className="mx-auto max-w-md space-y-5">
+      <h1 className="font-display text-3xl">تسویه حساب</h1>
       <Card className="p-8">
-        <h1 className="font-display text-lg">تسویه حساب</h1>
         {order ? (
-          <div className="mt-5 space-y-3 text-sm">
+          <div className="space-y-3 text-sm">
             {order.items.map((it) => (
-              <div key={it.course_id} className="flex items-center justify-between">
+              <div key={it.course_id} className="flex items-center justify-between gap-4">
                 <span className="text-foreground">{it.title_snapshot}</span>
-                <span>{formatTomanFromRial(it.unit_price_rial)}</span>
+                <span className="shrink-0">{formatTomanFromRial(it.unit_price_rial)}</span>
               </div>
             ))}
             {order.discount_rial > 0 && (
@@ -88,10 +88,10 @@ function CheckoutInner() {
                 <span>{formatTomanFromRial(order.discount_rial)}</span>
               </div>
             )}
-            <div className="border-t border-border pt-3">
-              <div className="flex items-center justify-between text-base font-semibold">
-                <span>قابل پرداخت</span>
-                <span>{formatTomanFromRial(order.total_rial)}</span>
+            <div className="border-t border-line pt-3">
+              <div className="flex items-baseline justify-between">
+                <span className="font-semibold">قابل پرداخت</span>
+                <span className="font-display text-xl">{formatTomanFromRial(order.total_rial)}</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
                 مهلت پرداخت: {fa(Math.max(0, Math.round((new Date(order.expires_at).getTime() - Date.now()) / 60000)))} دقیقه
@@ -99,7 +99,11 @@ function CheckoutInner() {
             </div>
           </div>
         ) : (
-          <p className="mt-4 text-sm text-muted-foreground">{busy ? "در حال آماده‌سازی…" : "—"}</p>
+          <div className="space-y-3" aria-label="در حال آماده‌سازی سفارش">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-5 w-1/2" />
+            <Skeleton className="h-8 w-full" />
+          </div>
         )}
 
         <div className="mt-6 flex gap-2">
@@ -112,26 +116,22 @@ function CheckoutInner() {
               onChange={(e) => setCoupon(e.target.value)}
             />
           </Field>
-          <Button variant="secondary" className="mt-6" onClick={applyCoupon} disabled={busy}>
+          <Button variant="outline" className="mt-6" onClick={() => void createOrder()} loading={busy}>
             اعمال
           </Button>
         </div>
 
-        {error && (
-          <p role="alert" className="mt-4 text-sm text-destructive">
-            {error}
-          </p>
-        )}
+        {error && <Alert className="mt-4">{error}</Alert>}
 
         <div className="mt-6 space-y-2">
           <p className="text-sm font-medium">انتخاب درگاه پرداخت</p>
-          <Button className="w-full" onClick={() => pay("zarinpal")} disabled={busy || !order}>
-            <ShieldCheck className="size-4" strokeWidth={1.5} aria-hidden />
+          <Button className="w-full" onClick={() => void pay("zarinpal")} disabled={busy || !order} loading={paying === "zarinpal"}>
             پرداخت با زرین‌پال
           </Button>
-          <Button variant="secondary" className="w-full" onClick={() => pay("mock")} disabled={busy || !order}>
-            درگاه آزمایشی (تست)
+          <Button variant="outline" className="w-full" onClick={() => void pay("mock")} disabled={busy || !order} loading={paying === "mock"}>
+            درگاه آزمایشی
           </Button>
+          <p className="text-center text-xs text-muted-foreground">درگاه آزمایشی فقط برای تست نصب است.</p>
         </div>
       </Card>
     </div>
@@ -140,7 +140,7 @@ function CheckoutInner() {
 
 export default function CheckoutPage() {
   return (
-    <React.Suspense fallback={null}>
+    <React.Suspense fallback={<Skeleton className="mx-auto h-96 max-w-md" />}>
       <CheckoutInner />
     </React.Suspense>
   );

@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Smartphone } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
 import { OtpField } from "@/components/ui/otp-field";
+import { Alert } from "@/components/ui/alert";
 import { ApiError, api } from "@/lib/api";
-import { fa } from "@/lib/utils";
+import { cn, fa } from "@/lib/utils";
 
 type Mode = "password" | "otp";
 type Step = "phone" | "code";
@@ -19,7 +20,6 @@ export default function LoginPage() {
   const [step, setStep] = React.useState<Step>("phone");
   const [mobile, setMobile] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [code, setCode] = React.useState("");
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [resent, setResent] = React.useState(0);
@@ -64,21 +64,17 @@ export default function LoginPage() {
 
   if (step === "code") {
     return (
-      <Card className="mx-auto max-w-sm p-8 text-center">
-        <Smartphone className="mx-auto size-8 text-primary" strokeWidth={1.5} aria-hidden />
-        <h1 className="mt-3 font-display text-lg">کد تأیید را وارد کنید</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+      <Card className="reveal mx-auto max-w-sm p-8 text-center">
+        <h1 className="font-display text-2xl">کد تأیید را وارد کن</h1>
+        <p className="mt-2 text-sm leading-7 text-muted-foreground">
           کد ۶ رقمی به شماره <span dir="ltr">{fa(mobile)}</span> پیامک شد.
         </p>
         <div className="mt-6 flex justify-center">
           <OtpField onComplete={submitCode} disabled={busy} />
         </div>
-        {error && (
-          <p role="alert" className="mt-4 text-sm text-destructive">
-            {error}
-          </p>
-        )}
+        {error && <Alert className="mt-4">{error}</Alert>}
         <button
+          type="button"
           className="mt-5 text-xs text-muted-foreground underline underline-offset-4 disabled:opacity-50"
           disabled={resent > 0}
           onClick={async () => {
@@ -92,7 +88,7 @@ export default function LoginPage() {
                 });
               }, 1000);
             } catch {
-              setError("ارسال مجدد ممکن نشد؛ کمی بعد تلاش کنید.");
+              setError("ارسال مجدد ممکن نشد؛ کمی بعد تلاش کن.");
             }
           }}
         >
@@ -103,9 +99,9 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="mx-auto max-w-sm p-8">
-      <h1 className="text-center font-display text-lg">ورود به گوLearn</h1>
-      <div className="mt-5 grid grid-cols-2 gap-1 rounded-control bg-muted p-1 text-sm" role="tablist">
+    <Card className="reveal mx-auto max-w-sm p-8">
+      <h1 className="text-center font-display text-2xl">ورود به گوLearn</h1>
+      <div className="mt-5 grid grid-cols-2 gap-1 rounded-control bg-muted p-1 text-sm">
         {(
           [
             ["password", "رمز عبور"],
@@ -114,11 +110,12 @@ export default function LoginPage() {
         ).map(([value, label]) => (
           <button
             key={value}
-            role="tab"
-            aria-selected={mode === value}
-            className={`rounded-field px-3 py-2 transition-colors duration-(--motion) ease-motion ${
-              mode === value ? "bg-card text-foreground shadow-control" : "text-muted-foreground"
-            }`}
+            type="button"
+            aria-pressed={mode === value}
+            className={cn(
+              "rounded-field px-3 py-2 transition-colors duration-(--motion) ease-motion",
+              mode === value ? "bg-card text-foreground shadow-raise" : "text-muted-foreground",
+            )}
             onClick={() => {
               setMode(value);
               setError("");
@@ -157,25 +154,16 @@ export default function LoginPage() {
             />
           </Field>
         )}
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
-        <Button type="submit" className="w-full" disabled={busy}>
-          {mode === "password" ? (
-            <KeyRound className="size-4" strokeWidth={1.5} aria-hidden />
-          ) : (
-            <Smartphone className="size-4" strokeWidth={1.5} aria-hidden />
-          )}
-          {busy ? "لطفاً صبر کنید…" : mode === "password" ? "ورود" : "ارسال کد تأیید"}
+        {error && <Alert>{error}</Alert>}
+        <Button type="submit" className="w-full" loading={busy}>
+          {mode === "password" ? "ورود" : "ارسال کد تأیید"}
         </Button>
       </form>
       <p className="mt-5 text-center text-sm text-muted-foreground">
-        حساب ندارید؟{" "}
-        <a href="/register" className="text-primary underline underline-offset-4">
+        حساب نداری؟{" "}
+        <Link href="/register" className="text-accent-strong underline underline-offset-4">
           ثبت‌نام
-        </a>
+        </Link>
       </p>
     </Card>
   );

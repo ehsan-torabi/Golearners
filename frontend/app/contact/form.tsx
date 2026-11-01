@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/input";
+import { Alert } from "@/components/ui/alert";
 import { ApiError, api } from "@/lib/api";
 
 export function ContactForm() {
@@ -33,9 +34,9 @@ export function ContactForm() {
 
   if (sent) {
     return (
-      <p className="text-center text-sm text-success" role="status">
+      <Alert tone="success" role="status">
         پیام شما ثبت شد؛ در اولین فرصت پاسخ می‌دهیم.
-      </p>
+      </Alert>
     );
   }
 
@@ -60,13 +61,9 @@ export function ContactForm() {
       <Field label="پیام" htmlFor="c-body" required>
         <Textarea id="c-body" value={body} onChange={(e) => setBody(e.target.value)} required minLength={10} />
       </Field>
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-      <Button type="submit" className="w-full" disabled={busy}>
-        {busy ? "در حال ارسال…" : "ارسال پیام"}
+      {error && <Alert>{error}</Alert>}
+      <Button type="submit" className="w-full" loading={busy}>
+        ارسال پیام
       </Button>
     </form>
   );
