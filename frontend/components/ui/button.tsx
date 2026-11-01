@@ -1,17 +1,20 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-type Variant = "primary" | "secondary" | "outline" | "ghost";
+type Variant = "primary" | "secondary" | "outline" | "ghost" | "destructive";
 type Size = "sm" | "md" | "lg";
 
 /* primary: شنگرف fill + ink border (boundary carries the 3:1, see DESIGN.md)
-   secondary: ink/paper inversion block; outline: quiet sibling; ghost: inline actions */
+   secondary: ink/paper inversion block; outline: quiet sibling; ghost: inline actions;
+   destructive: tinted danger for real destructive actions (refund, delete) */
 const variants: Record<Variant, string> = {
   primary:
     "border border-ink bg-primary text-primary-foreground hover:brightness-105 shadow-flat",
   secondary: "border border-ink bg-secondary text-secondary-foreground hover:opacity-90",
   outline: "border border-line bg-card text-foreground hover:bg-muted",
   ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
+  destructive:
+    "border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20",
 };
 
 const sizes: Record<Size, string> = {

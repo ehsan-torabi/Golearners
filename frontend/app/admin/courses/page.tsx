@@ -4,8 +4,10 @@ import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Field, Input, Textarea } from "@/components/ui/input";
-import { Badge } from "@/components/ui/card";
+import { Field, Input, Textarea, Select } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ApiError, formatTomanFromRial, type CourseSummary } from "@/lib/api";
 import { adminCreateCourse, adminPublishCourse, fetchAdmin } from "@/lib/admin";
 import { fa } from "@/lib/utils";
@@ -16,14 +18,18 @@ const STATUS_FA: Record<string, string> = {
   archived: "بایگانی",
 };
 
+const EMPTY_FORM = {
+  title: "", slug: "", summary: "", description_html: "", level: "beginner", price_toman: "",
+};
+
 export default function AdminCoursesPage() {
   const [courses, setCourses] = React.useState<CourseSummary[]>([]);
+  const [loaded, setLoaded] = React.useState(false);
   const [showForm, setShowForm] = React.useState(false);
   const [error, setError] = React.useState("");
-  const [busy, setBusy] = React.useState(false);
-  const [form, setForm] = React.useState({
-    title: "", slug: "", summary: "", description_html: "", level: "beginner", price_toman: "",
-  });
+  const [toggling, setToggling] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const [form, setForm] = React.useState(EMPTY_FORM);
 
   const load = React.useCallback(async () => {
     setError("");
@@ -32,6 +38,8 @@ export default function AdminCoursesPage() {
       setCourses(res.data ?? []);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "خطا در دریافت فهرست");
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -42,7 +50,7 @@ export default function AdminCoursesPage() {
   async function create(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setBusy(true);
+    setSaving(true);
     try {
       await adminCreateCourse({
         title: form.title,
@@ -53,22 +61,25 @@ export default function AdminCoursesPage() {
         price_rial: Number(form.price_toman || "0") * 10,
       });
       setShowForm(false);
-      setForm({ title: "", slug: "", summary: "", description_html: "", level: "beginner", price_toman: "" });
+      setForm(EMPTY_FORM);
       await load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "خطا در ایجاد دوره");
     } finally {
-      setBusy(false);
+      setSaving(false);
     }
   }
 
   async function togglePublish(id: string, current: string) {
     setError("");
+    setToggling(id);
     try {
       await adminPublishCourse(id, current !== "published");
       await load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "خطا در تغییر وضعیت");
+    } finally {
+      setToggling("");
     }
   }
 
@@ -76,14 +87,12 @@ export default function AdminCoursesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl">مدیریت دوره‌ها</h1>
-        <Button onClick={() => setShowForm((s) => !s)}>{showForm ? "بستن" : "دوره جدید"}</Button>
+        <Button variant={showForm ? "outline" : "primary"} onClick={() => setShowForm((s) => !s)}>
+          {showForm ? "بستن فرم" : "دوره جدید"}
+        </Button>
       </div>
 
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
+      {error && <Alert>{error}</Alert>}
 
       {showForm && (
         <Card className="p-6">
@@ -104,16 +113,11 @@ export default function AdminCoursesPage() {
               />
             </Field>
             <Field label="سطح" htmlFor="a-level">
-              <select
-                id="a-level"
-                value={form.level}
-                onChange={(e) => setForm({ ...form, level: e.target.value })}
-                className="h-11 w-full rounded-field border-line bg-field px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
-              >
+              <Select id="a-level" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}>
                 <option value="beginner">مقدماتی</option>
                 <option value="intermediate">متوسط</option>
                 <option value="advanced">پیشرفته</option>
-              </select>
+              </Select>
             </Field>
             <Field label="خلاصه" htmlFor="a-summary" className="sm:col-span-2">
               <Input id="a-summary" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
@@ -128,22 +132,34 @@ export default function AdminCoursesPage() {
               />
             </Field>
             <div className="sm:col-span-2">
-              <Button type="submit" disabled={busy}>
-                {busy ? "در حال ذخیره…" : "ایجاد دوره (پیش‌نویس)"}
+              <Button type="submit" loading={saving}>
+                ایجاد دوره (پیش‌نویس)
               </Button>
             </div>
           </form>
         </Card>
       )}
 
-      <div className="space-y-3">
-        {courses.length === 0 ? (
-          <Card className="p-8 text-center text-muted-foreground">دوره‌ای ثبت نشده است.</Card>
-        ) : (
-          courses.map((c) => (
+      {!loaded ? (
+        <Card className="space-y-3 p-6" aria-label="در حال بارگذاری فهرست دوره‌ها">
+          <div className="h-5 w-1/3 animate-pulse rounded bg-muted" />
+          <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
+        </Card>
+      ) : courses.length === 0 ? (
+        <EmptyState
+          title="دوره‌ای ثبت نشده است"
+          body="اولین دوره را با دکمهٔ «دوره جدید» بساز."
+        />
+      ) : (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">{fa(courses.length)} دوره</p>
+          {courses.map((c) => (
             <Card key={c.id} className="flex flex-wrap items-center justify-between gap-3 p-5">
               <div>
-                <Link href={`/courses/${encodeURIComponent(c.slug)}`} className="font-medium hover:text-primary">
+                <Link
+                  href={`/courses/${encodeURIComponent(c.slug)}`}
+                  className="font-medium transition-colors duration-(--motion) ease-motion hover:text-accent-strong"
+                >
                   {c.title}
                 </Link>
                 <p className="mt-0.5 text-xs text-muted-foreground" dir="ltr">
@@ -152,29 +168,22 @@ export default function AdminCoursesPage() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm">{c.price_rial === 0 ? "رایگان" : formatTomanFromRial(c.price_rial)}</span>
-                <Badge
-                  className={
-                    c.status === "published"
-                      ? "border-success/40 text-success"
-                      : c.status === "draft"
-                        ? "border-warning/40 text-warning"
-                        : "border-border text-muted-foreground"
-                  }
-                >
+                <Badge tone={c.status === "published" ? "success" : c.status === "draft" ? "warning" : "neutral"}>
                   {STATUS_FA[c.status] ?? c.status}
                 </Badge>
                 <Button
                   size="sm"
-                  variant={c.status === "published" ? "secondary" : "primary"}
+                  variant={c.status === "published" ? "outline" : "primary"}
+                  loading={toggling === c.id}
                   onClick={() => togglePublish(c.id, c.status)}
                 >
                   {c.status === "published" ? "لغو انتشار" : "انتشار"}
                 </Button>
               </div>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

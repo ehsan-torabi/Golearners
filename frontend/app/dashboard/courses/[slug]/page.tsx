@@ -37,13 +37,22 @@ async function curriculum(slug: string) {
   return (await res.json()) as { sections: SectionRow[]; lessons: LessonRow[] };
 }
 
-export default async function LearnCoursePage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function LearnCoursePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ lesson?: string }>;
+}) {
   const { slug } = await params;
+  const { lesson: lessonParam } = await searchParams;
   const data = await curriculum(decodeURIComponent(slug));
   if (!data) notFound();
 
-  const first = data.lessons.find((l) => l.accessible);
-  if (!first) {
+  /* the sidebar links here with ?lesson=; anything not accessible falls back to the first */
+  const requested = data.lessons.find((l) => l.id === lessonParam && l.accessible);
+  const current = requested ?? data.lessons.find((l) => l.accessible);
+  if (!current) {
     return (
       <Card className="mx-auto max-w-md p-10 text-center text-muted-foreground">
         دسترسی به این دوره فعال نیست.
@@ -52,20 +61,21 @@ export default async function LearnCoursePage({ params }: { params: Promise<{ sl
   }
 
   const sections = [...data.sections].sort((a, b) => a.position - b.position);
+  const base = `/dashboard/courses/${encodeURIComponent(slug)}`;
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
       <div className="space-y-4">
-        <VideoPlayer lessonId={first.id} />
-        <h1 className="font-display text-lg">{first.title}</h1>
+        <VideoPlayer key={current.id} lessonId={current.id} />
+        <h1 className="font-display text-xl leading-8">{current.title}</h1>
         <p className="text-sm text-muted-foreground">
-          درس {fa(first.position)} — در حین پخش، پیشرفت شما به‌صورت خودکار ذخیره می‌شود.
+          درس {fa(current.position)}؛ پیشرفت در حین پخش به‌صورت خودکار ذخیره می‌شود.
         </p>
       </div>
 
       <aside className="h-fit lg:sticky lg:top-24">
         <Card className="p-4">
-          <h2 className="px-2 pb-2 font-display text-sm">سرفصل‌ها</h2>
+          <h2 className="px-2 pb-2 font-display text-base">سرفصل‌ها</h2>
           <ol className="space-y-0.5 text-sm">
             {sections.map((sec) => (
               <li key={sec.id}>
@@ -73,24 +83,37 @@ export default async function LearnCoursePage({ params }: { params: Promise<{ sl
                 <ul>
                   {data.lessons
                     .filter((l) => l.section_id === sec.id)
-                    .map((l) => (
-                      <li key={l.id}>
-                        <span
-                          className={`flex items-center justify-between rounded-field px-2 py-2 ${
-                            l.id === first.id ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-                          }`}
-                        >
-                          <span className="truncate">{l.title}</span>
-                          {l.completed ? (
-                            <span className="text-success">✓</span>
-                          ) : l.accessible ? (
-                            <span className="text-xs">پخش</span>
-                          ) : (
-                            <span aria-label="قفل">🔒</span>
-                          )}
-                        </span>
-                      </li>
-                    ))}
+                    .map((l) =>
+                      l.accessible ? (
+                        <li key={l.id}>
+                          <Link
+                            href={`${base}?lesson=${l.id}`}
+                            aria-current={l.id === current.id ? "true" : undefined}
+                            className={`flex items-center justify-between gap-2 rounded-field px-2 py-2 transition-colors duration-(--motion) ease-motion ${
+                              l.id === current.id
+                                ? "bg-muted font-medium text-foreground"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            }`}
+                          >
+                            <span className="truncate">{l.title}</span>
+                            {l.completed ? (
+                              <svg aria-label="تمام‌شده" viewBox="0 0 16 16" className="size-3.5 shrink-0 text-success" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="m3 8.5 3.5 3.5L13 4.5" />
+                              </svg>
+                            ) : (
+                              <span className="shrink-0 text-xs">پخش</span>
+                            )}
+                          </Link>
+                        </li>
+                      ) : (
+                        <li key={l.id}>
+                          <span className="flex items-center justify-between gap-2 rounded-field px-2 py-2 text-muted-foreground/60">
+                            <span className="truncate">{l.title}</span>
+                            <span className="shrink-0 text-xs">قفل</span>
+                          </span>
+                        </li>
+                      ),
+                    )}
                 </ul>
               </li>
             ))}

@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
-import { formatTomanFromRial, LEVEL_FA, type CourseSummary } from "@/lib/api";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LEVEL_FA, type CourseSummary } from "@/lib/api";
 import { fa } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "داشبورد", robots: { index: false } };
@@ -21,6 +22,7 @@ export default async function DashboardPage() {
   const access = jar.get("gl_at")?.value ?? "";
   let courses: MyCourse[] = [];
   let authError = false;
+  let loadError = false;
   try {
     const res = await fetch(`${process.env.API_INTERNAL ?? "http://localhost:8080"}/api/v1/me/courses`, {
       headers: { Cookie: `gl_at=${access}` },
@@ -30,15 +32,15 @@ export default async function DashboardPage() {
     else if (res.ok) {
       const body = (await res.json()) as { data: MyCourse[] };
       courses = body.data ?? [];
-    }
+    } else loadError = true;
   } catch {
-    authError = false;
+    loadError = true;
   }
 
   if (authError) {
     return (
-      <Card className="mx-auto max-w-md p-10 text-center">
-        <p className="text-foreground">برای دیدن داشبورد ابتدا وارد شوید.</p>
+      <Card className="reveal mx-auto max-w-md p-10 text-center">
+        <p className="text-foreground">برای دیدن داشبورد ابتدا وارد شو.</p>
         <ButtonLink href="/login" className="mt-5">
           ورود به حساب
         </ButtonLink>
@@ -46,44 +48,56 @@ export default async function DashboardPage() {
     );
   }
 
+  if (loadError) {
+    return (
+      <EmptyState
+        className="mt-10"
+        title="داشبورد بارگذاری نشد"
+        body="ارتباط با سرور برقرار نشد. صفحه را دوباره باز کن؛ اگر تکرار شد، بعداً تلاش کن."
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl">دوره‌های من</h1>
+      <header className="reveal">
+        <h1 className="font-display text-3xl">دوره‌های من</h1>
+      </header>
       {courses.length === 0 ? (
-        <Card className="p-10 text-center text-muted-foreground">
-          هنوز دوره‌ای خریداری نکرده‌اید.
-          <div className="mt-5">
-            <ButtonLink href="/courses">مشاهده دوره‌ها</ButtonLink>
-          </div>
-        </Card>
+        <EmptyState
+          title="هنوز دوره‌ای نخریده‌ای"
+          body="با اولین خرید، دوره اینجا اضافه می‌شود و یادگیری را از همان‌جا شروع می‌کنی."
+          actionHref="/courses"
+          actionLabel="دیدن دوره‌ها"
+        />
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           {courses.map((mc) => (
             <Card key={mc.course.id} className="p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="font-display text-base">
+                  <h2 className="font-display text-lg leading-8">
                     <Link
                       href={`/dashboard/courses/${encodeURIComponent(mc.course.slug)}`}
-                      className="hover:text-primary"
+                      className="transition-colors duration-(--motion) ease-motion hover:text-accent-strong"
                     >
                       {mc.course.title}
                     </Link>
                   </h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {LEVEL_FA[mc.course.level]} • {formatTomanFromRial(mc.course.price_rial)}
-                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{LEVEL_FA[mc.course.level]}</p>
                 </div>
-                <span className="text-sm font-medium text-primary">{fa(mc.progress_pct)}٪</span>
+                <span className="font-display text-xl text-accent-strong">{fa(mc.progress_pct)}٪</span>
               </div>
+              {/* progress: a real status bar, square ends (pill reserved for badges) */}
               <div
-                className="mt-4 h-2 overflow-hidden rounded-full bg-muted"
+                className="mt-4 h-2 overflow-hidden rounded-field bg-muted"
                 role="progressbar"
                 aria-valuenow={mc.progress_pct}
                 aria-valuemin={0}
                 aria-valuemax={100}
+                aria-label={`پیشرفت دوره ${mc.course.title}`}
               >
-                <div className="h-full rounded-full bg-primary" style={{ width: `${mc.progress_pct}%` }} />
+                <div className="h-full bg-primary" style={{ width: `${mc.progress_pct}%` }} />
               </div>
               <ButtonLink
                 href={`/dashboard/courses/${encodeURIComponent(mc.course.slug)}`}
@@ -99,5 +113,3 @@ export default async function DashboardPage() {
     </div>
   );
 }
-
-

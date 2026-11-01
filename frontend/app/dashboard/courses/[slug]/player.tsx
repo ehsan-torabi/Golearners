@@ -1,12 +1,14 @@
 "use client";
 
 import * as React from "react";
+import { Skeleton } from "@/components/ui/section-head";
 
 // Dynamically-typed import keeps hls.js out of SSR bundles.
 export function VideoPlayer({ lessonId }: { lessonId: string }) {
   const ref = React.useRef<HTMLVideoElement>(null);
   const [error, setError] = React.useState("");
   const [url, setUrl] = React.useState("");
+  const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -14,6 +16,7 @@ export function VideoPlayer({ lessonId }: { lessonId: string }) {
 
     (async () => {
       try {
+        setLoading(true);
         const { api } = await import("@/lib/api");
         const res = await api<{ playback_url: string }>(`/playback/lessons/${lessonId}`, {
           cache: "no-store",
@@ -34,7 +37,11 @@ export function VideoPlayer({ lessonId }: { lessonId: string }) {
           video.src = res.playback_url;
         }
       } catch {
-        if (!cancelled) setError("پخش در دسترس نیست — احتمالاً دسترسی ندارید یا نشست منقضی شده؛ صفحه را تازه‌سازی کنید.");
+        if (!cancelled) {
+          setError("پخش در دسترس نیست؛ احتمالاً نشست منقضی شده. صفحه را تازه‌سازی کن یا دوباره وارد شو.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
 
@@ -75,10 +82,20 @@ export function VideoPlayer({ lessonId }: { lessonId: string }) {
     };
   }, [lessonId, url]);
 
-  if (error) return <div className="glass rounded-surface p-6 text-sm text-muted-foreground">{error}</div>;
+  if (error) {
+    return (
+      <div role="alert" className="rounded-surface border border-destructive/30 bg-destructive/10 p-6 text-sm leading-7 text-destructive">
+        {error}
+      </div>
+    );
+  }
 
+  /* the <video> stays mounted (hls.js attaches to it); the skeleton overlays while loading */
   return (
-    <div className="overflow-hidden rounded-surface border-line bg-black/40 shadow-surface">
+    <div className="relative overflow-hidden rounded-surface border border-line bg-black">
+      {loading && (
+        <Skeleton className="absolute inset-0 z-10 rounded-none" aria-label="در حال بارگذاری ویدیو" />
+      )}
       <video
         ref={ref}
         controls

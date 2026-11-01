@@ -34,11 +34,6 @@ export function faNumber(value: number): string {
   return fa(Math.round(value).toLocaleString("en-US")).replace(/,/g, "٬");
 }
 
-/** Amount in toman with the unit after the number (Rial/10). */
-export function formatTomanFromRial(rial: number): string {
-  return `${faNumber(rial / 10)} تومان`;
-}
-
 /** Percent with Persian digits: 18 -> ۱۸٪ */
 export function faPercent(value: number, digits = 0): string {
   return `${fa(value.toFixed(digits))}٪`;
