@@ -1,81 +1,105 @@
-import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { Button as ButtonPrimitive } from "@base-ui/react/button"
+import { cva, type VariantProps } from "class-variance-authority"
+import Link from "next/link"
+import { cn } from "cn"
 
-type Variant = "primary" | "secondary" | "outline" | "ghost" | "destructive";
-type Size = "sm" | "md" | "lg";
-
-/* primary: شنگرف fill + ink border (boundary carries the 3:1, see DESIGN.md)
-   secondary: ink/paper inversion block; outline: quiet sibling; ghost: inline actions;
-   destructive: tinted danger for real destructive actions (refund, delete) */
-const variants: Record<Variant, string> = {
-  primary:
-    "border border-ink bg-primary text-primary-foreground hover:brightness-105 shadow-flat",
-  secondary: "border border-ink bg-secondary text-secondary-foreground hover:opacity-90",
-  outline: "border border-line bg-card text-foreground hover:bg-muted",
-  ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
-  destructive:
-    "border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20",
-};
-
-const sizes: Record<Size, string> = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-11 px-5 text-sm",
-  lg: "h-13 px-7 text-lg",
-};
-
-const base =
-  "inline-flex min-w-11 items-center justify-center gap-2 rounded-control font-medium transition-[transform,background-color,border-color,opacity] duration-(--motion) ease-motion active:[transform:var(--press)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50";
+const buttonVariants = cva(
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm leading-(--leading-control) font-medium whitespace-nowrap shadow-none transition-all duration-150 outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  {
+    variants: {
+      variant: {
+        /* primary: solid AA-safe Ant blue; hover/active darken (light theme) */
+        default:
+          "bg-primary text-primary-foreground hover:bg-primary-hover active:not-aria-[haspopup]:bg-primary-active",
+        outline:
+          "border-border bg-card text-foreground hover:border-primary hover:text-primary active:not-aria-[haspopup]:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground border-border hover:border-primary hover:text-primary active:not-aria-[haspopup]:bg-muted",
+        ghost:
+          "hover:bg-muted hover:text-foreground active:not-aria-[haspopup]:bg-muted/80 aria-expanded:bg-muted aria-expanded:text-foreground",
+        destructive:
+          "border-destructive/30 bg-destructive-bg text-destructive-text hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20",
+        link: "text-accent-strong underline-offset-4 shadow-none hover:underline active:not-aria-[haspopup]:translate-y-0",
+      },
+      size: {
+        default: "h-8 gap-1.5 px-3 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        xs: "h-6 gap-1 px-2 text-xs [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-7 gap-1 px-2.5 text-[0.8rem] [&_svg:not([class*='size-'])]:size-3.5",
+        lg: "h-10 gap-1.5 px-4 text-base has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        icon: "size-8",
+        "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm": "size-7",
+        "icon-lg": "size-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
 
 function Spinner() {
   return (
     <span
       aria-hidden
-      className="size-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+      className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
     />
-  );
+  )
 }
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: Variant;
-  size?: Size;
-  loading?: boolean;
-};
+type Variant = NonNullable<VariantProps<typeof buttonVariants>["variant"]> | "primary"
+type Size = NonNullable<VariantProps<typeof buttonVariants>["size"]> | "md"
+type ButtonProps = Omit<ButtonPrimitive.Props, "variant" | "size"> & {
+  variant?: Variant
+  size?: Size
+  loading?: boolean
+}
 
-export function Button({
-  variant = "primary",
-  size = "md",
-  loading = false,
+const normVariant = (v: Variant | undefined) => (v === "primary" ? "default" : v) as VariantProps<typeof buttonVariants>["variant"]
+const normSize = (v: Size | undefined) => (v === "md" ? "default" : v) as VariantProps<typeof buttonVariants>["size"]
+
+function Button({
   className,
-  type = "button",
+  variant = "default",
+  size = "default",
+  loading = false,
   disabled,
   children,
   ...props
 }: ButtonProps) {
   return (
-    <button
-      type={type}
+    <ButtonPrimitive
+      data-slot="button"
       aria-busy={loading || undefined}
       disabled={disabled || loading}
-      className={cn(base, variants[variant], sizes[size], className)}
+      className={cn(buttonVariants({ variant: normVariant(variant), size: normSize(size), className }))}
       {...props}
     >
       {loading && <Spinner />}
       {children}
-    </button>
-  );
+    </ButtonPrimitive>
+  )
 }
 
-type ButtonLinkProps = React.ComponentProps<typeof Link> & {
-  variant?: Variant;
-  size?: Size;
-};
+type ButtonLinkProps = Omit<React.ComponentProps<typeof Link>, "variant" | "size"> & {
+  variant?: Variant
+  size?: Size
+}
 
-export function ButtonLink({
-  variant = "primary",
-  size = "md",
+function ButtonLink({
   className,
-  href,
+  variant = "default",
+  size = "default",
   ...props
 }: ButtonLinkProps) {
-  return <Link href={href} className={cn(base, variants[variant], sizes[size], className)} {...props} />;
+  return (
+    <Link
+      data-slot="button"
+      className={cn(buttonVariants({ variant: normVariant(variant), size: normSize(size), className }))}
+      {...props}
+    />
+  )
 }
+
+export { Button, ButtonLink, buttonVariants }

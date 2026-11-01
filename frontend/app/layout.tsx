@@ -3,6 +3,7 @@ import { SiteHeader, type NavItem } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
+
 export const metadata: Metadata = {
   title: { default: "گوLearn | آموزش برنامه‌نویسی به فارسی", template: "%s | گوLearn" },
   description: "دوره‌های ویدیویی برنامه‌نویسی به زبان فارسی، با دسترسی مادام‌العمر و پشتیبانی مستقیم مدرس.",

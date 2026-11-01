@@ -1,9 +1,11 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "farsiui/tailwind.css";
 
 /* dark mode is an explicit attribute on <html>, set by the theme toggle */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* Vazirmatn (body) + Lalezar (display), self-hosted, public/fonts */
+/* Vazirmatn — self-hosted (public/fonts). Ant v6 direction: 400/600 only. */
 @font-face {
   font-family: "Vazirmatn";
   src: url("/fonts/Vazirmatn-Regular.woff2") format("woff2");
@@ -22,90 +24,129 @@
   font-weight: 600;
   font-display: swap;
 }
-@font-face {
-  font-family: "Lalezar";
-  src: url("/fonts/Lalezar-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-display: swap;
-}
 
-/* گوLearn «پرانرژی» theme: paper + ink + شنگرف. See DESIGN.md.
-   Every text/bg pairing below is WCAG-AA verified (4.5:1, large 3:1). */
+/* گوLearn on Ant Design v6 tokens (DESIGN.md). Text pairs AA-verified:
+   interactive/text primary = blue-7 #0958D9 (6.2:1); #1677FF reserved for
+   borders/focus/large graphics (≥3:1); alert body text stays on-surface. */
 :root {
   color-scheme: light;
 
-  --background: oklch(0.97 0.012 85);
-  --foreground: oklch(0.22 0.02 260);
-  --card: oklch(0.995 0.008 85);
-  --card-foreground: oklch(0.22 0.02 260);
-  --popover: oklch(0.995 0.008 85);
-  --popover-foreground: oklch(0.22 0.02 260);
-  /* شنگرف fill carries ink text (6:1); boundary carried by 1px ink border */
-  --primary: oklch(0.7 0.19 35);
-  --primary-foreground: oklch(0.18 0.015 260);
-  --secondary: oklch(0.22 0.02 260);
-  --secondary-foreground: oklch(0.95 0.01 85);
-  --muted: oklch(0.93 0.012 85);
-  --muted-foreground: oklch(0.47 0.022 260);
-  --accent-strong: oklch(0.47 0.19 30);
-  --accent-display: oklch(0.55 0.21 32);
-  --destructive: oklch(0.46 0.19 25);
-  --success: oklch(0.46 0.13 150);
-  --warning: oklch(0.44 0.11 70);
-  --border: oklch(0.22 0.02 260 / 16%);
-  --input: oklch(0.955 0.012 85);
-  --ring: oklch(0.47 0.19 30);
-  /* inversion band: ink block in light, paper block in dark */
-  --invert: oklch(0.22 0.02 260);
-  --invert-foreground: oklch(0.95 0.01 85);
-  --invert-muted: oklch(0.95 0.01 85 / 70%);
-  --field: oklch(0.955 0.012 85);
+  /* three-layer surfaces: layout > container > elevated */
+  --background: #f5f5f5;
+  --card: #ffffff;
+  --card-foreground: #1f1f1f;
+  --popover: #ffffff;
+  --popover-foreground: #1f1f1f;
+  --foreground: #1f1f1f;
+  --muted: #fafafa;
+  --muted-foreground: #595959;
+  /* primary: AA-safe Ant blue; #1677FF lives in --ring and --primary-tint */
+  --primary: #0958d9;
+  --primary-hover: #0050b3;
+  --primary-active: #003a8c;
+  --primary-foreground: #ffffff;
+  --primary-tint: #e6f4ff;
+  --secondary: #fafafa;
+  --secondary-foreground: #1f1f1f;
+  --accent: #f0f0f0;
+  --accent-foreground: #1f1f1f;
+  /* legacy accent tokens now map to the AA text blue */
+  --accent-strong: #0958d9;
+  --accent-display: #0958d9;
+  /* semantic: fill + AA text step + pale alert/tag bg (Ant palette) */
+  --success: #52c41a;
+  --success-text: #237804;
+  --success-bg: #f6ffed;
+  --warning: #faad14;
+  --warning-text: #874d00;
+  --warning-bg: #fffbe6;
+  --destructive: #ff4d4f;
+  --destructive-text: #cf1322;
+  --destructive-bg: #fff2f0;
+  --info: #1677ff;
+  --info-text: #0958d9;
+  --info-bg: #e6f4ff;
+  --border: #d9d9d9;
+  --border-variant: #f0f0f0;
+  --input: #d9d9d9;
+  --field: #ffffff;
+  --ring: #1677ff;
+  /* legacy inversion band = the Ant dark sider/footer #001529, both themes */
+  --invert: #001529;
+  --invert-foreground: #ffffff;
+  --invert-muted: rgba(255, 255, 255, 0.65);
 
-  --shape-control: 0.625rem;
-  --shape-field: 0.625rem;
-  --shape-surface: 1.125rem;
-  --shape-overlay: 1.25rem;
+  --radius: 6px;
+  --shape-control: 6px;
+  --shape-field: 6px;
+  --shape-surface: 8px;
+  --shape-overlay: 8px;
+  --shape-tag: 4px;
   --line: 1px;
   --line-style: solid;
-  /* shadow = elevation marker only (DESIGN.md): raise for sticky/hover, pop for overlays */
+  /* Ant shadow tiers: tertiary (raised surface) + popup (floating layer) */
   --depth-flat: 0 0 #0000;
-  --depth-raise: 0 1px 2px oklch(0.22 0.02 260 / 8%), 0 12px 28px -16px oklch(0.22 0.02 260 / 30%);
-  --depth-pop: 0 24px 48px -20px oklch(0.22 0.02 260 / 35%);
-  --press: scale(0.96);
+  --depth-raise: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 6px -1px rgba(0, 0, 0, 0.03),
+    0 2px 4px 0 rgba(0, 0, 0, 0.03);
+  --depth-pop: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12),
+    0 9px 28px 8px rgba(0, 0, 0, 0.05);
+  --press: translate-y-px;
   --motion: 200ms;
-  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-fast: 100ms;
+  --motion-slow: 300ms;
+  --motion-ease: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --motion-ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
   --spacing: 0.25rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 16px;
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --background: oklch(0.18 0.015 260);
-  --foreground: oklch(0.94 0.01 85);
-  --card: oklch(0.22 0.015 260);
-  --card-foreground: oklch(0.94 0.01 85);
-  --popover: oklch(0.24 0.015 260);
-  --popover-foreground: oklch(0.94 0.01 85);
-  --primary: oklch(0.7 0.19 35);
-  --primary-foreground: oklch(0.18 0.015 260);
-  --secondary: oklch(0.94 0.01 85);
-  --secondary-foreground: oklch(0.18 0.015 260);
-  --muted: oklch(0.25 0.015 260);
-  --muted-foreground: oklch(0.72 0.015 260);
-  --accent-strong: oklch(0.7 0.19 35);
-  --accent-display: oklch(0.72 0.19 35);
-  --destructive: oklch(0.7 0.2 25);
-  --success: oklch(0.72 0.14 150);
-  --warning: oklch(0.75 0.13 80);
-  --border: oklch(0.94 0.01 85 / 18%);
-  --input: oklch(0.24 0.015 260);
-  --ring: oklch(0.7 0.19 35);
-  --invert: oklch(0.94 0.01 85);
-  --invert-foreground: oklch(0.18 0.015 260);
-  --invert-muted: oklch(0.18 0.015 260 / 70%);
-  --field: oklch(0.24 0.015 260);
-  --depth-raise: 0 1px 2px oklch(0 0 0 / 30%), 0 12px 28px -16px oklch(0 0 0 / 50%);
-  --depth-pop: 0 24px 48px -20px oklch(0 0 0 / 55%);
+  --background: #000000;
+  --card: #141414;
+  --card-foreground: rgba(255, 255, 255, 0.88);
+  --popover: #1f1f1f;
+  --popover-foreground: rgba(255, 255, 255, 0.88);
+  --foreground: rgba(255, 255, 255, 0.88);
+  --muted: #1a1a1a;
+  --muted-foreground: rgba(255, 255, 255, 0.65);
+  --primary: #0958d9;
+  --primary-hover: #1677ff;
+  --primary-active: #0050b3;
+  --primary-foreground: #ffffff;
+  --primary-tint: rgba(22, 119, 255, 0.2);
+  --secondary: #1f1f1f;
+  --secondary-foreground: rgba(255, 255, 255, 0.88);
+  --accent: #262626;
+  --accent-foreground: rgba(255, 255, 255, 0.88);
+  --accent-strong: #4096ff;
+  --accent-display: #4096ff;
+  --success: #6ab03c;
+  --success-text: #95de64;
+  --success-bg: rgba(82, 196, 26, 0.12);
+  --warning: #d4b106;
+  --warning-text: #ffd666;
+  --warning-bg: rgba(250, 173, 20, 0.12);
+  --destructive: #e5484d;
+  --destructive-text: #ff7875;
+  --destructive-bg: rgba(255, 77, 79, 0.12);
+  --info: #1677ff;
+  --info-text: #4096ff;
+  --info-bg: rgba(22, 119, 255, 0.12);
+  --border: #424242;
+  --border-variant: #2a2a2a;
+  --input: #424242;
+  --field: #1a1a1a;
+  --ring: #1677ff;
+  --invert: #001529;
+  --invert-foreground: #ffffff;
+  --invert-muted: rgba(255, 255, 255, 0.65);
+  --depth-raise: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --depth-pop: 0 6px 16px 0 rgba(0, 0, 0, 0.45), 0 3px 6px -4px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {
@@ -116,59 +157,73 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-tint: var(--primary-tint);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-accent-strong: var(--accent-strong);
   --color-accent-display: var(--accent-display);
-  --color-destructive: var(--destructive);
   --color-success: var(--success);
+  --color-success-text: var(--success-text);
+  --color-success-bg: var(--success-bg);
   --color-warning: var(--warning);
+  --color-warning-text: var(--warning-text);
+  --color-warning-bg: var(--warning-bg);
+  --color-destructive: var(--destructive);
+  --color-destructive-text: var(--destructive-text);
+  --color-destructive-bg: var(--destructive-bg);
+  --color-info: var(--info);
+  --color-info-text: var(--info-text);
+  --color-info-bg: var(--info-bg);
   --color-border: var(--border);
+  --color-border-variant: var(--border-variant);
+  --color-line: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-invert: var(--invert);
   --color-invert-foreground: var(--invert-foreground);
   --color-invert-muted: var(--invert-muted);
-  /* ink is the same physical ink in both themes; used for hard borders */
-  --color-ink: oklch(0.22 0.02 260);
 
   --radius-control: var(--shape-control);
   --radius-field: var(--shape-field);
   --radius-surface: var(--shape-surface);
   --radius-overlay: var(--shape-overlay);
+  --radius-tag: var(--shape-tag);
 
   --shadow-flat: var(--depth-flat);
   --shadow-raise: var(--depth-raise);
   --shadow-pop: var(--depth-pop);
-  /* legacy names kept flat: old class names resolve to no shadow */
   --shadow-control: var(--depth-flat);
   --shadow-press: var(--depth-flat);
   --shadow-field: var(--depth-flat);
   --shadow-surface: var(--depth-flat);
 
   --ease-motion: var(--motion-ease);
-  --font-display: "Lalezar", "Vazirmatn", system-ui, sans-serif;
+  --font-display: "Vazirmatn", system-ui, sans-serif;
+  --font-sans: "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: "Vazirmatn", system-ui, sans-serif;
-  line-height: 1.8;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.66;
 }
 
 ::selection {
-  background: oklch(0.7 0.19 35 / 30%);
+  background: rgba(22, 119, 255, 0.25);
 }
 
-/* Persian display type: Lalezar is single-weight; fake bold is banned.
-   No letter-spacing (breaks Persian joining). */
-h1, h2, h3, .font-display {
-  font-family: var(--font-display);
-  font-weight: 400;
+/* Ant v6: two weights only; headings take the 600 title grade */
+h1, h2, h3, h4, .font-display {
+  font-weight: 600;
   line-height: 1.35;
 }
 
@@ -194,11 +249,11 @@ select:disabled {
   cursor: not-allowed;
 }
 
-/* MOTION 2: one staggered entrance per page, transform+opacity only */
+/* MOTION (Ant): 200ms component transitions, ease-in-out; transform+opacity only */
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -206,13 +261,13 @@ select:disabled {
   }
 }
 .reveal {
-  animation: rise 480ms var(--motion-ease) both;
+  animation: rise 240ms var(--motion-ease-out) both;
 }
 .reveal-2 {
-  animation: rise 480ms var(--motion-ease) 90ms both;
+  animation: rise 240ms var(--motion-ease-out) 100ms both;
 }
 .reveal-3 {
-  animation: rise 480ms var(--motion-ease) 180ms both;
+  animation: rise 240ms var(--motion-ease-out) 200ms both;
 }
 
 /* iOS: keep form controls >= 16px to prevent focus zoom */
