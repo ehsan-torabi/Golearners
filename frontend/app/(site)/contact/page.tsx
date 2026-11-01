@@ -12,7 +12,7 @@ export default function ContactPage() {
   return (
     <div className="mx-auto max-w-md space-y-5">
       <header className="reveal">
-        <h1 className="font-display text-3xl">تماس با ما</h1>
+        <h1 className="font-semibold text-3xl">تماس با ما</h1>
         <p className="mt-2 text-sm leading-7 text-muted-foreground">
           سوال فنی درباره درس‌ها، مشکل پرداخت یا هر چیز دیگر؛ پیام بگذارید، سریع جواب می‌دهیم.
         </p>

@@ -67,7 +67,7 @@ export default async function LearnCoursePage({
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
       <div className="space-y-4">
         <VideoPlayer key={current.id} lessonId={current.id} />
-        <h1 className="font-display text-xl leading-8">{current.title}</h1>
+        <h1 className="font-semibold text-xl leading-8">{current.title}</h1>
         <p className="text-sm text-muted-foreground">
           درس {fa(current.position)}؛ پیشرفت در حین پخش به‌صورت خودکار ذخیره می‌شود.
         </p>
@@ -75,7 +75,7 @@ export default async function LearnCoursePage({
 
       <aside className="h-fit lg:sticky lg:top-24">
         <Card className="p-4">
-          <h2 className="px-2 pb-2 font-display text-base">سرفصل‌ها</h2>
+          <h2 className="px-2 pb-2 font-semibold text-base">سرفصل‌ها</h2>
           <ol className="space-y-0.5 text-sm">
             {sections.map((sec) => (
               <li key={sec.id}>

@@ -58,7 +58,7 @@ export default function RegisterPage() {
   if (step === "verify") {
     return (
       <Card className="reveal mx-auto max-w-sm p-8 text-center">
-        <h1 className="font-display text-2xl">تأیید شماره موبایل</h1>
+        <h1 className="font-semibold text-2xl">تأیید شماره موبایل</h1>
         <p className="mt-2 text-sm leading-7 text-muted-foreground">
           کد ۶ رقمی به شماره <span dir="ltr">{fa(mobile)}</span> پیامک شد.
         </p>
@@ -77,7 +77,7 @@ export default function RegisterPage() {
 
   return (
     <Card className="reveal mx-auto max-w-sm p-8">
-      <h1 className="text-center font-display text-2xl">ساخت حساب کاربری</h1>
+      <h1 className="text-center font-semibold text-2xl">ساخت حساب کاربری</h1>
       <form onSubmit={register} className="mt-6 space-y-4">
         <Field label="نام و نام خانوادگی" htmlFor="full_name" required>
           <Input

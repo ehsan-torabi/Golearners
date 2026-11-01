@@ -39,7 +39,10 @@ export default async function AdminPage() {
     else if (res.ok) {
       summary = (await res.json()) as Summary;
       const coursesRes = await fetch(`${base}/api/v1/admin/analytics/courses`, auth);
-      if (coursesRes.ok) top = (await coursesRes.json()) as CourseStat[];
+      if (coursesRes.ok) {
+        const body = (await coursesRes.json()) as { data?: CourseStat[] };
+        top = body.data ?? [];
+      }
     } else loadError = true;
   } catch {
     loadError = true;

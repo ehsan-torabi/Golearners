@@ -31,7 +31,7 @@ export default async function InstructorPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <h1 className="reveal font-display text-3xl">درباره مدرس</h1>
+      <h1 className="reveal font-semibold text-3xl">درباره مدرس</h1>
 
       {!instructor ? (
         <EmptyState
@@ -50,7 +50,7 @@ export default async function InstructorPage() {
           )}
           {instructor.bio_html && (
             <div
-              className="text-[0.95rem] leading-9 [&_a]:text-accent-strong [&_a]:underline [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-2xl [&_h3]:mt-6 [&_h3]:font-display [&_h3]:text-xl [&_p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:ps-6"
+              className="text-[0.95rem] leading-9 [&_a]:text-accent-strong [&_a]:underline [&_h2]:mt-8 [&_h2]:font-semibold [&_h2]:text-2xl [&_h3]:mt-6 [&_h3]:font-semibold [&_h3]:text-xl [&_p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:ps-6"
               dangerouslySetInnerHTML={{ __html: instructor.bio_html }}
             />
           )}
@@ -75,7 +75,7 @@ export default async function InstructorPage() {
 
       {quotes.length > 0 && (
         <section aria-labelledby="voices" className="mt-14">
-          <h2 id="voices" className="mb-6 font-display text-2xl">
+          <h2 id="voices" className="mb-6 font-semibold text-2xl">
             نظر دانشجوها
           </h2>
           <ul className="space-y-4">

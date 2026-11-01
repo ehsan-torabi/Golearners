@@ -68,6 +68,12 @@ export function toJalali(date: Date): JalaliDate {
   return d2j(g2d(date.getFullYear(), date.getMonth() + 1, date.getDate()));
 }
 
+/** zero-value timestamps (year 1) mean "not set", not a date in the past */
+function isRealDate(date: Date): boolean {
+  const t = date.getTime();
+  return Number.isFinite(t) && date.getFullYear() >= 1900;
+}
+
 export const JALALI_MONTHS = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 
 const FA = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
@@ -75,6 +81,7 @@ const faDigits = (n: number | string) => String(n).replace(/\d/g, (d) => FA[Numb
 
 /** «۲۵ شهریور ۱۴۰۵» */
 export function formatJalali(date: Date): string {
+  if (!date || !isRealDate(date)) return "";
   const { jy, jm, jd } = toJalali(date);
   return `${faDigits(jd)} ${JALALI_MONTHS[jm - 1]} ${faDigits(jy)}`;
 }

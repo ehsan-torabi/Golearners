@@ -132,7 +132,12 @@ export default async function DashboardPage() {
                       </Link>
                     </h3>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {LEVEL_FA[mc.course.level]}، خرید در {formatJalali(new Date(mc.granted_at))}
+                      {[
+                        LEVEL_FA[mc.course.level],
+                        mc.granted_at ? `خرید در ${formatJalali(new Date(mc.granted_at))}` : null,
+                      ]
+                        .filter(Boolean)
+                        .join("، ")}
                     </p>
                   </div>
                   <div className="flex items-center gap-4">

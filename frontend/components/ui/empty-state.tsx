@@ -22,7 +22,7 @@ export function EmptyState({
         className,
       )}
     >
-      <p className="font-display text-lg text-foreground">{title}</p>
+      <p className="font-semibold text-lg text-foreground">{title}</p>
       {body && <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-muted-foreground">{body}</p>}
       {actionHref && actionLabel && (
         <Link

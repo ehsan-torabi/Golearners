@@ -72,7 +72,7 @@ function CheckoutInner() {
 
   return (
     <div className="mx-auto max-w-md space-y-5">
-      <h1 className="font-display text-3xl">تسویه حساب</h1>
+      <h1 className="font-semibold text-3xl">تسویه حساب</h1>
       <Card className="p-8">
         {order ? (
           <div className="space-y-3 text-sm">
@@ -91,7 +91,7 @@ function CheckoutInner() {
             <div className="border-t border-line pt-3">
               <div className="flex items-baseline justify-between">
                 <span className="font-semibold">قابل پرداخت</span>
-                <span className="font-display text-xl">{formatTomanFromRial(order.total_rial)}</span>
+                <span className="font-semibold text-xl">{formatTomanFromRial(order.total_rial)}</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
                 مهلت پرداخت: {fa(Math.max(0, Math.round((new Date(order.expires_at).getTime() - Date.now()) / 60000)))} دقیقه

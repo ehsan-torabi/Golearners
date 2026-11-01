@@ -77,7 +77,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
         <div className="space-y-10">
           <header className="space-y-3 border-b border-line pb-8">
             <Badge tone={LEVEL_COLORS[d.course.level]}>{LEVEL_FA[d.course.level]}</Badge>
-            <h1 className="font-display text-4xl leading-[1.3]">{d.course.title}</h1>
+            <h1 className="font-semibold text-4xl leading-[1.3]">{d.course.title}</h1>
             <p className="max-w-2xl leading-8 text-muted-foreground">{d.course.summary}</p>
             {totalMinutes > 0 && (
               <p className="text-sm text-muted-foreground">
@@ -88,7 +88,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
           {(d.outcomes ?? []).length > 0 && (
             <section aria-labelledby="outcomes">
-              <h2 id="outcomes" className="mb-4 font-display text-2xl">در این دوره یاد می‌گیری</h2>
+              <h2 id="outcomes" className="mb-4 font-semibold text-2xl">در این دوره یاد می‌گیری</h2>
               <ul className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
                 {(d.outcomes ?? []).map((o, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm leading-7 text-muted-foreground">
@@ -101,19 +101,19 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
           )}
 
           <section aria-labelledby="curriculum">
-            <h2 id="curriculum" className="mb-4 font-display text-2xl">سرفصل‌ها</h2>
+            <h2 id="curriculum" className="mb-4 font-semibold text-2xl">سرفصل‌ها</h2>
             <div className="space-y-3">
               {d.sections.map((sec) => (
                 <Card key={sec.id} className="overflow-hidden">
                   <details className="group">
                     <summary className="flex list-none items-center justify-between gap-4 p-5 text-sm font-medium text-foreground">
                       <span>
-                        <span aria-hidden className="me-2 font-display text-accent-display">{fa(sec.position)}</span>
+                        <span aria-hidden className="me-2 font-semibold text-accent-display">{fa(sec.position)}</span>
                         {sec.title}
                       </span>
                       <span
                         aria-hidden
-                        className="font-display text-xl leading-none text-muted-foreground transition-transform duration-(--motion) ease-motion group-open:rotate-45"
+                        className="font-semibold text-xl leading-none text-muted-foreground transition-transform duration-(--motion) ease-motion group-open:rotate-45"
                       >
                         +
                       </span>
@@ -140,9 +140,9 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
           {d.description_html && (
             <section aria-labelledby="about">
-              <h2 id="about" className="mb-4 font-display text-2xl">درباره این دوره</h2>
+              <h2 id="about" className="mb-4 font-semibold text-2xl">درباره این دوره</h2>
               <Card
-                className="p-6 text-sm leading-8 [&_a]:text-accent-strong [&_a]:underline [&_h2]:font-display [&_h3]:font-display [&_pre]:overflow-x-auto"
+                className="p-6 text-sm leading-8 [&_a]:text-accent-strong [&_a]:underline [&_h2]:font-semibold [&_h3]:font-semibold [&_pre]:overflow-x-auto"
                 dangerouslySetInnerHTML={{ __html: d.description_html }}
               />
             </section>
@@ -150,9 +150,9 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
           {d.prerequisites_html && (
             <section aria-labelledby="prereq">
-              <h2 id="prereq" className="mb-4 font-display text-2xl">پیش‌نیازها</h2>
+              <h2 id="prereq" className="mb-4 font-semibold text-2xl">پیش‌نیازها</h2>
               <Card
-                className="p-6 text-sm leading-8 [&_a]:text-accent-strong [&_a]:underline [&_h2]:font-display [&_h3]:font-display [&_pre]:overflow-x-auto"
+                className="p-6 text-sm leading-8 [&_a]:text-accent-strong [&_a]:underline [&_h2]:font-semibold [&_h3]:font-semibold [&_pre]:overflow-x-auto"
                 dangerouslySetInnerHTML={{ __html: d.prerequisites_html }}
               />
             </section>
@@ -162,7 +162,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
         <aside className="h-fit lg:sticky lg:top-24">
           <Card className="border-ink p-6 shadow-raise">
             <div className="flex items-baseline justify-between">
-              <span className="font-display text-3xl text-foreground">
+              <span className="font-semibold text-3xl text-foreground">
                 {d.course.price_rial === 0 ? "رایگان" : formatTomanFromRial(d.course.price_rial)}
               </span>
               {d.course.compare_at_price_rial != null && d.course.compare_at_price_rial > d.course.price_rial && (

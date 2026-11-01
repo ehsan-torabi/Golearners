@@ -28,7 +28,7 @@ export default async function BlogPage() {
   return (
     <div className="space-y-8">
       <header className="reveal border-b border-line pb-8">
-        <h1 className="font-display text-3xl">وبلاگ</h1>
+        <h1 className="font-semibold text-3xl">وبلاگ</h1>
         <p className="mt-2 max-w-xl text-sm leading-7 text-muted-foreground">
           یادداشت‌های آموزشی درباره برنامه‌نویسی، از مقدمات تا نکته‌های حرفه‌ای.
         </p>
@@ -49,7 +49,7 @@ export default async function BlogPage() {
                   {p.published_at ? formatJalali(new Date(p.published_at)) : ""}
                 </time>
                 <div>
-                  <h2 className="font-display text-xl leading-9 text-foreground transition-colors duration-(--motion) ease-motion group-hover:text-accent-strong">
+                  <h2 className="font-semibold text-xl leading-9 text-foreground transition-colors duration-(--motion) ease-motion group-hover:text-accent-strong">
                     {p.title}
                   </h2>
                   <p className="mt-1 line-clamp-2 text-sm leading-7 text-muted-foreground">{p.excerpt}</p>

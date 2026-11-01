@@ -83,7 +83,7 @@ export default function LoginPage() {
   if (step === "code") {
     return (
       <Card className="reveal mx-auto max-w-sm p-8 text-center">
-        <h1 className="font-display text-2xl">
+        <h1 className="font-semibold text-2xl">
           {otpPurpose === "verify" ? "تأیید شماره و ورود" : "کد تأیید را وارد کن"}
         </h1>
         <p className="mt-2 text-sm leading-7 text-muted-foreground">
@@ -128,7 +128,7 @@ export default function LoginPage() {
 
   return (
     <Card className="reveal mx-auto max-w-sm p-8">
-      <h1 className="text-center font-display text-2xl">ورود به گوLearn</h1>
+      <h1 className="text-center font-semibold text-2xl">ورود به گوLearn</h1>
       <div className="mt-5 grid grid-cols-2 gap-1 rounded-control bg-muted p-1 text-sm">
         {(
           [

@@ -37,15 +37,16 @@ export default async function HomePage() {
   return (
     <div className="space-y-16">
       <section
-        className="reveal rounded-surface bg-invert px-6 py-12 text-invert-foreground sm:px-10 sm:py-16"
+        className="reveal rounded-lg border border-border bg-card px-6 py-12 shadow-raise sm:px-10 sm:py-14"
         aria-labelledby="hero-title"
       >
-        <h1 id="hero-title" className="max-w-3xl text-4xl leading-[1.25] sm:text-5xl sm:leading-[1.25]">
-          برنامه‌نویسی را{" "}
-          <span className="inline-block bg-primary px-3 text-primary-foreground">درست</span>{" "}
-          یاد بگیر
+        <h1
+          id="hero-title"
+          className="max-w-3xl text-[38px] leading-[46px] font-semibold text-foreground"
+        >
+          برنامه‌نویسی را <span className="text-accent-strong">درست</span> یاد بگیر
         </h1>
-        <p className="reveal-2 mt-5 max-w-xl text-base leading-8 text-invert-muted sm:text-lg">
+        <p className="reveal-2 mt-5 max-w-xl text-base leading-8 text-muted-foreground">
           دوره‌های ویدیویی فارسی، پروژه‌محور و با دسترسی مادام‌العمر. ویدیوها را یک بار بخر،
           برای همیشه داشته باش.
         </p>
@@ -53,12 +54,7 @@ export default async function HomePage() {
           <ButtonLink href="/courses" size="lg">
             دیدن دوره‌ها
           </ButtonLink>
-          <ButtonLink
-            href="/instructor"
-            variant="outline"
-            size="lg"
-            className="border-invert-foreground/40 bg-transparent text-invert-foreground hover:bg-invert-foreground/10"
-          >
+          <ButtonLink href="/instructor" variant="outline" size="lg">
             آشنایی با مدرس
           </ButtonLink>
         </div>
@@ -103,7 +99,7 @@ export default async function HomePage() {
             ["۳", "یادگیری با پشتیبانی", "اگر جایی گیر کردی، از صفحهٔ تماس برای مدرس پیام بگذار."],
           ].map(([n, title, body]) => (
             <li key={n} className="flex items-start gap-5">
-              <span aria-hidden className="font-display text-5xl leading-none text-accent-display">
+              <span aria-hidden className="text-3xl font-semibold leading-none text-accent-strong">
                 {n}
               </span>
               <div className="border-b border-line pb-6">
@@ -125,7 +121,7 @@ export default async function HomePage() {
                   {q.question}
                   <span
                     aria-hidden
-                    className="font-display text-xl leading-none text-accent-display transition-transform duration-(--motion) ease-motion group-open:rotate-45"
+                    className="text-lg font-semibold leading-none text-accent-strong transition-transform duration-150 group-open:rotate-45"
                   >
                     +
                   </span>
@@ -139,8 +135,8 @@ export default async function HomePage() {
         </section>
       )}
 
-      <section className="border-y border-line py-12 text-center" aria-label="شروع یادگیری">
-        <h2 className="font-display text-3xl text-foreground">دوره‌ات را انتخاب کن</h2>
+      <section className="rounded-lg border border-border bg-card px-6 py-10 text-center" aria-label="شروع یادگیری">
+        <h2 className="text-2xl font-semibold text-foreground">دوره‌ات را انتخاب کن</h2>
         <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-muted-foreground">
           از اولین درس تا آخرین پروژه، همه چیز فارسی و قدم‌به‌قدم.
         </p>
@@ -161,11 +157,10 @@ function FlagshipCard({ course }: { course: CourseSummary }) {
         href={`/courses/${encodeURIComponent(course.slug)}`}
         className="grid items-stretch sm:grid-cols-[240px_1fr]"
       >
-        <div className="relative flex aspect-video items-center justify-center bg-invert sm:aspect-auto">
-          <span aria-hidden className="font-display text-6xl leading-none text-invert-foreground/85">
+        <div className="flex aspect-video items-center justify-center bg-primary-tint sm:aspect-auto">
+          <span aria-hidden className="text-5xl font-semibold text-accent-strong">
             {course.title.slice(0, 2)}
           </span>
-          <span aria-hidden className="absolute bottom-0 end-0 size-8 border-s-[32px] border-s-transparent border-t-[32px] border-t-accent-display" />
         </div>
         <div className="flex flex-col justify-center gap-3 p-6">
           <div className="flex flex-wrap items-center gap-2">
@@ -176,7 +171,7 @@ function FlagshipCard({ course }: { course: CourseSummary }) {
               </span>
             )}
           </div>
-          <h3 className="font-display text-2xl leading-10 text-foreground transition-colors duration-(--motion) ease-motion group-hover:text-accent-strong">
+          <h3 className="text-xl font-semibold leading-8 text-foreground transition-colors duration-(--motion) ease-motion group-hover:text-accent-strong">
             {course.title}
           </h3>
           <p className="line-clamp-2 text-sm leading-7 text-muted-foreground">{course.summary}</p>

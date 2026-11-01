@@ -32,7 +32,7 @@ function ResultInner() {
       {paid ? (
         <>
           <CheckMark />
-          <h1 className="mt-4 font-display text-2xl">پرداخت با موفقیت انجام شد</h1>
+          <h1 className="mt-4 font-semibold text-2xl">پرداخت با موفقیت انجام شد</h1>
           <p className="mt-2 text-sm leading-7 text-muted-foreground">
             دسترسی شما به دوره فعال شد؛ همین حالا می‌توانی شروع کنی.
           </p>
@@ -43,7 +43,7 @@ function ResultInner() {
       ) : (
         <>
           <CrossMark />
-          <h1 className="mt-4 font-display text-2xl">پرداخت انجام نشد</h1>
+          <h1 className="mt-4 font-semibold text-2xl">پرداخت انجام نشد</h1>
           <p className="mt-2 text-sm leading-7 text-muted-foreground">
             پرداخت ناموفق بود یا لغو شد. می‌توانی دوباره تلاش کنی یا با پشتیبانی تماس بگیری.
           </p>

@@ -45,7 +45,7 @@ export default async function CoursesPage({ searchParams }: Props) {
   return (
     <div className="space-y-8">
       <header className="reveal">
-        <h1 className="font-display text-3xl">دوره‌ها</h1>
+        <h1 className="font-semibold text-3xl">دوره‌ها</h1>
         <p className="mt-2 max-w-xl text-sm leading-7 text-muted-foreground">
           هر دوره ویدیویی، پروژه‌محور و با دسترسی مادام‌العمر. سطح و موضوع را انتخاب کن.
         </p>
