@@ -4,6 +4,7 @@ package httpapi
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -103,6 +104,15 @@ func (a *App) handleAdminCoursePublish(publish bool) http.HandlerFunc {
 	}
 }
 
+// priceFilter reads a toman price filter and returns it in rial (x10).
+func priceFilter(r *http.Request, key string) int64 {
+	v, _ := strconv.ParseInt(r.URL.Query().Get(key), 10, 64)
+	if v <= 0 {
+		return 0
+	}
+	return v * 10
+}
+
 // GET /api/v1/admin/courses
 func (a *App) handleAdminCourseList(w http.ResponseWriter, r *http.Request) {
 	page, perPage := pageParams(r)
@@ -112,6 +122,10 @@ func (a *App) handleAdminCourseList(w http.ResponseWriter, r *http.Request) {
 		Level:        r.URL.Query().Get("level"),
 		Status:       r.URL.Query().Get("status"),
 		Q:            r.URL.Query().Get("q"),
+		Sort:         r.URL.Query().Get("sort"),
+		FeaturedOnly: r.URL.Query().Get("featured") == "1",
+		MinPriceRial: priceFilter(r, "min_price"),
+		MaxPriceRial: priceFilter(r, "max_price"),
 	})
 	if err != nil {
 		a.writeError(w, r, err)

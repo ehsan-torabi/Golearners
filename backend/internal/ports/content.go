@@ -41,6 +41,9 @@ type Transactor interface {
 type PostFilter struct {
 	Q          string // title/slug substring
 	Status     string // draft | published
+	CategoryID string
+	TagSlug    string
+	Sort       string // newest | oldest | title
 	Page       int
 	PerPage    int
 }

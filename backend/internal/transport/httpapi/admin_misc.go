@@ -10,7 +10,15 @@ import (
 	"golearn/backend/internal/domain/content"
 	"golearn/backend/internal/ports"
 	"golearn/backend/internal/service/contentadmin"
+
+	courseSlug "golearn/backend/internal/domain/course"
 )
+
+// taxonomyInput is the blog category/tag payload (title + optional position).
+type taxonomyInput struct {
+	Title    string `json:"title"`
+	Position int    `json:"position"`
+}
 
 // contentActor builds the contentadmin audit actor.
 func contentActor(r *http.Request) contentadmin.Actor {
@@ -95,8 +103,11 @@ func (a *App) handleAdminPostList(w http.ResponseWriter, r *http.Request) {
 	page, perPage := pageParams(r)
 	list, total, err := a.Posts.ListAdmin(r.Context(), ports.PostFilter{
 		Page: page, PerPage: perPage,
-		Status: r.URL.Query().Get("status"),
-		Q:      r.URL.Query().Get("q"),
+		Status:     r.URL.Query().Get("status"),
+		Q:          r.URL.Query().Get("q"),
+		CategoryID: r.URL.Query().Get("category_id"),
+		TagSlug:    r.URL.Query().Get("tag"),
+		Sort:       r.URL.Query().Get("sort"),
 	})
 	if err != nil {
 		a.writeError(w, r, err)
@@ -186,6 +197,77 @@ func (a *App) handleAdminTestimonialUpsert(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	writeJSON(w, http.StatusCreated, t)
+}
+
+// GET /api/v1/admin/blog-categories
+func (a *App) handleAdminBlogCategoryList(w http.ResponseWriter, r *http.Request) {
+	list, err := a.Taxonomy.ListCategories(r.Context())
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": list})
+}
+
+// POST /api/v1/admin/blog-categories
+func (a *App) handleAdminBlogCategoryCreate(w http.ResponseWriter, r *http.Request) {
+	var in taxonomyInput
+	if err := decodeJSON(w, r, &in); err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	slug, err := courseSlug.NormalizeSlug(in.Title)
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	c := &content.BlogCategory{
+		ID: uuid.Must(uuid.NewV7()), Slug: slug, Title: in.Title, Position: in.Position,
+	}
+	if err := a.Content.CreateBlogCategory(r.Context(), contentActor(r), c); err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, c)
+}
+
+// PUT /api/v1/admin/blog-categories/{id}
+func (a *App) handleAdminBlogCategoryUpdate(w http.ResponseWriter, r *http.Request) {
+	id, err := uuidParam(r, "id")
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	var in taxonomyInput
+	if err := decodeJSON(w, r, &in); err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	slug, err := courseSlug.NormalizeSlug(in.Title)
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	c := &content.BlogCategory{ID: id, Slug: slug, Title: in.Title, Position: in.Position}
+	if err := a.Content.UpdateBlogCategory(r.Context(), contentActor(r), c); err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	writeData(w, c)
+}
+
+// DELETE /api/v1/admin/blog-categories/{id}
+func (a *App) handleAdminBlogCategoryDelete(w http.ResponseWriter, r *http.Request) {
+	id, err := uuidParam(r, "id")
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	if err := a.Content.DeleteBlogCategory(r.Context(), contentActor(r), id); err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // GET /api/v1/admin/messages + POST /api/v1/admin/messages/{id}/status

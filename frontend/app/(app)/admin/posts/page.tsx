@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Input, Select } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -27,13 +27,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PostEditor } from "@/components/admin/post-editor";
 import {
   ApiError,
   adminDeletePost,
   adminPublishPost,
   fetchAdmin,
+  fetchBlogTaxonomy,
   type AdminPost,
+  type TaxonomyItem,
 } from "@/lib/admin";
 import { formatJalali } from "@/lib/jalali";
 import { fa } from "@/lib/utils";
@@ -49,13 +50,16 @@ export default function AdminPostsPage() {
   const [total, setTotal] = React.useState(0);
   const [page, setPage] = React.useState(1);
   const [status, setStatus] = React.useState("");
+  const [sort, setSort] = React.useState("newest");
+  const [categoryId, setCategoryId] = React.useState("");
+  const [tagSlug, setTagSlug] = React.useState("");
+  const [categories, setCategories] = React.useState<TaxonomyItem[]>([]);
+  const [tags, setTags] = React.useState<TaxonomyItem[]>([]);
   const [query, setQuery] = React.useState("");
   const [search, setSearch] = React.useState("");
   const [loaded, setLoaded] = React.useState(false);
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState("");
-  const [editorOpen, setEditorOpen] = React.useState(false);
-  const [editing, setEditing] = React.useState<string | null>(null);
   const [removing, setRemoving] = React.useState<AdminPost | null>(null);
 
   const load = React.useCallback(async () => {
@@ -64,6 +68,9 @@ export default function AdminPostsPage() {
       const params = new URLSearchParams({ page: String(page), per_page: "20" });
       if (status) params.set("status", status);
       if (search) params.set("q", search);
+      if (categoryId) params.set("category_id", categoryId);
+      if (tagSlug) params.set("tag", tagSlug);
+      params.set("sort", sort);
       const res = await fetchAdmin<{ data: AdminPost[]; meta: { total: number } }>(
         `/admin/posts?${params}`,
       );
@@ -74,11 +81,23 @@ export default function AdminPostsPage() {
     } finally {
       setLoaded(true);
     }
-  }, [page, status, search]);
+  }, [page, status, search, categoryId, tagSlug, sort]);
 
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  React.useEffect(() => {
+    fetchBlogTaxonomy()
+      .then((res) => {
+        setCategories(res.categories);
+        setTags(res.tags);
+      })
+      .catch(() => {
+        setCategories([]);
+        setTags([]);
+      });
+  }, []);
 
   async function togglePublish(post: AdminPost) {
     setError("");
@@ -119,14 +138,7 @@ export default function AdminPostsPage() {
             {loaded ? `${fa(total)} نوشته ثبت شده است.` : "در حال شمارش نوشته‌ها…"}
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setEditorOpen(true);
-          }}
-        >
-          نوشتهٔ تازه
-        </Button>
+        <ButtonLink href="/admin/posts/new">نوشتهٔ تازه</ButtonLink>
       </header>
 
       {error && <Alert>{error}</Alert>}
@@ -150,7 +162,7 @@ export default function AdminPostsPage() {
           </Tabs>
 
           <form
-            className="ms-auto flex items-center gap-2"
+            className="ms-auto flex flex-wrap items-end gap-3"
             role="search"
             onSubmit={(e) => {
               e.preventDefault();
@@ -158,18 +170,81 @@ export default function AdminPostsPage() {
               setPage(1);
             }}
           >
-            <label htmlFor="post-q" className="sr-only">
-              جست‌وجوی نوشته
-            </label>
-            <Input
-              id="post-q"
-              value={query}
-              placeholder="عنوان یا نامک نوشته"
-              className="w-56"
-              onChange={(e) => setQuery(e.target.value)}
-            />
+            <div>
+              <label htmlFor="post-q" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                جست‌وجو
+              </label>
+              <Input
+                id="post-q"
+                value={query}
+                placeholder="عنوان یا نامک نوشته"
+                className="w-52"
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="post-cat" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                دسته‌بندی
+              </label>
+              <Select
+                id="post-cat"
+                value={categoryId}
+                className="w-36"
+                onChange={(e) => {
+                  setCategoryId(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">همهٔ دسته‌ها</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label htmlFor="post-tag" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                برچسب
+              </label>
+              <Select
+                id="post-tag"
+                value={tagSlug}
+                className="w-32"
+                onChange={(e) => {
+                  setTagSlug(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">همهٔ برچسب‌ها</option>
+                {tags.map((t) => (
+                  <option key={t.id} value={t.slug}>
+                    {t.title}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label htmlFor="post-sort" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                ترتیب
+              </label>
+              <Select
+                id="post-sort"
+                value={sort}
+                className="w-32"
+                onChange={(e) => {
+                  setSort(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="newest">تازه‌ترین</option>
+                <option value="oldest">قدیمی‌ترین</option>
+                <option value="published">آخرین انتشار</option>
+                <option value="title">عنوان</option>
+              </Select>
+            </div>
             <Button type="submit" variant="outline">
-              جست‌وجو
+              اعمال
             </Button>
           </form>
         </div>
@@ -219,16 +294,9 @@ export default function AdminPostsPage() {
                   </TableCell>
                   <TableCell className="text-start">
                     <div className="flex flex-wrap items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setEditing(p.id);
-                          setEditorOpen(true);
-                        }}
-                      >
+                      <ButtonLink size="sm" variant="outline" href={`/admin/posts/${p.id}`}>
                         ویرایش
-                      </Button>
+                      </ButtonLink>
                       <Button
                         size="sm"
                         variant="ghost"
@@ -274,13 +342,6 @@ export default function AdminPostsPage() {
           </div>
         )}
       </Card>
-
-      <PostEditor
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-        postId={editing}
-        onSaved={() => void load()}
-      />
 
       <AlertDialog
         open={removing !== null}

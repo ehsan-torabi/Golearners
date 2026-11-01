@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -27,8 +28,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CourseEditor } from "@/components/admin/course-editor";
-import { ApiError, adminDeleteCourse, adminPublishCourse, fetchAdmin } from "@/lib/admin";
+import {
+  ApiError,
+  adminDeleteCourse,
+  adminPublishCourse,
+  fetchAdmin,
+  fetchCourseCategories,
+  type TaxonomyItem,
+} from "@/lib/admin";
 import { formatTomanFromRial, LEVEL_FA, type CourseSummary } from "@/lib/api";
 import { fa } from "@/lib/utils";
 
@@ -51,13 +58,17 @@ export default function AdminCoursesPage() {
   const [page, setPage] = React.useState(1);
   const [status, setStatus] = React.useState("");
   const [level, setLevel] = React.useState("");
+  const [category, setCategory] = React.useState("");
+  const [sort, setSort] = React.useState("newest");
+  const [featured, setFeatured] = React.useState(false);
+  const [minPrice, setMinPrice] = React.useState("");
+  const [maxPrice, setMaxPrice] = React.useState("");
+  const [categories, setCategories] = React.useState<TaxonomyItem[]>([]);
   const [query, setQuery] = React.useState("");
   const [search, setSearch] = React.useState("");
   const [loaded, setLoaded] = React.useState(false);
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState("");
-  const [editorOpen, setEditorOpen] = React.useState(false);
-  const [editing, setEditing] = React.useState<string | null>(null);
   const [removing, setRemoving] = React.useState<CourseSummary | null>(null);
 
   const load = React.useCallback(async () => {
@@ -66,7 +77,12 @@ export default function AdminCoursesPage() {
       const params = new URLSearchParams({ page: String(page), per_page: "20" });
       if (status) params.set("status", status);
       if (level) params.set("level", level);
+      if (category) params.set("category", category);
       if (search) params.set("q", search);
+      params.set("sort", sort);
+      if (featured) params.set("featured", "1");
+      if (minPrice) params.set("min_price", minPrice);
+      if (maxPrice) params.set("max_price", maxPrice);
       const res = await fetchAdmin<{ data: CourseSummary[]; meta: { total: number } }>(
         `/admin/courses?${params}`,
       );
@@ -77,11 +93,17 @@ export default function AdminCoursesPage() {
     } finally {
       setLoaded(true);
     }
-  }, [page, status, level, search]);
+  }, [page, status, level, category, sort, featured, minPrice, maxPrice, search]);
 
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  React.useEffect(() => {
+    fetchCourseCategories()
+      .then((res) => setCategories(res.data ?? []))
+      .catch(() => setCategories([]));
+  }, []);
 
   async function togglePublish(course: CourseSummary) {
     setError("");
@@ -122,14 +144,7 @@ export default function AdminCoursesPage() {
             {loaded ? `${fa(total)} دوره ثبت شده است.` : "در حال شمارش دوره‌ها…"}
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setEditorOpen(true);
-          }}
-        >
-          دورهٔ تازه
-        </Button>
+        <ButtonLink href="/admin/courses/new">دورهٔ تازه</ButtonLink>
       </header>
 
       {error && <Alert>{error}</Alert>}
@@ -153,7 +168,7 @@ export default function AdminCoursesPage() {
           </Tabs>
 
           <form
-            className="ms-auto flex items-center gap-2"
+            className="ms-auto flex flex-wrap items-end gap-3"
             role="search"
             onSubmit={(e) => {
               e.preventDefault();
@@ -161,35 +176,120 @@ export default function AdminCoursesPage() {
               setPage(1);
             }}
           >
-            <label htmlFor="course-q" className="sr-only">
-              جست‌وجوی دوره
-            </label>
-            <Input
-              id="course-q"
-              value={query}
-              placeholder="عنوان یا نامک دوره"
-              className="w-56"
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <label htmlFor="course-level" className="sr-only">
-              سطح دوره
-            </label>
-            <Select
-              id="course-level"
-              value={level}
-              className="w-32"
-              onChange={(e) => {
-                setLevel(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">همهٔ سطوح</option>
-              <option value="beginner">مقدماتی</option>
-              <option value="intermediate">متوسط</option>
-              <option value="advanced">پیشرفته</option>
-            </Select>
+            <div>
+              <label htmlFor="course-q" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                جست‌وجو
+              </label>
+              <Input
+                id="course-q"
+                value={query}
+                placeholder="عنوان یا نامک دوره"
+                className="w-52"
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="course-level" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                سطح
+              </label>
+              <Select
+                id="course-level"
+                value={level}
+                className="w-32"
+                onChange={(e) => {
+                  setLevel(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">همهٔ سطوح</option>
+                <option value="beginner">مقدماتی</option>
+                <option value="intermediate">متوسط</option>
+                <option value="advanced">پیشرفته</option>
+              </Select>
+            </div>
+            <div>
+              <label htmlFor="course-cat" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                دسته‌بندی
+              </label>
+              <Select
+                id="course-cat"
+                value={category}
+                className="w-36"
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">همهٔ دسته‌ها</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.slug}>
+                    {c.title}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label htmlFor="course-sort" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                ترتیب
+              </label>
+              <Select
+                id="course-sort"
+                value={sort}
+                className="w-36"
+                onChange={(e) => {
+                  setSort(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="newest">تازه‌ترین</option>
+                <option value="oldest">قدیمی‌ترین</option>
+                <option value="title">عنوان</option>
+                <option value="price_asc">ارزان‌ترین</option>
+                <option value="price_desc">گران‌ترین</option>
+                <option value="popular">ویژه و پرطرفدار</option>
+              </Select>
+            </div>
+            <div>
+              <label htmlFor="course-min" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                قیمت از (تومان)
+              </label>
+              <Input
+                id="course-min"
+                dir="ltr"
+                inputMode="numeric"
+                value={minPrice}
+                className="w-28"
+                onChange={(e) => setMinPrice(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="course-max" className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                تا (تومان)
+              </label>
+              <Input
+                id="course-max"
+                dir="ltr"
+                inputMode="numeric"
+                value={maxPrice}
+                className="w-28"
+                onChange={(e) => setMaxPrice(e.target.value)}
+              />
+            </div>
+            <div className="flex h-8 items-center gap-2">
+              <Checkbox
+                id="course-featured"
+                checked={featured}
+                onCheckedChange={(v) => {
+                  setFeatured(v);
+                  setPage(1);
+                }}
+              />
+              <label htmlFor="course-featured" className="text-sm">
+                فقط ویژه‌ها
+              </label>
+            </div>
             <Button type="submit" variant="outline">
-              جست‌وجو
+              اعمال
             </Button>
           </form>
         </div>
@@ -243,16 +343,9 @@ export default function AdminCoursesPage() {
                     </TableCell>
                     <TableCell className="text-start">
                       <div className="flex flex-wrap items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditing(c.id);
-                            setEditorOpen(true);
-                          }}
-                        >
+                        <ButtonLink size="sm" variant="outline" href={`/admin/courses/${c.id}`}>
                           ویرایش
-                        </Button>
+                        </ButtonLink>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -299,13 +392,6 @@ export default function AdminCoursesPage() {
           </div>
         )}
       </Card>
-
-      <CourseEditor
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-        courseId={editing}
-        onSaved={() => void load()}
-      />
 
       <AlertDialog
         open={removing !== null}

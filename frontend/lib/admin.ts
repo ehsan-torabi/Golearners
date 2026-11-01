@@ -217,12 +217,79 @@ export async function adminPublishPost(id: string, publish: boolean) {
   return api(`/admin/posts/${id}/${publish ? "publish" : "unpublish"}`, { method: "POST" });
 }
 
-// ---------- taxonomy, categories, media ----------
+// ---------- categories ----------
+
+export interface CourseCategory {
+  id: string;
+  slug: string;
+  title: string;
+  position: number;
+}
+
+export function adminListCategories() {
+  return fetchAdmin<{ data: CourseCategory[] }>("/admin/categories");
+}
+
+export async function adminCreateCategory(title: string, position = 0) {
+  return api("/admin/categories", { method: "POST", body: JSON.stringify({ title, position }) });
+}
+
+export async function adminUpdateCategory(id: string, title: string, position: number) {
+  return api(`/admin/categories/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ title, position }),
+  });
+}
+
+export async function adminDeleteCategory(id: string) {
+  return api(`/admin/categories/${id}`, { method: "DELETE" });
+}
+
+export async function adminCreateBlogCategory(title: string, position = 0) {
+  return api("/admin/blog-categories", {
+    method: "POST",
+    body: JSON.stringify({ title, position }),
+  });
+}
+
+export async function adminUpdateBlogCategory(id: string, title: string, position: number) {
+  return api(`/admin/blog-categories/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ title, position }),
+  });
+}
+
+export async function adminDeleteBlogCategory(id: string) {
+  return api(`/admin/blog-categories/${id}`, { method: "DELETE" });
+}
+
+// ---------- media ----------
+
+export function adminListMedia(params: {
+  page?: number;
+  per_page?: number;
+  kind?: string;
+  status?: string;
+  q?: string;
+  sort?: string;
+}) {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== "") search.set(k, String(v));
+  });
+  return fetchAdmin<AdminList<MediaAsset>>(`/admin/media?${search}`);
+}
+
+export async function adminDeleteMedia(id: string) {
+  return api(`/admin/media/${id}`, { method: "DELETE" });
+}
+
 
 export interface TaxonomyItem {
   id: string;
   slug: string;
   title: string;
+  position?: number;
 }
 
 export interface MediaAsset {
@@ -248,10 +315,11 @@ export async function fetchBlogTaxonomy() {
   return { categories: categories.data ?? [], tags: tags.data ?? [] };
 }
 
+/** Stored assets of one kind; failed uploads are hidden from pickers. */
 export function fetchMedia(kind: "image" | "video") {
-  return fetchAdmin<AdminList<MediaAsset>>(`/admin/media?status=ready&per_page=100`).then((res) => ({
+  return fetchAdmin<AdminList<MediaAsset>>("/admin/media?per_page=100").then((res) => ({
     ...res,
-    data: res.data.filter((m) => m.kind === kind),
+    data: res.data.filter((m) => m.kind === kind && m.status !== "failed"),
   }));
 }
 

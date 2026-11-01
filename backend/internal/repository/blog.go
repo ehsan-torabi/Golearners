@@ -181,9 +181,26 @@ func (r *BlogPostRepo) ListAdmin(ctx context.Context, f ports.PostFilter) ([]*co
 		where = append(where, "(p.title ILIKE $"+fmt.Sprint(len(args)+1)+" OR p.slug ILIKE $"+fmt.Sprint(len(args)+1)+")")
 		args = append(args, "%"+f.Q+"%")
 	}
+	if f.CategoryID != "" {
+		where = append(where, "p.category_id = $"+fmt.Sprint(len(args)+1))
+		args = append(args, f.CategoryID)
+	}
+	if f.TagSlug != "" {
+		where = append(where, "EXISTS(SELECT 1 FROM blog_post_tags pt JOIN blog_tags t ON t.id = pt.tag_id WHERE pt.post_id = p.id AND t.slug = $"+fmt.Sprint(len(args)+1)+")")
+		args = append(args, f.TagSlug)
+	}
+	order := "p.created_at DESC"
+	switch f.Sort {
+	case "oldest":
+		order = "p.created_at ASC"
+	case "title":
+		order = "p.title ASC"
+	case "published":
+		order = "p.published_at DESC NULLS LAST"
+	}
 	cond := strings.Join(where, " AND ")
 	rows, err := querierOf(ctx, r.pool).Query(ctx,
-		`SELECT `+postColumns+` FROM blog_posts p WHERE `+cond+` ORDER BY p.created_at DESC LIMIT $`+fmt.Sprint(len(args)+1)+` OFFSET $`+fmt.Sprint(len(args)+2),
+		`SELECT `+postColumns+` FROM blog_posts p WHERE `+cond+` ORDER BY `+order+` LIMIT $`+fmt.Sprint(len(args)+1)+` OFFSET $`+fmt.Sprint(len(args)+2),
 		append(append([]any{}, args...), f.PerPage, (f.Page-1)*f.PerPage)...)
 	list, err := collectPosts(rows, err)
 	if err != nil {

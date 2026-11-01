@@ -490,7 +490,7 @@ func (f *MediaRepo) ByID(_ context.Context, id uuid.UUID) (*course.MediaAsset, e
 	return &clone, nil
 }
 
-func (f *MediaRepo) List(context.Context, string, int, int) ([]*course.MediaAsset, int, error) {
+func (f *MediaRepo) List(context.Context, ports.MediaFilter) ([]*course.MediaAsset, int, error) {
 	return nil, 0, nil
 }
 

@@ -1,0 +1,156 @@
+import { expect, expectNoClientErrors, test } from "../lib/helpers";
+
+test.describe("public site", () => {
+  test("home page renders hero, course sections and FAQ", async ({ page, diag }) => {
+    await page.goto("/");
+
+    await expect(page.getByRole("heading", { name: "برنامه‌نویسی را درست یاد بگیر" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "دیدن دوره‌ها" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "دوره‌های پربازدید" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "مسیر یادگیری" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "سوال‌های پرتکرار" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "دوره‌ات را انتخاب کن" })).toBeVisible();
+
+    expectNoClientErrors(diag);
+  });
+
+  test("courses list shows cards that lead to a detail page", async ({ page, diag }) => {
+    await page.goto("/courses");
+
+    await expect(page.getByRole("heading", { name: "دوره‌ها", level: 1 })).toBeVisible();
+    const card = page.locator('a[href^="/courses/"]').first();
+    await expect(card).toBeVisible();
+    await card.click();
+    await expect(page).toHaveURL(/\/courses\/[^/]+$/);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+    expectNoClientErrors(diag);
+  });
+
+  test("course search finds the known course", async ({ page, diag }) => {
+    await page.goto("/courses?q=Go");
+    await page.getByRole("button", { name: "اعمال فیلتر" }).click();
+    await page.waitForURL(/q=Go/);
+
+    await expect(
+      page.getByRole("link", { name: /آموزش Go از صفر/ }).first(),
+    ).toBeVisible();
+
+    expectNoClientErrors(diag);
+  });
+
+  test("course detail shows curriculum and a guest purchase CTA", async ({ page, diag }) => {
+    await page.goto("/courses/go-from-zero");
+
+    await expect(page.getByRole("heading", { name: "آموزش Go از صفر" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "سرفصل‌ها" })).toBeVisible();
+    // a guest never sees the checkout button — only the login prompt
+    await expect(page.getByRole("link", { name: "ورود برای خرید" })).toBeVisible();
+
+    expectNoClientErrors(diag);
+  });
+
+  test("unknown course slug renders the not-found page", async ({ page, diag }) => {
+    const response = await page.goto("/courses/does-not-exist-e2e");
+    expect(response?.status()).toBe(404);
+    expectNoClientErrors(diag);
+  });
+
+  test("blog list renders posts or the empty state", async ({ page, diag }) => {
+    await page.goto("/blog");
+
+    await expect(page.getByRole("heading", { name: "وبلاگ", level: 1 })).toBeVisible();
+    const empty = page.getByText("هنوز مقاله‌ای منتشر نشده است");
+    const post = page.locator('a[href^="/blog/"]').first();
+    await expect(empty.or(post)).toBeVisible();
+
+    if (await post.isVisible()) {
+      await post.click();
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    }
+
+    expectNoClientErrors(diag);
+  });
+
+  test("instructor page renders the profile or its empty state", async ({ page, diag }) => {
+    await page.goto("/instructor");
+
+    await expect(page.getByRole("heading", { name: "درباره مدرس" })).toBeVisible();
+    const empty = page.getByText("اطلاعات مدرس هنوز تکمیل نشده است");
+    const headline = page.locator("main p").first();
+    await expect(empty.or(headline)).toBeVisible();
+
+    expectNoClientErrors(diag);
+  });
+
+  test("contact form stores a message and confirms", async ({ page, diag }) => {
+    await page.goto("/contact");
+
+    await page.getByLabel("نام").fill("کاربر تست E2E");
+    await page.getByLabel("موبایل یا ایمیل").fill("09121110099");
+    await page.getByLabel("پیام").fill("این یک پیام تست خودکار از تست E2E است.");
+    await page.getByRole("button", { name: "ارسال پیام" }).click();
+
+    await expect(page.getByText("پیام شما ثبت شد؛ در اولین فرصت پاسخ می‌دهیم.")).toBeVisible();
+
+    expectNoClientErrors(diag);
+  });
+
+  test("contact form rejects a too short message", async ({ page, diag }) => {
+    await page.goto("/contact");
+
+    await page.getByLabel("نام").fill("کاربر تست E2E");
+    await page.getByLabel("موبایل یا ایمیل").fill("09121110098");
+    await page.getByLabel("پیام").fill("کوتاه");
+    await page.getByRole("button", { name: "ارسال پیام" }).click();
+
+    await expect(page.getByText("پیام شما ثبت شد؛ در اولین فرصت پاسخ می‌دهیم.")).toBeHidden();
+    expectNoClientErrors(diag);
+  });
+
+  test("navbar reaches every public section", async ({ page, diag }) => {
+    await page.goto("/");
+    const nav = page.getByRole("navigation", { name: "ناوبری اصلی" });
+
+    for (const [label, path] of [
+      ["دوره‌ها", "/courses"],
+      ["وبلاگ", "/blog"],
+      ["درباره مدرس", "/instructor"],
+      ["تماس", "/contact"],
+    ] as const) {
+      await nav.getByRole("link", { name: label }).click();
+      await expect(page).toHaveURL(new RegExp(`${path}$`));
+    }
+
+    expectNoClientErrors(diag);
+  });
+
+  test("footer links and support address are present", async ({ page, diag }) => {
+    await page.goto("/");
+    const footer = page.getByRole("navigation", { name: "ناوبری پابرگ" });
+
+    await expect(footer.getByRole("link", { name: "دوره‌ها" })).toBeVisible();
+    await expect(footer.getByRole("link", { name: "وبلاگ" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "support@golearn.ir" })).toBeVisible();
+
+    expectNoClientErrors(diag);
+  });
+
+  test("theme toggle switches the colour scheme", async ({ page, diag }) => {
+    await page.goto("/");
+    const html = page.locator("html");
+    const before = await html.getAttribute("class");
+
+    await page.getByRole("button", { name: "تغییر تم روشن و تاریک" }).click();
+    await expect(html).not.toHaveClass(before ?? "");
+
+    expectNoClientErrors(diag);
+  });
+
+  test("robots.txt and sitemap.xml are served", async ({ request }) => {
+    for (const path of ["/robots.txt", "/sitemap.xml"]) {
+      const res = await request.get(path);
+      expect(res.status(), `${path} should be served`).toBe(200);
+    }
+  });
+});

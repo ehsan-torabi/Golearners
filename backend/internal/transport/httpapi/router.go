@@ -165,11 +165,16 @@ func NewRouter(a *App) http.Handler {
 			r.Delete("/admin/media/{id}", a.handleAdminMediaDelete)
 
 			r.Post("/admin/categories", a.handleAdminCategoryCreate)
+			r.Get("/admin/categories", a.handleAdminCategoryList)
 			r.Put("/admin/categories/{id}", a.handleAdminCategoryUpdate)
 			r.Delete("/admin/categories/{id}", a.handleAdminCategoryDelete)
 
 			r.Post("/admin/posts", a.handleAdminPostCreate)
 			r.Get("/admin/posts", a.handleAdminPostList)
+			r.Get("/admin/blog-categories", a.handleAdminBlogCategoryList)
+			r.Post("/admin/blog-categories", a.handleAdminBlogCategoryCreate)
+			r.Put("/admin/blog-categories/{id}", a.handleAdminBlogCategoryUpdate)
+			r.Delete("/admin/blog-categories/{id}", a.handleAdminBlogCategoryDelete)
 			r.Get("/admin/posts/{id}", a.handleAdminPostDetail)
 			r.Put("/admin/posts/{id}", a.handleAdminPostUpdate)
 			r.Delete("/admin/posts/{id}", a.handleAdminPostDelete)

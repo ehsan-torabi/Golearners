@@ -168,6 +168,17 @@ func courseListWhere(f ports.CourseFilter, publicOnly bool) (string, []any) {
 		where = append(where, "(c.title ILIKE '%'||$"+fmt.Sprint(len(args)+1)+"||'%' OR c.summary ILIKE '%'||$"+fmt.Sprint(len(args)+1)+"||'%')")
 		args = append(args, f.Q)
 	}
+	if f.FeaturedOnly {
+		where = append(where, "c.is_featured = TRUE")
+	}
+	if f.MinPriceRial > 0 {
+		where = append(where, "c.price_rial >= $"+fmt.Sprint(len(args)+1))
+		args = append(args, f.MinPriceRial)
+	}
+	if f.MaxPriceRial > 0 {
+		where = append(where, "c.price_rial <= $"+fmt.Sprint(len(args)+1))
+		args = append(args, f.MaxPriceRial)
+	}
 	return strings.Join(where, " AND "), args
 }
 
@@ -179,6 +190,10 @@ func courseOrder(sort string) string {
 		return "c.price_rial ASC"
 	case "price_desc":
 		return "c.price_rial DESC"
+	case "oldest":
+		return "c.created_at ASC"
+	case "title":
+		return "c.title ASC"
 	default:
 		return "c.published_at DESC NULLS LAST, c.created_at DESC"
 	}
@@ -223,7 +238,8 @@ func (r *CourseRepo) ListPublished(ctx context.Context, f ports.CourseFilter) ([
 func (r *CourseRepo) ListAdmin(ctx context.Context, f ports.CourseFilter) ([]*course.Course, int, error) {
 	where, args := courseListWhere(f, false)
 	q := `SELECT ` + courseColumns + ` FROM courses c WHERE ` + where +
-		` ORDER BY c.created_at DESC LIMIT $` + fmt.Sprint(len(args)+1) + ` OFFSET $` + fmt.Sprint(len(args)+2)
+		` ORDER BY ` + courseOrder(f.Sort) +
+		` LIMIT $` + fmt.Sprint(len(args)+1) + ` OFFSET $` + fmt.Sprint(len(args)+2)
 	args = append(args, f.PerPage, (f.Page-1)*f.PerPage)
 	rows, err := querierOf(ctx, r.pool).Query(ctx, q, args...)
 	list, err := collectCourses(rows, err)

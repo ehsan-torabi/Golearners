@@ -15,7 +15,10 @@ type CourseFilter struct {
 	Level         string
 	Status        string // admin only: draft | published | archived
 	Q             string
-	Sort          string // newest | popular | price_asc | price_desc
+	Sort          string // newest | oldest | popular | price_asc | price_desc | title
+	FeaturedOnly  bool
+	MinPriceRial  int64
+	MaxPriceRial  int64
 	Page, PerPage int
 }
 
@@ -96,11 +99,21 @@ type EntitlementRepo interface {
 	RevokeByOrder(ctx context.Context, orderID uuid.UUID) error
 }
 
+// MediaFilter shapes the admin media grid.
+type MediaFilter struct {
+	Kind    string // image | video | pdf
+	Status  string // uploaded | processing | ready | failed
+	Q       string // storage key substring
+	Sort    string // newest | oldest | size_desc | size_asc
+	Page    int
+	PerPage int
+}
+
 // MediaRepo — metadata + pipeline status for stored files.
 type MediaRepo interface {
 	Create(ctx context.Context, m *course.MediaAsset) error
 	ByID(ctx context.Context, id uuid.UUID) (*course.MediaAsset, error)
-	List(ctx context.Context, status string, page, perPage int) ([]*course.MediaAsset, int, error)
+	List(ctx context.Context, f MediaFilter) ([]*course.MediaAsset, int, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	SetStatus(ctx context.Context, id uuid.UUID, status course.MediaStatus, errMsg string) error
 	SetIngested(ctx context.Context, id uuid.UUID, provider, remoteID string) error

@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"golearn/backend/internal/apperr"
+	"golearn/backend/internal/ports"
 	"golearn/backend/internal/service/media"
 )
 
@@ -68,7 +69,13 @@ func (a *App) handleAdminMediaRegister(w http.ResponseWriter, r *http.Request) {
 // GET /api/v1/admin/media
 func (a *App) handleAdminMediaList(w http.ResponseWriter, r *http.Request) {
 	page, perPage := pageParams(r)
-	list, total, err := a.MediaService.List(r.Context(), r.URL.Query().Get("status"), page, perPage)
+	list, total, err := a.MediaService.List(r.Context(), ports.MediaFilter{
+		Page: page, PerPage: perPage,
+		Kind:   r.URL.Query().Get("kind"),
+		Status: r.URL.Query().Get("status"),
+		Q:      r.URL.Query().Get("q"),
+		Sort:   r.URL.Query().Get("sort"),
+	})
 	if err != nil {
 		a.writeError(w, r, err)
 		return

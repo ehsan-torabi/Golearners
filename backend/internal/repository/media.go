@@ -55,17 +55,34 @@ func (r *MediaRepo) ByID(ctx context.Context, id uuid.UUID) (*course.MediaAsset,
 		`SELECT `+mediaColumns+` FROM media_assets WHERE id=$1`, id))
 }
 
-func (r *MediaRepo) List(ctx context.Context, status string, page, perPage int) ([]*course.MediaAsset, int, error) {
+func (r *MediaRepo) List(ctx context.Context, f ports.MediaFilter) ([]*course.MediaAsset, int, error) {
 	where := "TRUE"
 	args := []any{}
-	if status != "" {
+	if f.Status != "" {
 		where = "status = $1"
-		args = append(args, status)
+		args = append(args, f.Status)
+	}
+	if f.Kind != "" {
+		where = where + " AND kind = $" + fmt.Sprint(len(args)+1)
+		args = append(args, f.Kind)
+	}
+	if f.Q != "" {
+		where = where + " AND storage_key ILIKE $" + fmt.Sprint(len(args)+1)
+		args = append(args, "%"+f.Q+"%")
+	}
+	order := "created_at DESC"
+	switch f.Sort {
+	case "oldest":
+		order = "created_at ASC"
+	case "size_desc":
+		order = "size_bytes DESC"
+	case "size_asc":
+		order = "size_bytes ASC"
 	}
 	q := `SELECT ` + mediaColumns + ` FROM media_assets WHERE ` + where +
-		` ORDER BY created_at DESC LIMIT $` + fmt.Sprint(len(args)+1) +
+		` ORDER BY ` + order + ` LIMIT $` + fmt.Sprint(len(args)+1) +
 		` OFFSET $` + fmt.Sprint(len(args)+2)
-	args = append(args, perPage, (page-1)*perPage)
+	args = append(args, f.PerPage, (f.Page-1)*f.PerPage)
 	rows, err := querierOf(ctx, r.pool).Query(ctx, q, args...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list media: %w", err)

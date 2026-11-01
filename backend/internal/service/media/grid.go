@@ -13,8 +13,8 @@ import (
 )
 
 // List is the admin grid.
-func (s *Service) List(ctx context.Context, status string, page, perPage int) ([]*course.MediaAsset, int, error) {
-	return s.d.Media.List(ctx, status, page, perPage)
+func (s *Service) List(ctx context.Context, f ports.MediaFilter) ([]*course.MediaAsset, int, error) {
+	return s.d.Media.List(ctx, f)
 }
 
 // Delete removes the asset metadata + storage object (best effort) and audits.

@@ -175,6 +175,16 @@ func (a *App) handleAdminCurriculum(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"sections": sections, "lessons": lessons})
 }
 
+// GET /api/v1/admin/categories — the course taxonomy for the admin console.
+func (a *App) handleAdminCategoryList(w http.ResponseWriter, r *http.Request) {
+	list, err := a.Categories.List(r.Context())
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": list})
+}
+
 // POST /api/v1/admin/categories
 func (a *App) handleAdminCategoryCreate(w http.ResponseWriter, r *http.Request) {
 	var in courseadmin.CategoryInput

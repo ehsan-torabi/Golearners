@@ -1,23 +1,18 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { CurriculumEditor } from "@/components/admin/curriculum-editor";
-import { MediaSelect } from "@/components/admin/media-select";
+import { MediaField } from "@/components/admin/media-field";
 import {
   adminCreateCourse,
   adminGetCourse,
@@ -64,33 +59,23 @@ const EMPTY: CourseForm = {
 };
 
 /**
- * Course create/edit panel.
- * Ant v6 console density: one primary action in the footer, everything else
- * is a default or ghost control.
+ * Course editor as a full page: Ant v6 console density, one primary action
+ * in a sticky bar, everything else a default or ghost control.
  */
-export function CourseEditor({
-  open,
-  onOpenChange,
-  courseId,
-  onSaved,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  courseId: string | null;
-  onSaved: () => void;
-}) {
+export function CourseEditor({ courseId }: { courseId: string | null }) {
   const [form, setForm] = React.useState<CourseForm>(EMPTY);
   const [categories, setCategories] = React.useState<TaxonomyItem[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState("");
+  const [saved, setSaved] = React.useState(false);
 
   const set = <K extends keyof CourseForm>(key: K, value: CourseForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
 
   React.useEffect(() => {
-    if (!open) return;
     setError("");
+    setSaved(false);
     setForm(EMPTY);
     fetchCourseCategories()
       .then((res) => setCategories(res.data ?? []))
@@ -120,10 +105,11 @@ export function CourseEditor({
       })
       .catch(() => setError("دریافت اطلاعات دوره ناموفق بود."))
       .finally(() => setLoading(false));
-  }, [open, courseId]);
+  }, [courseId]);
 
   async function save() {
     setError("");
+    setSaved(false);
     setSaving(true);
     const payload: CoursePayload = {
       title: form.title.trim(),
@@ -150,8 +136,7 @@ export function CourseEditor({
       } else {
         await adminCreateCourse(payload);
       }
-      onSaved();
-      onOpenChange(false);
+      setSaved(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "ذخیرهٔ دوره ناموفق بود.");
     } finally {
@@ -159,211 +144,208 @@ export function CourseEditor({
     }
   }
 
+  if (loading) {
+    return (
+      <div className="space-y-4" aria-label="در حال بارگذاری دوره">
+        <div className="h-8 w-1/3 animate-pulse rounded bg-muted" />
+        <div className="h-64 w-full animate-pulse rounded bg-muted" />
+      </div>
+    );
+  }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-full gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <SheetHeader className="border-b border-border-variant px-5 py-3">
-          <SheetTitle>{courseId ? "ویرایش دوره" : "دورهٔ تازه"}</SheetTitle>
-          <SheetDescription>
-            {courseId
-              ? "تغییرها را ذخیره کنید تا در سایت اعمال شود."
-              : "دوره به‌صورت پیش‌نویس ساخته می‌شود؛ پس از آماده‌سازی سرفصل آن را منتشر کنید."}
-          </SheetDescription>
-        </SheetHeader>
+    <div className="space-y-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/courses"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            ← بازگشت به فهرست دوره‌ها
+          </Link>
+        </div>
+        {saved && <Badge tone="success">ذخیره شد</Badge>}
+      </header>
 
-        {loading ? (
-          <div className="flex-1 space-y-3 overflow-y-auto p-5" aria-label="در حال بارگذاری دوره">
-            <div className="h-8 w-1/2 animate-pulse rounded bg-muted" />
-            <div className="h-24 w-full animate-pulse rounded bg-muted" />
+      {error && <Alert>{error}</Alert>}
+
+      <Card className="p-0">
+        <Tabs defaultValue="basics">
+          <div className="border-b border-border-variant px-5">
+            <TabsList variant="line" className="h-11 w-full justify-start gap-5 p-0">
+              <TabsTrigger value="basics">اطلاعات</TabsTrigger>
+              <TabsTrigger value="content">محتوا</TabsTrigger>
+              {courseId && <TabsTrigger value="curriculum">سرفصل</TabsTrigger>}
+              <TabsTrigger value="media">رسانه و سئو</TabsTrigger>
+            </TabsList>
           </div>
-        ) : (
-          <Tabs defaultValue="basics" className="min-h-0 flex-1 gap-0 overflow-hidden">
-            <div className="border-b border-border-variant px-5">
-              <TabsList variant="line" className="h-10 w-full justify-start gap-4 p-0">
-                <TabsTrigger value="basics">اطلاعات</TabsTrigger>
-                <TabsTrigger value="content">محتوا</TabsTrigger>
-                {courseId && <TabsTrigger value="curriculum">سرفصل</TabsTrigger>}
-                <TabsTrigger value="media">رسانه و سئو</TabsTrigger>
-              </TabsList>
-            </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto p-5">
-              {error && (
-                <div className="mb-4">
-                  <Alert>{error}</Alert>
-                </div>
-              )}
-
-              <TabsContent value="basics" className="space-y-4">
-                <Field label="عنوان دوره" htmlFor="c-title" required>
-                  <Input id="c-title" value={form.title} onChange={(e) => set("title", e.target.value)} required />
+          <div className="p-5">
+            <TabsContent value="basics" className="space-y-4">
+              <Field label="عنوان دوره" htmlFor="c-title" required>
+                <Input id="c-title" value={form.title} onChange={(e) => set("title", e.target.value)} required />
+              </Field>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Field label="نامک" htmlFor="c-slug" hint="خالی = از عنوان.">
+                  <Input id="c-slug" dir="ltr" value={form.slug} onChange={(e) => set("slug", e.target.value)} />
                 </Field>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field
-                    label="نامک"
-                    htmlFor="c-slug"
-                    hint="خالی بگذارید تا از عنوان ساخته شود."
-                  >
-                    <Input id="c-slug" dir="ltr" value={form.slug} onChange={(e) => set("slug", e.target.value)} />
-                  </Field>
-                  <Field label="سطح" htmlFor="c-level">
-                    <Select id="c-level" value={form.level} onChange={(e) => set("level", e.target.value)}>
-                      <option value="beginner">مقدماتی</option>
-                      <option value="intermediate">متوسط</option>
-                      <option value="advanced">پیشرفته</option>
-                    </Select>
-                  </Field>
-                  <Field label="قیمت (تومان)" htmlFor="c-price" hint="صفر یعنی رایگان.">
-                    <Input
-                      id="c-price"
-                      dir="ltr"
-                      inputMode="numeric"
-                      value={form.price}
-                      onChange={(e) => set("price", e.target.value)}
-                    />
-                  </Field>
-                  <Field
-                    label="قیمت پیش از تخفیف (تومان)"
-                    htmlFor="c-compare"
-                    hint="برای نمایش تخفیف؛ اختیاری."
-                  >
-                    <Input
-                      id="c-compare"
-                      dir="ltr"
-                      inputMode="numeric"
-                      value={form.compare_at}
-                      onChange={(e) => set("compare_at", e.target.value)}
-                    />
-                  </Field>
-                </div>
-                <Field label="خلاصه" htmlFor="c-summary" hint="در فهرست دوره‌ها و کارت‌ها نمایش داده می‌شود.">
-                  <Textarea id="c-summary" value={form.summary} onChange={(e) => set("summary", e.target.value)} />
+                <Field label="سطح" htmlFor="c-level">
+                  <Select id="c-level" value={form.level} onChange={(e) => set("level", e.target.value)}>
+                    <option value="beginner">مقدماتی</option>
+                    <option value="intermediate">متوسط</option>
+                    <option value="advanced">پیشرفته</option>
+                  </Select>
                 </Field>
-                <fieldset className="rounded-md border border-border-variant p-3">
-                  <legend className="px-1 text-sm font-medium">دسته‌بندی</legend>
-                  {categories.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">دسته‌بندی‌ای ثبت نشده است.</p>
-                  ) : (
-                    <div className="flex flex-wrap gap-x-6 gap-y-2">
-                      {categories.map((c) => (
-                        <label key={c.id} htmlFor={`cat-${c.id}`} className="flex items-center gap-2 text-sm">
-                          <Checkbox
-                            id={`cat-${c.id}`}
-                            checked={form.category_ids.includes(c.id)}
-                            onCheckedChange={(checked) =>
-                              set(
-                                "category_ids",
-                                checked
-                                  ? [...form.category_ids, c.id]
-                                  : form.category_ids.filter((id) => id !== c.id),
-                              )
-                            }
-                          />
-                          {c.title}
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </fieldset>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="c-featured"
-                    checked={form.is_featured}
-                    onCheckedChange={(v) => set("is_featured", v)}
+                <Field label="قیمت (تومان)" htmlFor="c-price" hint="صفر = رایگان.">
+                  <Input
+                    id="c-price"
+                    dir="ltr"
+                    inputMode="numeric"
+                    value={form.price}
+                    onChange={(e) => set("price", e.target.value)}
                   />
-                  <label htmlFor="c-featured" className="text-sm">
-                    دورهٔ ویژه
-                  </label>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="content" className="space-y-5">
-                <div className="space-y-1.5">
-                  <label htmlFor="c-desc" className="block text-sm font-medium text-foreground">
-                    توضیح دوره
-                  </label>
-                  <RichTextEditor
-                    id="c-desc"
-                    value={form.description_html}
-                    onChange={({ html }) => set("description_html", html)}
-                    placeholder="این دوره چه چیزی آموزش می‌دهد؟"
-                    minHeight="18rem"
+                </Field>
+                <Field label="قیمت پیش از تخفیف (تومان)" htmlFor="c-compare" hint="اختیاری.">
+                  <Input
+                    id="c-compare"
+                    dir="ltr"
+                    inputMode="numeric"
+                    value={form.compare_at}
+                    onChange={(e) => set("compare_at", e.target.value)}
                   />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="c-prereq" className="block text-sm font-medium text-foreground">
-                    پیش‌نیازها
-                  </label>
-                  <RichTextEditor
-                    id="c-prereq"
-                    value={form.prerequisites_html}
-                    onChange={({ html }) => set("prerequisites_html", html)}
-                    placeholder="دانستنی‌های لازم پیش از شروع"
-                    minHeight="10rem"
-                  />
-                </div>
-
-                <fieldset className="rounded-md border border-border-variant p-3">
-                  <legend className="px-1 text-sm font-medium">نتایج یادگیری</legend>
-                  <div className="space-y-2">
-                    {form.outcomes.map((outcome, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Input
-                          value={outcome}
-                          aria-label={`نتیجهٔ یادگیری ${index + 1}`}
-                          onChange={(e) =>
+                </Field>
+              </div>
+              <Field label="خلاصه" htmlFor="c-summary" hint="در فهرست و کارت دوره‌ها نمایش داده می‌شود.">
+                <Textarea id="c-summary" value={form.summary} onChange={(e) => set("summary", e.target.value)} />
+              </Field>
+              <fieldset className="rounded-md border border-border-variant p-3">
+                <legend className="px-1 text-sm font-medium">دسته‌بندی</legend>
+                {categories.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">دسته‌بندی‌ای ثبت نشده است.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-x-6 gap-y-2">
+                    {categories.map((c) => (
+                      <label key={c.id} htmlFor={`cat-${c.id}`} className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          id={`cat-${c.id}`}
+                          checked={form.category_ids.includes(c.id)}
+                          onCheckedChange={(checked) =>
                             set(
-                              "outcomes",
-                              form.outcomes.map((o, i) => (i === index ? e.target.value : o)),
+                              "category_ids",
+                              checked
+                                ? [...form.category_ids, c.id]
+                                : form.category_ids.filter((id) => id !== c.id),
                             )
                           }
                         />
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive-text"
-                          onClick={() =>
-                            set("outcomes", form.outcomes.filter((_, i) => i !== index))
-                          }
-                        >
-                          حذف
-                        </Button>
-                      </div>
+                        {c.title}
+                      </label>
                     ))}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => set("outcomes", [...form.outcomes, ""])}
-                    >
-                      افزودن نتیجه
-                    </Button>
                   </div>
-                </fieldset>
+                )}
+              </fieldset>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="c-featured"
+                  checked={form.is_featured}
+                  onCheckedChange={(v) => set("is_featured", v)}
+                />
+                <label htmlFor="c-featured" className="text-sm">
+                  دورهٔ ویژه
+                </label>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="content" className="space-y-5">
+              <div className="space-y-1.5">
+                <label htmlFor="c-desc" className="block text-sm font-medium text-foreground">
+                  توضیح دوره
+                </label>
+                <RichTextEditor
+                  id="c-desc"
+                  value={form.description_html}
+                  onChange={({ html }) => set("description_html", html)}
+                  placeholder="این دوره چه چیزی آموزش می‌دهد؟"
+                  variant="advanced"
+                  minHeight="20rem"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="c-prereq" className="block text-sm font-medium text-foreground">
+                  پیش‌نیازها
+                </label>
+                <RichTextEditor
+                  id="c-prereq"
+                  value={form.prerequisites_html}
+                  onChange={({ html }) => set("prerequisites_html", html)}
+                  placeholder="دانستنی‌های لازم پیش از شروع"
+                  minHeight="10rem"
+                />
+              </div>
+
+              <fieldset className="rounded-md border border-border-variant p-3">
+                <legend className="px-1 text-sm font-medium">نتایج یادگیری</legend>
+                <div className="space-y-2">
+                  {form.outcomes.map((outcome, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        value={outcome}
+                        aria-label={`نتیجهٔ یادگیری ${index + 1}`}
+                        onChange={(e) =>
+                          set(
+                            "outcomes",
+                            form.outcomes.map((o, i) => (i === index ? e.target.value : o)),
+                          )
+                        }
+                      />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive-text"
+                        onClick={() =>
+                          set("outcomes", form.outcomes.filter((_, i) => i !== index))
+                        }
+                      >
+                        حذف
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => set("outcomes", [...form.outcomes, ""])}
+                  >
+                    افزودن نتیجه
+                  </Button>
+                </div>
+              </fieldset>
+            </TabsContent>
+
+            {courseId && (
+              <TabsContent value="curriculum">
+                <CurriculumEditor courseId={courseId} />
               </TabsContent>
+            )}
 
-              {courseId && (
-                <TabsContent value="curriculum">
-                  <CurriculumEditor courseId={courseId} />
-                </TabsContent>
-              )}
-
-              <TabsContent value="media" className="space-y-4">
-                <MediaSelect
-                  id="c-cover"
-                  label="تصویر کاور"
-                  kind="image"
-                  value={form.cover_media_id}
-                  onChange={(v) => set("cover_media_id", v)}
-                  hint="برای افزودن تصویر تازه به بخش «رسانه‌ها» بروید."
-                />
-                <MediaSelect
-                  id="c-promo"
-                  label="ویدیوی معرفی"
-                  kind="video"
-                  value={form.promo_video_media_id}
-                  onChange={(v) => set("promo_video_media_id", v)}
-                />
+            <TabsContent value="media" className="space-y-6">
+              <MediaField
+                id="c-cover"
+                label="تصویر کاور"
+                kind="image"
+                value={form.cover_media_id}
+                onChange={(v) => set("cover_media_id", v)}
+                uploaderLabel="بارگذاری تصویر کاور"
+              />
+              <MediaField
+                id="c-promo"
+                label="ویدیوی معرفی"
+                kind="video"
+                value={form.promo_video_media_id}
+                onChange={(v) => set("promo_video_media_id", v)}
+                uploaderLabel="بارگذاری ویدیوی معرفی"
+              />
+              <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="عنوان سئو" htmlFor="c-meta-title" hint="خالی = عنوان دوره.">
                   <Input
                     id="c-meta-title"
@@ -374,7 +356,7 @@ export function CourseEditor({
                 <Field
                   label="توضیح سئو"
                   htmlFor="c-meta-desc"
-                  hint="خلاصه‌ای برای نتایج جست‌وجو؛ خالی = خلاصهٔ دوره."
+                  hint="خالی = خلاصهٔ دوره."
                 >
                   <Textarea
                     id="c-meta-desc"
@@ -382,20 +364,17 @@ export function CourseEditor({
                     onChange={(e) => set("meta_description", e.target.value)}
                   />
                 </Field>
-              </TabsContent>
-            </div>
-          </Tabs>
-        )}
+              </div>
+            </TabsContent>
+          </div>
+        </Tabs>
+      </Card>
 
-        <SheetFooter className="flex-row items-center justify-end gap-2 border-t border-border-variant px-5 py-3">
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            انصراف
-          </Button>
-          <Button onClick={() => void save()} loading={saving} disabled={!form.title.trim()}>
-            {courseId ? "ذخیرهٔ دوره" : "ساخت دوره"}
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+      <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-border-variant bg-background/95 py-3 backdrop-blur">
+        <Button onClick={() => void save()} loading={saving} disabled={!form.title.trim()}>
+          {courseId ? "ذخیرهٔ دوره" : "ساخت دوره"}
+        </Button>
+      </div>
+    </div>
   );
 }

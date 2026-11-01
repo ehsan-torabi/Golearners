@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Switch } from "@/components/ui/switch";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { MediaField } from "@/components/admin/media-field";
 import {
   adminCreateLesson,
   adminCreateSection,
@@ -393,6 +394,7 @@ function LessonForm({
   const [status, setStatus] = React.useState(lesson?.status ?? "draft");
   const [isPreview, setIsPreview] = React.useState(lesson?.is_preview ?? false);
   const [body, setBody] = React.useState(lesson?.content_html ?? "");
+  const [mediaId, setMediaId] = React.useState<string | null>(lesson?.media_id ?? null);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -404,7 +406,7 @@ function LessonForm({
       is_preview: isPreview,
       duration_seconds: Number.isFinite(minutes) ? Math.max(0, minutes) * 60 : 0,
       status,
-      media_id: lesson?.media_id ?? null,
+      media_id: mediaId,
     });
   }
 
@@ -450,6 +452,16 @@ function LessonForm({
           minHeight="10rem"
         />
       </div>
+
+      <MediaField
+        id="lesson-media"
+        label="رسانهٔ درس"
+        kind="video"
+        value={mediaId}
+        onChange={setMediaId}
+        uploaderLabel="بارگذاری ویدیوی درس"
+        hint="ویدیوی درس همین‌جا بارگذاری می‌شود؛ نیازی به بخش رسانه‌ها نیست."
+      />
 
       <div className="flex items-center gap-2">
         <Button type="submit" loading={busy} disabled={!title.trim()}>
