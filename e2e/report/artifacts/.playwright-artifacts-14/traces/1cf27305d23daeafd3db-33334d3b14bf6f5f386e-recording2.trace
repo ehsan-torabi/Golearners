@@ -1,0 +1,467 @@
+{"version":10,"type":"context-options","origin":"library","browserName":"","playwrightVersion":"1.64.1","options":{},"platform":"linux","wallTime":1793576426079,"monotonicTime":327764.686,"sdkLanguage":"javascript","title":"learner.spec.ts:80 › learner dashboard › the dashboard shows the profile and the learning stats"}
+{"type":"before","callId":"tavu@122","startTime":327770,"class":"APIRequestContext","method":"storageState","params":{}}
+{"type":"after","callId":"tavu@122","endTime":327770.542,"result":{"cookies":[{"name":"gl_at","value":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk","domain":"localhost","path":"/","expires":1793576998.469,"httpOnly":true,"secure":false,"sameSite":"Lax"},{"name":"gl_rt","value":"OERbtZTOneDakPbsf7j7tfiMG2jiRH2EnUHsav2Qvus","domain":"localhost","path":"/api/v1/auth","expires":1796168098.469,"httpOnly":true,"secure":false,"sameSite":"Lax"},{"name":"gl_csrf","value":"e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836","domain":"localhost","path":"/","expires":-1,"httpOnly":false,"secure":false,"sameSite":"Lax"}],"origins":[]}}
+{"type":"before","callId":"tavu@124","startTime":327773.468,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media/presign","method":"POST","headers":[{"name":"X-CSRF-Token","value":"e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}],"jsonData":"{\"mime\":\"video/mp4\",\"size_bytes\":7684}","timeout":20000}}
+{"type":"log","callId":"tavu@124","time":327783.167,"message":"→ POST http://localhost:8080/api/v1/admin/media/presign"}
+{"type":"log","callId":"tavu@124","time":327783.203,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@124","time":327783.21,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@124","time":327783.216,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@124","time":327783.221,"message":"  X-CSRF-Token: e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@124","time":327783.227,"message":"  content-type: application/json"}
+{"type":"log","callId":"tavu@124","time":327783.251,"message":"  content-length: 38"}
+{"type":"log","callId":"tavu@124","time":327783.26,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@124","time":327806.556,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@124","time":327806.613,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@124","time":327806.638,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@124","time":327806.648,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@124","time":327806.658,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@124","time":327806.667,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@124","time":327806.677,"message":"  date: Sun, 01 Nov 2026 23:40:26 GMT"}
+{"type":"log","callId":"tavu@124","time":327806.685,"message":"  content-length: 587"}
+{"type":"after","callId":"tavu@124","endTime":327807.302,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media/presign","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:26 GMT"},{"name":"Content-Length","value":"587"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576426092,"domainLookupStart":0,"domainLookupEnd":14.362000000022817,"connectStart":14.362000000022817,"secureConnectionStart":-1,"connectEnd":20.29700000002049,"requestStart":20.29700000002049,"responseStart":25.058000000019092},"responseEndTiming":27.18900000001304,"fetchUid":"8fc3f3723010ffe1e23c777fbc3ce39c"}}}
+{"type":"before","callId":"tavu@127","startTime":327813.857,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:9000/golearn-media/media/video/2026/11/01a1997c-5a82-7e30-8ec5-db32bd88c06f/master.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20261101%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20261101T234026Z&X-Amz-Expires=600&X-Amz-SignedHeaders=content-type%3Bhost&x-id=PutObject&X-Amz-Signature=61a834c064596a8e0690f668f7144e2a87877fef3e8f07d3a97ec0a8cbe1d81d","method":"PUT","headers":[{"name":"Content-Type","value":"video/mp4"}],"postData":"<Buffer>","timeout":20000}}
+{"type":"log","callId":"tavu@127","time":327815.798,"message":"→ PUT http://localhost:9000/golearn-media/media/video/2026/11/01a1997c-5a82-7e30-8ec5-db32bd88c06f/master.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20261101%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20261101T234026Z&X-Amz-Expires=600&X-Amz-SignedHeaders=content-type%3Bhost&x-id=PutObject&X-Amz-Signature=61a834c064596a8e0690f668f7144e2a87877fef3e8f07d3a97ec0a8cbe1d81d"}
+{"type":"log","callId":"tavu@127","time":327815.835,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@127","time":327815.844,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@127","time":327815.856,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@127","time":327815.862,"message":"  Content-Type: video/mp4"}
+{"type":"log","callId":"tavu@127","time":327815.868,"message":"  content-length: 7684"}
+{"type":"log","callId":"tavu@127","time":327815.873,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@127","time":327824.463,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@127","time":327824.481,"message":"  accept-ranges: bytes"}
+{"type":"log","callId":"tavu@127","time":327824.492,"message":"  content-length: 0"}
+{"type":"log","callId":"tavu@127","time":327824.498,"message":"  etag: \"8c7e8ffcbef6db14edc18710b7fd165d\""}
+{"type":"log","callId":"tavu@127","time":327824.504,"message":"  server: MinIO"}
+{"type":"log","callId":"tavu@127","time":327824.51,"message":"  strict-transport-security: max-age=31536000; includeSubDomains"}
+{"type":"log","callId":"tavu@127","time":327824.515,"message":"  vary: Origin, Accept-Encoding"}
+{"type":"log","callId":"tavu@127","time":327824.52,"message":"  x-amz-id-2: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"}
+{"type":"log","callId":"tavu@127","time":327824.526,"message":"  x-amz-request-id: 18E41041BD33ECD5"}
+{"type":"log","callId":"tavu@127","time":327824.531,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@127","time":327824.536,"message":"  x-ratelimit-limit: 8351"}
+{"type":"log","callId":"tavu@127","time":327824.542,"message":"  x-ratelimit-remaining: 8351"}
+{"type":"log","callId":"tavu@127","time":327824.547,"message":"  x-xss-protection: 1; mode=block"}
+{"type":"log","callId":"tavu@127","time":327824.553,"message":"  date: Sun, 01 Nov 2026 23:40:26 GMT"}
+{"type":"after","callId":"tavu@127","endTime":327824.707,"result":{"response":{"url":"http://localhost:9000/golearn-media/media/video/2026/11/01a1997c-5a82-7e30-8ec5-db32bd88c06f/master.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20261101%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20261101T234026Z&X-Amz-Expires=600&X-Amz-SignedHeaders=content-type%3Bhost&x-id=PutObject&X-Amz-Signature=61a834c064596a8e0690f668f7144e2a87877fef3e8f07d3a97ec0a8cbe1d81d","status":200,"statusText":"OK","headers":[{"name":"Accept-Ranges","value":"bytes"},{"name":"Content-Length","value":"0"},{"name":"ETag","value":"\"8c7e8ffcbef6db14edc18710b7fd165d\""},{"name":"Server","value":"MinIO"},{"name":"Strict-Transport-Security","value":"max-age=31536000; includeSubDomains"},{"name":"Vary","value":"Origin"},{"name":"Vary","value":"Accept-Encoding"},{"name":"X-Amz-Id-2","value":"dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8"},{"name":"X-Amz-Request-Id","value":"18E41041BD33ECD5"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Ratelimit-Limit","value":"8351"},{"name":"X-Ratelimit-Remaining","value":"8351"},{"name":"X-Xss-Protection","value":"1; mode=block"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:26 GMT"}],"serverAddr":{"ipAddress":"::1","port":9000},"timing":{"startTime":1793576426130,"domainLookupStart":0,"domainLookupEnd":2.3919999999925494,"connectStart":2.3919999999925494,"secureConnectionStart":-1,"connectEnd":2.75099999998929,"requestStart":2.75099999998929,"responseStart":8.635999999998603},"responseEndTiming":9.057999999960884,"fetchUid":"bd3d9d4a93bb3db7f782e1afc61a4295"}}}
+{"type":"before","callId":"tavu@129","startTime":327826.623,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media","method":"POST","headers":[{"name":"X-CSRF-Token","value":"e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}],"jsonData":"{\"storage_key\":\"media/video/2026/11/01a1997c-5a82-7e30-8ec5-db32bd88c06f/master.mp4\",\"filename\":\"sample.mp4\",\"mime\":\"video/mp4\",\"size_bytes\":7684,\"checksum\":\"\"}","timeout":20000}}
+{"type":"log","callId":"tavu@129","time":327828.879,"message":"→ POST http://localhost:8080/api/v1/admin/media"}
+{"type":"log","callId":"tavu@129","time":327828.917,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@129","time":327828.923,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@129","time":327828.929,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@129","time":327828.934,"message":"  X-CSRF-Token: e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@129","time":327828.938,"message":"  content-type: application/json"}
+{"type":"log","callId":"tavu@129","time":327828.943,"message":"  content-length: 160"}
+{"type":"log","callId":"tavu@129","time":327828.948,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@129","time":327842.647,"message":"← 201 Created"}
+{"type":"log","callId":"tavu@129","time":327842.672,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@129","time":327842.681,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@129","time":327842.687,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@129","time":327842.701,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@129","time":327842.708,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@129","time":327842.713,"message":"  date: Sun, 01 Nov 2026 23:40:26 GMT"}
+{"type":"log","callId":"tavu@129","time":327842.718,"message":"  content-length: 324"}
+{"type":"after","callId":"tavu@129","endTime":327842.876,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media","status":201,"statusText":"Created","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:26 GMT"},{"name":"Content-Length","value":"324"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576426142,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":1.5359999999636784,"responseStart":14.167000000015832},"responseEndTiming":14.49900000001071,"fetchUid":"a58ef0f0c93f18a14a44601f09c2dcbd"}}}
+{"type":"before","callId":"tavu@132","startTime":327845.682,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@132","time":327846.443,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@132","time":327846.482,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@132","time":327846.487,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@132","time":327846.489,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@132","time":327846.492,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@132","time":327854.269,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@132","time":327854.282,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@132","time":327854.288,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@132","time":327854.291,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@132","time":327854.294,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@132","time":327854.297,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@132","time":327854.3,"message":"  date: Sun, 01 Nov 2026 23:40:26 GMT"}
+{"type":"log","callId":"tavu@132","time":327854.303,"message":"  content-length: 794"}
+{"type":"after","callId":"tavu@132","endTime":327854.448,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:26 GMT"},{"name":"Content-Length","value":"794"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576426161,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.5339999999850988,"responseStart":7.050999999977648},"responseEndTiming":7.599999999976717,"fetchUid":"e1ff99ce145a3beaa935da09a5d709d2"}}}
+{"type":"before","callId":"tavu@135","startTime":328356.879,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@135","time":328357.473,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@135","time":328357.486,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@135","time":328357.489,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@135","time":328357.491,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@135","time":328357.493,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@135","time":328361.804,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@135","time":328361.823,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@135","time":328361.834,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@135","time":328361.841,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@135","time":328361.846,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@135","time":328361.852,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@135","time":328361.858,"message":"  date: Sun, 01 Nov 2026 23:40:26 GMT"}
+{"type":"log","callId":"tavu@135","time":328361.863,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@135","endTime":328362.02,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:26 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576426672,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.28399999998509884,"responseStart":3.3199999999487773},"responseEndTiming":3.926999999966938,"fetchUid":"639440e0eef0424e40ab49121de99b4e"}}}
+{"type":"before","callId":"tavu@138","startTime":328864.825,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@138","time":328865.44,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@138","time":328865.469,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@138","time":328865.474,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@138","time":328865.478,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@138","time":328865.482,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@138","time":328868.536,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@138","time":328868.551,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@138","time":328868.559,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@138","time":328868.565,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@138","time":328868.57,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@138","time":328868.575,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@138","time":328868.58,"message":"  date: Sun, 01 Nov 2026 23:40:27 GMT"}
+{"type":"log","callId":"tavu@138","time":328868.585,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@138","endTime":328868.719,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:27 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576427180,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.367000000027474,"responseStart":2.73499999998603},"responseEndTiming":2.9720000000088476,"fetchUid":"7e378c9dac6f47711c0b246e41e0312e"}}}
+{"type":"before","callId":"tavu@141","startTime":329374.171,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@141","time":329375.029,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@141","time":329375.064,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@141","time":329375.071,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@141","time":329375.077,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@141","time":329375.082,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@141","time":329378.701,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@141","time":329378.715,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@141","time":329378.726,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@141","time":329378.731,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@141","time":329378.735,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@141","time":329378.739,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@141","time":329378.743,"message":"  date: Sun, 01 Nov 2026 23:40:27 GMT"}
+{"type":"log","callId":"tavu@141","time":329378.748,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@141","endTime":329378.89,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:27 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576427689,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.481000000028871,"responseStart":3.342000000004191},"responseEndTiming":3.618000000016764,"fetchUid":"1bc00c27f5c157fd89648970352473c2"}}}
+{"type":"before","callId":"tavu@144","startTime":329881.784,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@144","time":329883.166,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@144","time":329883.202,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@144","time":329883.212,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@144","time":329883.22,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@144","time":329883.228,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@144","time":329887.397,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@144","time":329887.417,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@144","time":329887.427,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@144","time":329887.431,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@144","time":329887.434,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@144","time":329887.437,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@144","time":329887.44,"message":"  date: Sun, 01 Nov 2026 23:40:28 GMT"}
+{"type":"log","callId":"tavu@144","time":329887.444,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@144","endTime":329887.619,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:28 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576428197,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.7650000000139698,"responseStart":3.798000000009779},"responseEndTiming":4.129000000015367,"fetchUid":"0bec3a7a01a29e7518053ed2d04a5b57"}}}
+{"type":"before","callId":"tavu@147","startTime":330390.846,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@147","time":330392.004,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@147","time":330392.025,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@147","time":330392.031,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@147","time":330392.035,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@147","time":330392.05,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@147","time":330395.104,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@147","time":330395.125,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@147","time":330395.135,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@147","time":330395.142,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@147","time":330395.147,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@147","time":330395.155,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@147","time":330395.161,"message":"  date: Sun, 01 Nov 2026 23:40:28 GMT"}
+{"type":"log","callId":"tavu@147","time":330395.167,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@147","endTime":330395.383,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:28 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576428706,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.7870000000111759,"responseStart":2.90400000003865},"responseEndTiming":3.1920000000391155,"fetchUid":"abd7503967ee48f1382e17b55f16a0d4"}}}
+{"type":"before","callId":"tavu@150","startTime":330899.838,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@150","time":330901,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@150","time":330901.028,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@150","time":330901.036,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@150","time":330901.053,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@150","time":330901.059,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@150","time":330907.402,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@150","time":330907.422,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@150","time":330907.433,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@150","time":330907.44,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@150","time":330907.446,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@150","time":330907.452,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@150","time":330907.458,"message":"  date: Sun, 01 Nov 2026 23:40:29 GMT"}
+{"type":"log","callId":"tavu@150","time":330907.464,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@150","endTime":330907.629,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:29 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576429215,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.7060000000055879,"responseStart":5.89000000001397},"responseEndTiming":6.331999999994878,"fetchUid":"07083fc28f7812134357d56264b90b23"}}}
+{"type":"before","callId":"tavu@153","startTime":331411.742,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@153","time":331412.719,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@153","time":331412.785,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@153","time":331412.793,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@153","time":331412.797,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@153","time":331412.802,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@153","time":331419.623,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@153","time":331419.644,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@153","time":331419.653,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@153","time":331419.659,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@153","time":331419.665,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@153","time":331419.671,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@153","time":331419.676,"message":"  date: Sun, 01 Nov 2026 23:40:29 GMT"}
+{"type":"log","callId":"tavu@153","time":331419.682,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@153","endTime":331419.837,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:29 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576429727,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.532999999995809,"responseStart":6.304999999993015},"responseEndTiming":6.6560000000172295,"fetchUid":"6d2cc98c4a42ded13beaa90b565a712e"}}}
+{"type":"before","callId":"tavu@156","startTime":331926.172,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@156","time":331926.946,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@156","time":331926.969,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@156","time":331926.974,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@156","time":331926.977,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@156","time":331926.98,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@156","time":331928.914,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@156","time":331928.925,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@156","time":331928.93,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@156","time":331928.934,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@156","time":331928.937,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@156","time":331928.939,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@156","time":331928.942,"message":"  date: Sun, 01 Nov 2026 23:40:30 GMT"}
+{"type":"log","callId":"tavu@156","time":331928.944,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@156","endTime":331929.054,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:30 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576430241,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.45600000000558794,"responseStart":1.8910000000032596},"responseEndTiming":2.0609999999869615,"fetchUid":"e345be5ff3645ca0139f9ce728bc3ab1"}}}
+{"type":"before","callId":"tavu@159","startTime":332432.423,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@159","time":332433.114,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@159","time":332433.136,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@159","time":332433.141,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@159","time":332433.145,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@159","time":332433.149,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@159","time":332440.838,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@159","time":332440.855,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@159","time":332440.863,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@159","time":332440.869,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@159","time":332440.874,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@159","time":332440.879,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@159","time":332440.884,"message":"  date: Sun, 01 Nov 2026 23:40:30 GMT"}
+{"type":"log","callId":"tavu@159","time":332440.889,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@159","endTime":332441.165,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:30 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576430748,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.39600000000791624,"responseStart":7.274999999965075},"responseEndTiming":7.6049999999813735,"fetchUid":"58f9e6807b7be1770bbfb24bc8204dbe"}}}
+{"type":"before","callId":"tavu@162","startTime":332947.699,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@162","time":332948.136,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@162","time":332948.156,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@162","time":332948.159,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@162","time":332948.16,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@162","time":332948.162,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@162","time":332949.88,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@162","time":332949.888,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@162","time":332949.895,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@162","time":332949.898,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@162","time":332949.901,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@162","time":332949.904,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@162","time":332949.907,"message":"  date: Sun, 01 Nov 2026 23:40:31 GMT"}
+{"type":"log","callId":"tavu@162","time":332949.91,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@162","endTime":332949.99,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:31 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576431263,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.24099999997997656,"responseStart":1.5719999999855645},"responseEndTiming":1.7109999999520369,"fetchUid":"7125fd2c48639e94d4224d1f2c17f796"}}}
+{"type":"before","callId":"tavu@165","startTime":333453.175,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@165","time":333454.141,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@165","time":333454.172,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@165","time":333454.176,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@165","time":333454.178,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@165","time":333454.18,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@165","time":333458.611,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@165","time":333458.624,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@165","time":333458.63,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@165","time":333458.634,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@165","time":333458.637,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@165","time":333458.641,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@165","time":333458.644,"message":"  date: Sun, 01 Nov 2026 23:40:31 GMT"}
+{"type":"log","callId":"tavu@165","time":333458.647,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@165","endTime":333458.768,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:31 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576431769,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.4409999999916181,"responseStart":4.241999999969266},"responseEndTiming":4.464999999967404,"fetchUid":"1413426b436b5efb66f0fb444ec4c8e0"}}}
+{"type":"before","callId":"tavu@168","startTime":333961.223,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@168","time":333961.655,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@168","time":333961.669,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@168","time":333961.673,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@168","time":333961.676,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@168","time":333961.678,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@168","time":333963.862,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@168","time":333963.872,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@168","time":333963.878,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@168","time":333963.881,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@168","time":333963.884,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@168","time":333963.887,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@168","time":333963.89,"message":"  date: Sun, 01 Nov 2026 23:40:32 GMT"}
+{"type":"log","callId":"tavu@168","time":333963.893,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@168","endTime":333963.972,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:32 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576432276,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.22100000001955777,"responseStart":2.037000000011176},"responseEndTiming":2.1639999999897555,"fetchUid":"95c04c62c2267978394a90b77b444a27"}}}
+{"type":"before","callId":"tavu@171","startTime":334466.563,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@171","time":334467.419,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@171","time":334467.448,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@171","time":334467.455,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@171","time":334467.46,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@171","time":334467.464,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@171","time":334469.846,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@171","time":334469.855,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@171","time":334469.861,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@171","time":334469.864,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@171","time":334469.867,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@171","time":334469.871,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@171","time":334469.874,"message":"  date: Sun, 01 Nov 2026 23:40:32 GMT"}
+{"type":"log","callId":"tavu@171","time":334469.877,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@171","endTime":334469.968,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:32 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576432782,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.41300000000046566,"responseStart":2.422000000020489},"responseEndTiming":2.550000000046566,"fetchUid":"340d78f411507f30a406129e62224283"}}}
+{"type":"before","callId":"tavu@174","startTime":334972.071,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@174","time":334972.732,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@174","time":334972.758,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@174","time":334972.764,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@174","time":334972.768,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@174","time":334972.772,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@174","time":334976.83,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@174","time":334976.844,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@174","time":334976.853,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@174","time":334976.857,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@174","time":334976.861,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@174","time":334976.864,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@174","time":334976.868,"message":"  date: Sun, 01 Nov 2026 23:40:33 GMT"}
+{"type":"log","callId":"tavu@174","time":334976.872,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@174","endTime":334976.997,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:33 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576433287,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.364000000001397,"responseStart":3.536000000021886},"responseEndTiming":3.9349999999976717,"fetchUid":"462069efd43ad673e234afe276ebfda7"}}}
+{"type":"before","callId":"tavu@177","startTime":335479.502,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@177","time":335479.923,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@177","time":335479.932,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@177","time":335479.934,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@177","time":335479.936,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@177","time":335479.937,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@177","time":335482.032,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@177","time":335482.047,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@177","time":335482.052,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@177","time":335482.056,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@177","time":335482.059,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@177","time":335482.061,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@177","time":335482.064,"message":"  date: Sun, 01 Nov 2026 23:40:33 GMT"}
+{"type":"log","callId":"tavu@177","time":335482.067,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@177","endTime":335482.158,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:33 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576433795,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.20799999998416752,"responseStart":1.9459999999962747},"responseEndTiming":2.0760000000009313,"fetchUid":"d27cebf528f728e5e2d62c89e131b35d"}}}
+{"type":"before","callId":"tavu@180","startTime":335984.379,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@180","time":335984.948,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@180","time":335984.962,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@180","time":335984.967,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@180","time":335984.97,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@180","time":335984.973,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@180","time":335988.432,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@180","time":335988.442,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@180","time":335988.448,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@180","time":335988.452,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@180","time":335988.455,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@180","time":335988.458,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@180","time":335988.461,"message":"  date: Sun, 01 Nov 2026 23:40:34 GMT"}
+{"type":"log","callId":"tavu@180","time":335988.464,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@180","endTime":335988.555,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:34 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576434300,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.23399999999674037,"responseStart":3.1309999999939464},"responseEndTiming":3.385999999998603,"fetchUid":"51d17a964f33b4e8ce0d1841afa1559b"}}}
+{"type":"before","callId":"tavu@183","startTime":336490.952,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@183","time":336491.331,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@183","time":336491.343,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@183","time":336491.345,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@183","time":336491.347,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@183","time":336491.35,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@183","time":336494.73,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@183","time":336494.748,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@183","time":336494.759,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@183","time":336494.766,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@183","time":336494.772,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@183","time":336494.778,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@183","time":336494.783,"message":"  date: Sun, 01 Nov 2026 23:40:34 GMT"}
+{"type":"log","callId":"tavu@183","time":336494.789,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@183","endTime":336494.985,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:34 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576434806,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.2180000000516884,"responseStart":2.8479999999981374},"responseEndTiming":3.121000000042841,"fetchUid":"499891df35a8f9f84b845d1b79b2fa23"}}}
+{"type":"before","callId":"tavu@186","startTime":336998.39,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@186","time":336998.914,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@186","time":336998.929,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@186","time":336998.933,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@186","time":336998.939,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@186","time":336998.942,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@186","time":337001.501,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@186","time":337001.511,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@186","time":337001.518,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@186","time":337001.526,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@186","time":337001.529,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@186","time":337001.533,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@186","time":337001.538,"message":"  date: Sun, 01 Nov 2026 23:40:35 GMT"}
+{"type":"log","callId":"tavu@186","time":337001.541,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@186","endTime":337001.642,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:35 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576435314,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.26900000002933666,"responseStart":2.2210000000195578},"responseEndTiming":2.4650000000256114,"fetchUid":"bb4f910110187bfbf06d70f41977b47c"}}}
+{"type":"before","callId":"tavu@189","startTime":337504.029,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@189","time":337504.477,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@189","time":337504.487,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@189","time":337504.489,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@189","time":337504.49,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@189","time":337504.496,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@189","time":337506.511,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@189","time":337506.519,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@189","time":337506.524,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@189","time":337506.528,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@189","time":337506.533,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@189","time":337506.536,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@189","time":337506.538,"message":"  date: Sun, 01 Nov 2026 23:40:35 GMT"}
+{"type":"log","callId":"tavu@189","time":337506.543,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@189","endTime":337506.633,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:35 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576435819,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.21199999999953434,"responseStart":1.8020000000251457},"responseEndTiming":1.9880000000121072,"fetchUid":"9892fe7d29b664e6c80bfe139600aa4e"}}}
+{"type":"before","callId":"tavu@192","startTime":338009.797,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@192","time":338010.474,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@192","time":338010.488,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@192","time":338010.494,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@192","time":338010.497,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@192","time":338010.5,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@192","time":338012.591,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@192","time":338012.599,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@192","time":338012.607,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@192","time":338012.61,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@192","time":338012.613,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@192","time":338012.618,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@192","time":338012.621,"message":"  date: Sun, 01 Nov 2026 23:40:36 GMT"}
+{"type":"log","callId":"tavu@192","time":338012.624,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@192","endTime":338012.711,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:36 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576436325,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.2679999999818392,"responseStart":1.9359999999869615},"responseEndTiming":2.121999999973923,"fetchUid":"fb5148cc7454a947dcd4c567fa05a92c"}}}
+{"type":"before","callId":"tavu@195","startTime":338515.665,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@195","time":338516.574,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@195","time":338516.612,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@195","time":338516.619,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@195","time":338516.623,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@195","time":338516.631,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@195","time":338520.427,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@195","time":338520.44,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@195","time":338520.447,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@195","time":338520.455,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@195","time":338520.459,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@195","time":338520.463,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@195","time":338520.469,"message":"  date: Sun, 01 Nov 2026 23:40:36 GMT"}
+{"type":"log","callId":"tavu@195","time":338520.473,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@195","endTime":338520.62,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:36 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576436831,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.49199999996926636,"responseStart":3.6149999999906868},"responseEndTiming":3.8559999999706633,"fetchUid":"d411cd8f186caf0041133b929e5ee39c"}}}
+{"type":"before","callId":"tavu@198","startTime":339023.36,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@198","time":339023.899,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@198","time":339023.916,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@198","time":339023.921,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@198","time":339023.924,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@198","time":339023.927,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@198","time":339026.359,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@198","time":339026.372,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@198","time":339026.378,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@198","time":339026.382,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@198","time":339026.385,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@198","time":339026.39,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@198","time":339026.393,"message":"  date: Sun, 01 Nov 2026 23:40:37 GMT"}
+{"type":"log","callId":"tavu@198","time":339026.396,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@198","endTime":339026.529,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:37 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576437338,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.27600000001257285,"responseStart":2.1260000000474975},"responseEndTiming":2.3260000000009313,"fetchUid":"6e47420f1d834aeafcbc1c8d777c1e82"}}}
+{"type":"before","callId":"tavu@201","startTime":339528.999,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@201","time":339529.539,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@201","time":339529.558,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@201","time":339529.562,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@201","time":339529.564,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@201","time":339529.566,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@201","time":339532.396,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@201","time":339532.408,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@201","time":339532.413,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@201","time":339532.416,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@201","time":339532.421,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@201","time":339532.424,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@201","time":339532.427,"message":"  date: Sun, 01 Nov 2026 23:40:37 GMT"}
+{"type":"log","callId":"tavu@201","time":339532.429,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@201","endTime":339532.523,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:37 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576437844,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.3010000000358559,"responseStart":2.5630000000237487},"responseEndTiming":2.75099999998929,"fetchUid":"3fc72f230592c740d2e5a395ec945041"}}}
+{"type":"before","callId":"tavu@204","startTime":340035.228,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@204","time":340035.975,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@204","time":340036.006,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@204","time":340036.012,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@204","time":340036.016,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@204","time":340036.019,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@204","time":340040.179,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@204","time":340040.202,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@204","time":340040.226,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@204","time":340040.232,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@204","time":340040.241,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@204","time":340040.245,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@204","time":340040.249,"message":"  date: Sun, 01 Nov 2026 23:40:38 GMT"}
+{"type":"log","callId":"tavu@204","time":340040.255,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@204","endTime":340040.423,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:38 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576438350,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.45400000002700835,"responseStart":3.8150000000023283},"responseEndTiming":4.105000000039581,"fetchUid":"dca8a3e031b298e403f546ace7d3acd9"}}}
+{"type":"before","callId":"tavu@207","startTime":340543.015,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@207","time":340543.519,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@207","time":340543.536,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@207","time":340543.541,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@207","time":340543.544,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@207","time":340543.547,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@207","time":340545.402,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@207","time":340545.412,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@207","time":340545.421,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@207","time":340545.425,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@207","time":340545.428,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@207","time":340545.433,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@207","time":340545.436,"message":"  date: Sun, 01 Nov 2026 23:40:38 GMT"}
+{"type":"log","callId":"tavu@207","time":340545.438,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@207","endTime":340545.525,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:38 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576438858,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.2519999999785796,"responseStart":1.7119999999995343},"responseEndTiming":1.857999999949243,"fetchUid":"ae3c6fb4d5214985a3cc5b79a0738a95"}}}
+{"type":"before","callId":"tavu@210","startTime":341047.697,"class":"APIRequestContext","method":"fetch","params":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","method":"GET","timeout":20000}}
+{"type":"log","callId":"tavu@210","time":341048.157,"message":"→ GET http://localhost:8080/api/v1/admin/media?per_page=100"}
+{"type":"log","callId":"tavu@210","time":341048.174,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"tavu@210","time":341048.179,"message":"  accept: */*"}
+{"type":"log","callId":"tavu@210","time":341048.185,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"tavu@210","time":341048.188,"message":"  cookie: gl_at=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk; gl_csrf=e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836"}
+{"type":"log","callId":"tavu@210","time":341051.706,"message":"← 200 OK"}
+{"type":"log","callId":"tavu@210","time":341051.718,"message":"  content-security-policy: default-src 'none'; frame-ancestors 'none'"}
+{"type":"log","callId":"tavu@210","time":341051.723,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"tavu@210","time":341051.78,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"tavu@210","time":341051.784,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"tavu@210","time":341051.788,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"tavu@210","time":341051.791,"message":"  date: Sun, 01 Nov 2026 23:40:39 GMT"}
+{"type":"log","callId":"tavu@210","time":341051.809,"message":"  content-length: 864"}
+{"type":"after","callId":"tavu@210","endTime":341051.941,"result":{"response":{"url":"http://localhost:8080/api/v1/admin/media?per_page=100","status":200,"statusText":"OK","headers":[{"name":"Content-Security-Policy","value":"default-src 'none'; frame-ancestors 'none'"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Date","value":"Sun, 01 Nov 2026 23:40:39 GMT"},{"name":"Content-Length","value":"864"}],"serverAddr":{"ipAddress":"::1","port":8080},"timing":{"startTime":1793576439363,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":-1,"secureConnectionStart":-1,"connectEnd":-1,"requestStart":0.26400000002468005,"responseStart":3.0289999999804422},"responseEndTiming":3.2100000000209548,"fetchUid":"f65f0fecb72793173467189ee1013d70"}}}

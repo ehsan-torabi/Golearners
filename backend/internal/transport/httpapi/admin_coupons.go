@@ -57,7 +57,7 @@ func (a *App) auditAdmin(actor identity.Actor, action, entity, id string) {
 // GET /api/v1/admin/coupons
 func (a *App) handleAdminCouponList(w http.ResponseWriter, r *http.Request) {
 	page, perPage := pageParams(r)
-	list, total, err := a.Coupons.List(r.Context(), page, perPage)
+	list, total, err := a.Coupons.List(r.Context(), r.URL.Query().Get("status"), page, perPage)
 	if err != nil {
 		a.writeError(w, r, err)
 		return

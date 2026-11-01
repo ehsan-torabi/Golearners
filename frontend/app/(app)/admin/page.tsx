@@ -23,7 +23,13 @@ interface CourseStat {
   revenue_rial: number;
 }
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ days?: string }>;
+}) {
+  const { days: daysParam } = await searchParams;
+  const days = [7, 30, 90].includes(Number(daysParam)) ? Number(daysParam) : 30;
   const jar = await cookies();
   const access = jar.get("gl_at")?.value ?? "";
   const base = process.env.API_INTERNAL ?? "http://localhost:8080";
@@ -34,7 +40,7 @@ export default async function AdminPage() {
   let forbidden = false;
   let loadError = false;
   try {
-    const res = await fetch(`${base}/api/v1/admin/analytics/summary`, auth);
+    const res = await fetch(`${base}/api/v1/admin/analytics/summary?days=${days}`, auth);
     if (res.status === 403 || res.status === 401) forbidden = true;
     else if (res.ok) {
       summary = (await res.json()) as Summary;
@@ -77,8 +83,28 @@ export default async function AdminPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="reveal text-xl leading-7 text-foreground">نمای کلی</h1>
-        <p className="text-xs text-muted-foreground">داده‌های واقعی سیستم، بدون تخمین</p>
+        <div>
+          <h1 className="reveal text-xl leading-7 text-foreground">نمای کلی</h1>
+          <p className="mt-1 text-xs text-muted-foreground">
+            داده‌های واقعی سیستم، بدون تخمین · بازهٔ {fa(days)} روز
+          </p>
+        </div>
+        <nav aria-label="بازهٔ گزارش" className="flex items-center gap-1">
+          {[7, 30, 90].map((d) => (
+            <Link
+              key={d}
+              href={`/admin?days=${d}`}
+              aria-current={d === days ? "page" : undefined}
+              className={
+                d === days
+                  ? "rounded-md bg-primary-tint px-3 py-1.5 text-sm font-medium text-accent-strong"
+                  : "rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+              }
+            >
+              {fa(d)} روز
+            </Link>
+          ))}
+        </nav>
       </div>
 
       {summary && (
@@ -133,9 +159,34 @@ export default async function AdminPage() {
         )}
       </Card>
 
-      <p className="text-xs leading-6 text-muted-foreground">
-        ساختار دوره‌ها (فصل‌ها، درس‌ها، رسانه‌ها) فعلاً از API مدیریت انجام می‌شود؛ رابط کامل آن در فاز بعد اضافه می‌شود.
-      </p>
+      <Card className="p-5">
+        <h2 className="text-base font-medium text-foreground">مدیریت بخش‌ها</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          هر بخش از پنل مدیریت جداگانه کامل است: فیلتر، مرتب‌سازی، صفحه‌بندی و ویرایش.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[
+            { href: "/admin/courses", label: "دوره‌ها" },
+            { href: "/admin/categories", label: "دسته‌بندی‌ها" },
+            { href: "/admin/posts", label: "نوشته‌های وبلاگ" },
+            { href: "/admin/media", label: "رسانه‌ها" },
+            { href: "/admin/orders", label: "سفارش‌ها" },
+            { href: "/admin/coupons", label: "کدهای تخفیف" },
+            { href: "/admin/users", label: "کاربران" },
+            { href: "/admin/messages", label: "پیام‌های تماس" },
+            { href: "/admin/settings", label: "تنظیمات" },
+            { href: "/admin/audit-logs", label: "گزارش رویدادها" },
+          ].map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="rounded-md border border-border-variant px-3 py-1.5 text-sm text-foreground hover:border-primary hover:text-accent-strong"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }

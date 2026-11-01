@@ -1,0 +1,35 @@
+{
+  "cookies": [
+    {
+      "name": "gl_at",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlYXJuIiwic3ViIjoiMDFhMTkwMGMtMTAyYi03OTYyLThiNzctOGUyMzI0YTcxYjhkIiwiZXhwIjoxNzkzNTc2OTk5LCJpYXQiOjE3OTM1NzYwOTksImp0aSI6ImE1ZTYwZmNiLWUzNmQtNGVhYS04ZTNiLWY3M2U2NTAyYmU2MSJ9.04eefxVz4f2JfCA5LI9X2T2cW6Lrn9eHu40a0mxUQzk",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1793576998.469,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "gl_rt",
+      "value": "OERbtZTOneDakPbsf7j7tfiMG2jiRH2EnUHsav2Qvus",
+      "domain": "localhost",
+      "path": "/api/v1/auth",
+      "expires": 1796168098.469,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "gl_csrf",
+      "value": "e9654393ca83c3f58c368880e8255f1e64efc70f6a2033a13a1b4bd368e68836",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

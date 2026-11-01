@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
@@ -16,6 +17,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { fetchAdmin } from "@/lib/admin";
 import { formatJalali } from "@/lib/jalali";
+import { fa } from "@/lib/utils";
 
 interface AuditRow {
   ID: string;
@@ -27,30 +29,41 @@ interface AuditRow {
   CreatedAt: string;
 }
 
+const PER_PAGE = 20;
+
 export default function AdminAuditLogsPage() {
   const [rows, setRows] = React.useState<AuditRow[]>([]);
+  const [total, setTotal] = React.useState(0);
+  const [page, setPage] = React.useState(1);
   const [loaded, setLoaded] = React.useState(false);
   const [error, setError] = React.useState("");
 
+  const load = React.useCallback(async () => {
+    try {
+      const res = await fetchAdmin<{ data: AuditRow[]; meta: { total: number } }>(
+        `/admin/audit-logs?page=${page}&per_page=${PER_PAGE}`,
+      );
+      setRows(res.data ?? []);
+      setTotal(res.meta?.total ?? 0);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "خطا در دریافت گزارش رویدادها");
+    } finally {
+      setLoaded(true);
+    }
+  }, [page]);
+
   React.useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetchAdmin<{ data: AuditRow[] }>("/admin/audit-logs?per_page=50");
-        setRows(res.data ?? []);
-      } catch (err) {
-        setError(err instanceof ApiError ? err.message : "خطا در دریافت گزارش رویدادها");
-      } finally {
-        setLoaded(true);
-      }
-    })();
-  }, []);
+    void load();
+  }, [load]);
+
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="reveal text-xl leading-7 text-foreground">گزارش رویدادها</h1>
         <p className="mt-1 text-xs text-muted-foreground">
-          هر تغییر حساس در پنل مدیریت اینجا ثبت می‌شود.
+          هر تغییر حساس در پنل مدیریت اینجا ثبت می‌شود. مجموع {fa(total)} رویداد.
         </p>
       </div>
       {error && <Alert>{error}</Alert>}
@@ -94,6 +107,32 @@ export default function AdminAuditLogsPage() {
             </Table>
           </table>
         </Card>
+      )}
+
+      {loaded && total > 0 && (
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-muted-foreground">
+            صفحهٔ {fa(page)} از {fa(pages)}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              قبلی
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page >= pages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              بعدی
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

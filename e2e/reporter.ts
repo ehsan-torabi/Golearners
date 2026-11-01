@@ -1,7 +1,6 @@
 import type { FullResult, Reporter, Suite, TestCase, TestResult } from "@playwright/test/reporter";
 import fs from "node:fs";
 import path from "node:path";
-import { diagnosticsOf } from "./lib/helpers";
 
 interface Bug {
   id: string;
@@ -30,10 +29,20 @@ interface Observation {
   serverErrors: string[];
 }
 
+interface Diagnostics {
+  consoleErrors: string[];
+  pageErrors: string[];
+  failedRequests: string[];
+  serverErrors: string[];
+  clientErrors: string[];
+  apiCalls: string[];
+}
+
 /** Turns the run into an AI-actionable bug report (markdown + json). */
 export default class BugReporter implements Reporter {
   private bugs: Bug[] = [];
   private observations: Observation[] = [];
+  private counts = { total: 0, passed: 0, failed: 0, skipped: 0, flaky: 0 };
   private started = Date.now();
 
   onBegin(_config: unknown, _suite: Suite): void {
@@ -41,9 +50,16 @@ export default class BugReporter implements Reporter {
   }
 
   onTestEnd(test: TestCase, result: TestResult): void {
-    const diag = diagnosticsOf(test.id);
+    const diag = diagnosticsFrom(result);
     const area = areaOf(test);
     const testPath = `${relative(test.location.file)}:${test.location.line}`;
+
+    this.counts.total += 1;
+    const outcome = test.outcome();
+    if (outcome === "expected") this.counts.passed += 1;
+    else if (outcome === "unexpected") this.counts.failed += 1;
+    else if (outcome === "flaky") this.counts.flaky += 1;
+    else this.counts.skipped += 1;
 
     if (result.status === "failed") {
       const error = result.error?.message ?? "unknown failure";
@@ -87,11 +103,7 @@ export default class BugReporter implements Reporter {
       generatedAt: new Date().toISOString(),
       durationMs: Date.now() - this.started,
       status: result.status,
-      total: result.total,
-      passed: result.expected,
-      failed: result.unexpected,
-      skipped: result.skipped,
-      flaky: result.flaky,
+      ...this.counts,
       bugs: this.bugs,
       observations: this.observations,
     };
@@ -99,6 +111,25 @@ export default class BugReporter implements Reporter {
     fs.writeFileSync(path.join(outDir, "bugs.json"), JSON.stringify(summary, null, 2));
     fs.writeFileSync(path.join(outDir, "bugs.md"), markdown(summary));
     console.log(`\n[e2e] bug report: ${path.join(outDir, "bugs.md")}`);
+  }
+}
+
+/** Reads the diagnostics the page fixture attached to the test result. */
+function diagnosticsFrom(result: TestResult): Diagnostics {
+  const empty: Diagnostics = {
+    consoleErrors: [],
+    pageErrors: [],
+    failedRequests: [],
+    serverErrors: [],
+    clientErrors: [],
+    apiCalls: [],
+  };
+  const att = result.attachments.find((a) => a.name === "diagnostics");
+  if (!att?.body) return empty;
+  try {
+    return { ...empty, ...(JSON.parse(att.body.toString()) as Diagnostics) };
+  } catch {
+    return empty;
   }
 }
 
@@ -120,7 +151,7 @@ function areaOf(test: TestCase): string {
   return map[file] ?? file;
 }
 
-function severityOf(error: string, diag: ReturnType<typeof diagnosticsOf>): Bug["severity"] {
+function severityOf(error: string, diag: Diagnostics): Bug["severity"] {
   if (/Internal Server Error|status: 500|\b500\b/.test(error) || diag.serverErrors.length) return "critical";
   if (/Timeout|timed out/i.test(error)) return "major";
   if (diag.pageErrors.length) return "major";

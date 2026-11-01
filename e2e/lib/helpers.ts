@@ -68,6 +68,11 @@ export const test = base.extend<{ diag: Diagnostics }>({
       else if (r.status() >= 400) d.clientErrors.push(line);
     });
     await use(d);
+    // the reporter reads the diagnostics from the attachment, not from a map
+    await testInfo.attach("diagnostics", {
+      body: JSON.stringify(d),
+      contentType: "application/json",
+    });
   },
 });
 

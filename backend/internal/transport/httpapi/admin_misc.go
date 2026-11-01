@@ -273,7 +273,7 @@ func (a *App) handleAdminBlogCategoryDelete(w http.ResponseWriter, r *http.Reque
 // GET /api/v1/admin/messages + POST /api/v1/admin/messages/{id}/status
 func (a *App) handleAdminMessages(w http.ResponseWriter, r *http.Request) {
 	page, perPage := pageParams(r)
-	list, total, err := a.Contacts.List(r.Context(), page, perPage)
+	list, total, err := a.Contacts.List(r.Context(), r.URL.Query().Get("status"), page, perPage)
 	if err != nil {
 		a.writeError(w, r, err)
 		return

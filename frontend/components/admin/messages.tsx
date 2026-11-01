@@ -13,9 +13,11 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApiError, api } from "@/lib/api";
 import { fetchAdmin } from "@/lib/admin";
 import { formatJalali } from "@/lib/jalali";
+import { fa } from "@/lib/utils";
 
 /* message-list block, wired to the real contact messages endpoint. */
 interface MessageRow {
@@ -27,6 +29,14 @@ interface MessageRow {
   CreatedAt: string;
 }
 
+const FILTERS = [
+  { value: "", label: "همه" },
+  { value: "new", label: "خوانده‌نشده" },
+  { value: "open", label: "باز" },
+  { value: "replied", label: "پاسخ‌داده‌شده" },
+  { value: "closed", label: "بسته" },
+];
+
 const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "neutral" }> = {
   new: { label: "خوانده‌نشده", tone: "warning" },
   open: { label: "باز", tone: "warning" },
@@ -36,20 +46,28 @@ const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "
 
 export function AdminMessages() {
   const [messages, setMessages] = React.useState<MessageRow[]>([]);
+  const [total, setTotal] = React.useState(0);
+  const [page, setPage] = React.useState(1);
+  const [filter, setFilter] = React.useState("");
   const [loaded, setLoaded] = React.useState(false);
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState("");
 
   const load = React.useCallback(async () => {
     try {
-      const res = await fetchAdmin<{ data: MessageRow[] }>("/admin/messages");
+      const params = new URLSearchParams({ page: String(page), per_page: "20" });
+      if (filter) params.set("status", filter);
+      const res = await fetchAdmin<{ data: MessageRow[]; meta: { total: number } }>(
+        `/admin/messages?${params}`,
+      );
       setMessages(res.data ?? []);
+      setTotal(res.meta?.total ?? 0);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "خطا در دریافت پیام‌ها");
     } finally {
       setLoaded(true);
     }
-  }, []);
+  }, [page, filter]);
 
   React.useEffect(() => {
     void load();
@@ -77,18 +95,38 @@ export function AdminMessages() {
     );
   }
 
-  if (messages.length === 0) {
-    return (
-      <EmptyState
-        title="پیامی ثبت نشده است"
-        body="پیام‌های فرم تماس مشتری‌ها همین‌جا فهرست می‌شوند."
-      />
-    );
-  }
+  const pages = Math.max(1, Math.ceil(total / 20));
 
   return (
     <div className="space-y-4">
       {error && <Alert>{error}</Alert>}
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Tabs
+          value={filter}
+          onValueChange={(v) => {
+            setFilter(v);
+            setPage(1);
+          }}
+        >
+          <TabsList variant="line" className="h-9 gap-4 p-0">
+            {FILTERS.map((f) => (
+              <TabsTrigger key={f.value} value={f.value}>
+                {f.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+        <span className="ms-auto text-sm text-muted-foreground">{fa(total)} پیام</span>
+      </div>
+
+      {messages.length === 0 ? (
+        <EmptyState
+          title="پیامی با این فیلترها نیست"
+          body="فیلتر وضعیت را تغییر دهید یا منتظر پیام تازه باشید."
+        />
+      ) : (
+        <div className="space-y-4">
       {messages.map((m) => {
         const status = STATUS_FA[m.Status] ?? { label: m.Status, tone: "neutral" as const };
         return (
@@ -138,6 +176,34 @@ export function AdminMessages() {
           </Card>
         );
       })}
+        </div>
+      )}
+
+      {total > 0 && (
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-muted-foreground">
+            صفحهٔ {fa(page)} از {fa(pages)}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              قبلی
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page >= pages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              بعدی
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

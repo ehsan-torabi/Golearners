@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -18,6 +19,7 @@ import {
 import { ApiError, api, formatTomanFromRial } from "@/lib/api";
 import { fetchAdmin } from "@/lib/admin";
 import { formatJalali } from "@/lib/jalali";
+import { fa } from "@/lib/utils";
 
 interface CouponRow {
   id: string;
@@ -32,8 +34,13 @@ interface CouponRow {
   created_at: string;
 }
 
+const PER_PAGE = 20;
+
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = React.useState<CouponRow[]>([]);
+  const [total, setTotal] = React.useState(0);
+  const [page, setPage] = React.useState(1);
+  const [status, setStatus] = React.useState("");
   const [loaded, setLoaded] = React.useState(false);
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState("");
@@ -49,14 +56,19 @@ export default function AdminCouponsPage() {
 
   const load = React.useCallback(async () => {
     try {
-      const res = await fetchAdmin<{ data: CouponRow[] }>("/admin/coupons");
+      const params = new URLSearchParams({ page: String(page), per_page: String(PER_PAGE) });
+      if (status) params.set("status", status);
+      const res = await fetchAdmin<{ data: CouponRow[]; meta: { total: number } }>(
+        `/admin/coupons?${params}`,
+      );
       setCoupons(res.data ?? []);
+      setTotal(res.meta?.total ?? 0);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "خطا در دریافت کدهای تخفیف");
     } finally {
       setLoaded(true);
     }
-  }, []);
+  }, [page, status]);
 
   React.useEffect(() => {
     void load();
@@ -106,10 +118,30 @@ export default function AdminCouponsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="reveal text-xl leading-7 text-foreground">کدهای تخفیف</h1>
-        <Button variant={showForm ? "outline" : "default"} onClick={() => setShowForm((s) => !s)}>
-          {showForm ? "بستن فرم" : "کد تازه"}
-        </Button>
+        <div>
+          <h1 className="reveal text-xl leading-7 text-foreground">کدهای تخفیف</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {loaded ? `${fa(total)} کد ثبت شده است.` : "در حال شمارش کدها…"}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Tabs
+            value={status}
+            onValueChange={(v) => {
+              setStatus(v);
+              setPage(1);
+            }}
+          >
+            <TabsList variant="line" className="h-9 gap-4 p-0">
+              <TabsTrigger value="">همه</TabsTrigger>
+              <TabsTrigger value="active">فعال</TabsTrigger>
+              <TabsTrigger value="inactive">غیرفعال</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button variant={showForm ? "outline" : "default"} onClick={() => setShowForm((s) => !s)}>
+            {showForm ? "بستن فرم" : "کد تازه"}
+          </Button>
+        </div>
       </div>
       {error && <Alert>{error}</Alert>}
 
@@ -215,6 +247,32 @@ export default function AdminCouponsPage() {
             </Table>
           </table>
         </Card>
+      )}
+
+      {loaded && total > 0 && (
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-muted-foreground">
+            صفحهٔ {fa(page)} از {fa(Math.max(1, Math.ceil(total / PER_PAGE)))}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              قبلی
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page >= Math.ceil(total / PER_PAGE)}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              بعدی
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

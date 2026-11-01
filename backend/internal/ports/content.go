@@ -104,6 +104,6 @@ type TestimonialRepo interface {
 // ContactRepo — public contact inbox.
 type ContactRepo interface {
 	Create(ctx context.Context, m *content.ContactMessage) error
-	List(ctx context.Context, page, perPage int) ([]*content.ContactMessage, int, error)
+	List(ctx context.Context, status string, page, perPage int) ([]*content.ContactMessage, int, error)
 	SetStatus(ctx context.Context, id uuid.UUID, s content.ContactStatus) error
 }

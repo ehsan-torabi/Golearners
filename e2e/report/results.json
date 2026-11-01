@@ -1,0 +1,695 @@
+{
+  "config": {
+    "argv": [
+      "/usr/bin/node",
+      "/home/ehsan/Workspace/GoLearn/e2e/node_modules/.bin/playwright",
+      "test",
+      "specs/smoke.spec.ts",
+      "--project=desktop"
+    ],
+    "configFile": "/home/ehsan/Workspace/GoLearn/e2e/playwright.config.ts",
+    "rootDir": "/home/ehsan/Workspace/GoLearn/e2e/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": "/home/ehsan/Workspace/GoLearn/e2e/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/home/ehsan/Workspace/GoLearn/e2e/specs",
+        "testIgnore": [
+          "/responsive\\.spec\\.ts/"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 90000
+      },
+      {
+        "outputDir": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile",
+        "name": "mobile",
+        "testDir": "/home/ehsan/Workspace/GoLearn/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "/responsive\\.spec\\.ts/"
+        ],
+        "timeout": 90000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "desktop",
+        "testDir": "/home/ehsan/Workspace/GoLearn/e2e/specs",
+        "snapshotDir": "/home/ehsan/Workspace/GoLearn/e2e/specs",
+        "testIgnore": {},
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 90000,
+        "use": {
+          "baseURL": "http://localhost:3000",
+          "locale": "fa-IR",
+          "timezoneId": "Asia/Tehran",
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "actionTimeout": 20000,
+          "navigationTimeout": 40000,
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "desktop"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "./report/results.json"
+        }
+      ],
+      [
+        "/home/ehsan/Workspace/GoLearn/e2e/reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "smoke.spec.ts",
+      "file": "smoke.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "route smoke test",
+          "file": "smoke.spec.ts",
+          "line": 20,
+          "column": 6,
+          "specs": [
+            {
+              "title": "/ renders without errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1492,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T23:31:35.280Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-a8104568e2969dbb88fa",
+              "file": "smoke.spec.ts",
+              "line": 22,
+              "column": 9
+            },
+            {
+              "title": "/courses renders without errors",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2476,
+                      "error": {
+                        "message": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                        "stack": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at expectNoClientErrors (/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts:79:63)\n    at /home/ehsan/Workspace/GoLearn/e2e/specs/smoke.spec.ts:27:27",
+                        "location": {
+                          "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                          "column": 63,
+                          "line": 79
+                        },
+                        "snippet": "   at ../lib/helpers.ts:79\n\n  77 | export function expectNoClientErrors(diag: Diagnostics): void {\n  78 |   const noise = [...diag.pageErrors, ...diag.serverErrors];\n> 79 |   expect(noise, `client/server errors:\\n${noise.join(\"\\n\")}`).toEqual([]);\n     |                                                               ^\n  80 | }\n  81 |\n  82 | /** Reads the latest OTP code for a mobile out of the API log (mock SMS provider). */"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                            "column": 63,
+                            "line": 79
+                          },
+                          "message": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n   at ../lib/helpers.ts:79\n\n  77 | export function expectNoClientErrors(diag: Diagnostics): void {\n  78 |   const noise = [...diag.pageErrors, ...diag.serverErrors];\n> 79 |   expect(noise, `client/server errors:\\n${noise.join(\"\\n\")}`).toEqual([]);\n     |                                                               ^\n  80 | }\n  81 |\n  82 | /** Reads the latest OTP code for a mobile out of the API log (mock SMS provider). */\n    at expectNoClientErrors (/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts:79:63)\n    at /home/ehsan/Workspace/GoLearn/e2e/specs/smoke.spec.ts:27:27"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T23:31:36.862Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-courses-renders-without-errors-desktop/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-courses-renders-without-errors-desktop/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-courses-renders-without-errors-desktop/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                        "column": 63,
+                        "line": 79
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-9b5f9d62f97025282733",
+              "file": "smoke.spec.ts",
+              "line": 22,
+              "column": 9
+            },
+            {
+              "title": "/courses/go-from-zero renders without errors",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2422,
+                      "error": {
+                        "message": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                        "stack": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at expectNoClientErrors (/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts:79:63)\n    at /home/ehsan/Workspace/GoLearn/e2e/specs/smoke.spec.ts:27:27",
+                        "location": {
+                          "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                          "column": 63,
+                          "line": 79
+                        },
+                        "snippet": "   at ../lib/helpers.ts:79\n\n  77 | export function expectNoClientErrors(diag: Diagnostics): void {\n  78 |   const noise = [...diag.pageErrors, ...diag.serverErrors];\n> 79 |   expect(noise, `client/server errors:\\n${noise.join(\"\\n\")}`).toEqual([]);\n     |                                                               ^\n  80 | }\n  81 |\n  82 | /** Reads the latest OTP code for a mobile out of the API log (mock SMS provider). */"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                            "column": 63,
+                            "line": 79
+                          },
+                          "message": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n   at ../lib/helpers.ts:79\n\n  77 | export function expectNoClientErrors(diag: Diagnostics): void {\n  78 |   const noise = [...diag.pageErrors, ...diag.serverErrors];\n> 79 |   expect(noise, `client/server errors:\\n${noise.join(\"\\n\")}`).toEqual([]);\n     |                                                               ^\n  80 | }\n  81 |\n  82 | /** Reads the latest OTP code for a mobile out of the API log (mock SMS provider). */\n    at expectNoClientErrors (/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts:79:63)\n    at /home/ehsan/Workspace/GoLearn/e2e/specs/smoke.spec.ts:27:27"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T23:31:39.901Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-cou-8019c-zero-renders-without-errors-desktop/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-cou-8019c-zero-renders-without-errors-desktop/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-cou-8019c-zero-renders-without-errors-desktop/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                        "column": 63,
+                        "line": 79
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-4bc5b02399080193d47f",
+              "file": "smoke.spec.ts",
+              "line": 22,
+              "column": 9
+            },
+            {
+              "title": "/blog renders without errors",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 1850,
+                      "error": {
+                        "message": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                        "stack": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at expectNoClientErrors (/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts:79:63)\n    at /home/ehsan/Workspace/GoLearn/e2e/specs/smoke.spec.ts:27:27",
+                        "location": {
+                          "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                          "column": 63,
+                          "line": 79
+                        },
+                        "snippet": "   at ../lib/helpers.ts:79\n\n  77 | export function expectNoClientErrors(diag: Diagnostics): void {\n  78 |   const noise = [...diag.pageErrors, ...diag.serverErrors];\n> 79 |   expect(noise, `client/server errors:\\n${noise.join(\"\\n\")}`).toEqual([]);\n     |                                                               ^\n  80 | }\n  81 |\n  82 | /** Reads the latest OTP code for a mobile out of the API log (mock SMS provider). */"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                            "column": 63,
+                            "line": 79
+                          },
+                          "message": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n   at ../lib/helpers.ts:79\n\n  77 | export function expectNoClientErrors(diag: Diagnostics): void {\n  78 |   const noise = [...diag.pageErrors, ...diag.serverErrors];\n> 79 |   expect(noise, `client/server errors:\\n${noise.join(\"\\n\")}`).toEqual([]);\n     |                                                               ^\n  80 | }\n  81 |\n  82 | /** Reads the latest OTP code for a mobile out of the API log (mock SMS provider). */\n    at expectNoClientErrors (/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts:79:63)\n    at /home/ehsan/Workspace/GoLearn/e2e/specs/smoke.spec.ts:27:27"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T23:31:42.925Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-blog-renders-without-errors-desktop/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-blog-renders-without-errors-desktop/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-blog-renders-without-errors-desktop/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                        "column": 63,
+                        "line": 79
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-d14811579868ab751ebc",
+              "file": "smoke.spec.ts",
+              "line": 22,
+              "column": 9
+            },
+            {
+              "title": "/instructor renders without errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1653,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T23:31:45.414Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-9e59b39c0fd4fdda5bcf",
+              "file": "smoke.spec.ts",
+              "line": 22,
+              "column": 9
+            },
+            {
+              "title": "/contact renders without errors",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3085,
+                      "error": {
+                        "message": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                        "stack": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at expectNoClientErrors (/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts:79:63)\n    at /home/ehsan/Workspace/GoLearn/e2e/specs/smoke.spec.ts:27:27",
+                        "location": {
+                          "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                          "column": 63,
+                          "line": 79
+                        },
+                        "snippet": "   at ../lib/helpers.ts:79\n\n  77 | export function expectNoClientErrors(diag: Diagnostics): void {\n  78 |   const noise = [...diag.pageErrors, ...diag.serverErrors];\n> 79 |   expect(noise, `client/server errors:\\n${noise.join(\"\\n\")}`).toEqual([]);\n     |                                                               ^\n  80 | }\n  81 |\n  82 | /** Reads the latest OTP code for a mobile out of the API log (mock SMS provider). */"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                            "column": 63,
+                            "line": 79
+                          },
+                          "message": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n   at ../lib/helpers.ts:79\n\n  77 | export function expectNoClientErrors(diag: Diagnostics): void {\n  78 |   const noise = [...diag.pageErrors, ...diag.serverErrors];\n> 79 |   expect(noise, `client/server errors:\\n${noise.join(\"\\n\")}`).toEqual([]);\n     |                                                               ^\n  80 | }\n  81 |\n  82 | /** Reads the latest OTP code for a mobile out of the API log (mock SMS provider). */\n    at expectNoClientErrors (/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts:79:63)\n    at /home/ehsan/Workspace/GoLearn/e2e/specs/smoke.spec.ts:27:27"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T23:31:47.164Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-contact-renders-without-errors-desktop/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-contact-renders-without-errors-desktop/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/ehsan/Workspace/GoLearn/e2e/report/artifacts/smoke-route-smoke-test-contact-renders-without-errors-desktop/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/ehsan/Workspace/GoLearn/e2e/lib/helpers.ts",
+                        "column": 63,
+                        "line": 79
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-00481ab7fed3900a8369",
+              "file": "smoke.spec.ts",
+              "line": 22,
+              "column": 9
+            },
+            {
+              "title": "/login renders without errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1756,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T23:31:50.807Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-e27f0f8df7f91d040666",
+              "file": "smoke.spec.ts",
+              "line": 22,
+              "column": 9
+            },
+            {
+              "title": "/register renders without errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1599,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T23:31:52.664Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-f821aec301c3737f3707",
+              "file": "smoke.spec.ts",
+              "line": 22,
+              "column": 9
+            },
+            {
+              "title": "/checkout?course=go-from-zero renders without errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1810,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T23:31:54.279Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-b6a5d744bd623e316fe0",
+              "file": "smoke.spec.ts",
+              "line": 22,
+              "column": 9
+            },
+            {
+              "title": "/checkout/result?status=paid renders without errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1606,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T23:31:56.106Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-fc4216aac2db6ea9b9f9",
+              "file": "smoke.spec.ts",
+              "line": 22,
+              "column": 9
+            },
+            {
+              "title": "the API health endpoint answers",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 25,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T23:31:57.725Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-e0d2a44bf6bba1ea8429",
+              "file": "smoke.spec.ts",
+              "line": 31,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-01T23:31:34.493Z",
+    "duration": 23313.041,
+    "expected": 7,
+    "skipped": 0,
+    "unexpected": 4,
+    "flaky": 0
+  }
+}

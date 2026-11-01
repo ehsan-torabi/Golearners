@@ -788,7 +788,7 @@ func (f *CouponRepo) ByCode(_ context.Context, code string) (*commerce.Coupon, e
 func (f *CouponRepo) Update(context.Context, *commerce.Coupon) error { return nil }
 func (f *CouponRepo) Delete(context.Context, uuid.UUID) error        { return nil }
 
-func (f *CouponRepo) List(context.Context, int, int) ([]*commerce.Coupon, int, error) {
+func (f *CouponRepo) List(context.Context, string, int, int) ([]*commerce.Coupon, int, error) {
 	return nil, 0, nil
 }
 

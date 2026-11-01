@@ -7,9 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Textarea } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApiError, formatTomanFromRial } from "@/lib/api";
 import { adminRefundOrder, fetchAdmin } from "@/lib/admin";
 import { formatJalali } from "@/lib/jalali";
+import { fa } from "@/lib/utils";
 
 const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "destructive" | "neutral" }> = {
   awaiting_payment: { label: "در انتظار پرداخت", tone: "warning" },
@@ -19,12 +22,44 @@ const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "
   refunded: { label: "بازگشت‌خورده", tone: "destructive" },
 };
 
+const FILTERS = [
+  { value: "", label: "همه" },
+  { value: "awaiting_payment", label: "در انتظار" },
+  { value: "paid", label: "پرداخت‌شده" },
+  { value: "refunded", label: "بازگشت‌خورده" },
+  { value: "expired", label: "منقضی" },
+];
+
+const PER_PAGE = 20;
+
 interface OrderRow {
   id: string;
   user_id: string;
   status: string;
+  subtotal_rial: number;
+  discount_rial: number;
+  total_rial: number;
+  paid_at: string | null;
+  created_at: string;
+}
+
+interface OrderDetail {
+  id: string;
+  status: string;
+  subtotal_rial: number;
+  discount_rial: number;
   total_rial: number;
   created_at: string;
+  items?: { title_snapshot: string; unit_price_rial: number }[];
+  payments?: {
+    id: string;
+    gateway: string;
+    status: string;
+    amount_rial: number;
+    card_masked: string | null;
+    failure_reason: string | null;
+    created_at: string;
+  }[];
 }
 
 /* native <dialog>: Escape closes it, focus is trapped, no library needed */
@@ -102,82 +137,262 @@ function RefundDialog({
   );
 }
 
+function DetailDialog({ orderId, onClose }: { orderId: string | null; onClose: () => void }) {
+  const ref = React.useRef<HTMLDialogElement>(null);
+  const [detail, setDetail] = React.useState<OrderDetail | null>(null);
+  const [error, setError] = React.useState("");
+
+  React.useEffect(() => {
+    const dlg = ref.current;
+    if (!dlg) return;
+    if (orderId && !dlg.open) dlg.showModal();
+    if (!orderId && dlg.open) dlg.close();
+  }, [orderId]);
+
+  React.useEffect(() => {
+    if (!orderId) return;
+    setDetail(null);
+    setError("");
+    fetchAdmin<OrderDetail>(`/admin/orders/${orderId}`)
+      .then(setDetail)
+      .catch(() => setError("دریافت جزئیات سفارش ناموفق بود."));
+  }, [orderId]);
+
+  return (
+    <dialog
+      ref={ref}
+      onClose={onClose}
+      onClick={(e) => e.target === ref.current && ref.current.close()}
+      className="m-auto max-h-[85vh] w-[min(92vw,40rem)] overflow-y-auto rounded-lg border border-border bg-card p-0 text-foreground backdrop:bg-black/45"
+    >
+      <div className="space-y-4 p-6">
+        <h2 className="text-base font-medium">جزئیات سفارش</h2>
+        {error && <Alert>{error}</Alert>}
+        {!detail && !error && <p className="text-sm text-muted-foreground">در حال دریافت جزئیات…</p>}
+        {detail && (
+          <>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <p className="text-sm">
+                <span className="text-muted-foreground">جمع کل: </span>
+                {formatTomanFromRial(detail.total_rial)}
+              </p>
+              <p className="text-sm">
+                <span className="text-muted-foreground">تخفیف: </span>
+                {formatTomanFromRial(detail.discount_rial ?? 0)}
+              </p>
+              <p className="text-sm">
+                <span className="text-muted-foreground">تاریخ: </span>
+                {formatJalali(new Date(detail.created_at))}
+              </p>
+            </div>
+
+            <div>
+              <h3 className="mb-2 text-sm font-medium">اقلام سفارش</h3>
+              {(detail.items ?? []).length === 0 ? (
+                <p className="text-xs text-muted-foreground">قلمی ثبت نشده است.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {(detail.items ?? []).map((item, i) => (
+                    <li key={i} className="flex justify-between text-sm">
+                      <span>{item.title_snapshot}</span>
+                      <span className="text-muted-foreground">
+                        {formatTomanFromRial(item.unit_price_rial)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <h3 className="mb-2 text-sm font-medium">پرداخت‌ها</h3>
+              {(detail.payments ?? []).length === 0 ? (
+                <p className="text-xs text-muted-foreground">پرداختی ثبت نشده است.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {(detail.payments ?? []).map((p) => (
+                    <li key={p.id} className="rounded-md border border-border-variant p-3 text-sm">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge tone={p.status === "verified" ? "success" : "warning"}>{p.status}</Badge>
+                        <span dir="ltr">{p.gateway}</span>
+                        <span className="text-muted-foreground">
+                          {formatTomanFromRial(p.amount_rial)}
+                        </span>
+                        {p.card_masked && (
+                          <span className="text-muted-foreground" dir="ltr">
+                            {p.card_masked}
+                          </span>
+                        )}
+                      </div>
+                      {p.failure_reason && (
+                        <p className="mt-1 text-xs text-destructive-text">{p.failure_reason}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="flex justify-start">
+              <Button type="button" variant="outline" onClick={() => ref.current?.close()}>
+                بستن
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </dialog>
+  );
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = React.useState<OrderRow[]>([]);
+  const [total, setTotal] = React.useState(0);
+  const [page, setPage] = React.useState(1);
+  const [status, setStatus] = React.useState("");
   const [loaded, setLoaded] = React.useState(false);
   const [error, setError] = React.useState("");
   const [target, setTarget] = React.useState<OrderRow | null>(null);
+  const [detailId, setDetailId] = React.useState<string | null>(null);
 
   const load = React.useCallback(async () => {
+    setError("");
     try {
-      const res = await fetchAdmin<{ data: OrderRow[] }>("/admin/orders?per_page=50");
+      const params = new URLSearchParams({ page: String(page), per_page: String(PER_PAGE) });
+      if (status) params.set("status", status);
+      const res = await fetchAdmin<{ data: OrderRow[]; meta: { total: number } }>(
+        `/admin/orders?${params}`,
+      );
       setOrders(res.data ?? []);
+      setTotal(res.meta?.total ?? 0);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "خطا در دریافت سفارش‌ها");
     } finally {
       setLoaded(true);
     }
-  }, []);
+  }, [page, status]);
 
   React.useEffect(() => {
     void load();
   }, [load]);
 
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+
   return (
-    <div className="space-y-6">
-      <h1 className="reveal text-xl leading-7 text-foreground">سفارش‌ها</h1>
+    <div className="space-y-4">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="reveal text-xl leading-7 text-foreground">سفارش‌ها</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {loaded ? `${fa(total)} سفارش ثبت شده است.` : "در حال شمارش سفارش‌ها…"}
+          </p>
+        </div>
+        <Tabs
+          value={status}
+          onValueChange={(v) => {
+            setStatus(v);
+            setPage(1);
+          }}
+        >
+          <TabsList variant="line" className="h-9 gap-4 p-0">
+            {FILTERS.map((f) => (
+              <TabsTrigger key={f.value} value={f.value}>
+                {f.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </header>
+
       {error && <Alert>{error}</Alert>}
-      {!loaded ? (
-        <Card className="space-y-3 p-6" aria-label="در حال بارگذاری سفارش‌ها">
-          <div className="h-5 w-1/3 animate-pulse rounded bg-accent" />
-          <div className="h-5 w-1/2 animate-pulse rounded bg-accent" />
-        </Card>
-      ) : orders.length === 0 ? (
-        <EmptyState title="سفارشی ثبت نشده است" body="با اولین خرید، سفارش‌ها همین‌جا فهرست می‌شوند." />
-      ) : (
-        <Card className="overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-muted text-xs text-muted-foreground">
-              <tr>
-                <th scope="col" className="px-5 py-3 text-start font-medium">شناسه</th>
-                <th scope="col" className="px-5 py-3 text-start font-medium">تاریخ</th>
-                <th scope="col" className="px-5 py-3 text-start font-medium">مبلغ</th>
-                <th scope="col" className="px-5 py-3 text-start font-medium">وضعیت</th>
-                <th scope="col" className="px-5 py-3 text-start font-medium">عملیات</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-variant">
+
+      <Card className="p-0">
+        {!loaded ? (
+          <div className="space-y-3 p-6" aria-label="در حال بارگذاری سفارش‌ها">
+            <div className="h-5 w-1/3 animate-pulse rounded bg-muted" />
+            <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
+          </div>
+        ) : orders.length === 0 ? (
+          <EmptyState title="سفارشی با این فیلترها نیست" body="فیلتر وضعیت را تغییر دهید." />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-start">سفارش</TableHead>
+                <TableHead className="text-start">مبلغ</TableHead>
+                <TableHead className="text-start">تاریخ</TableHead>
+                <TableHead className="text-start">وضعیت</TableHead>
+                <TableHead className="text-start">کنش‌ها</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {orders.map((o) => {
-                const status = STATUS_FA[o.status] ?? { label: o.status, tone: "neutral" as const };
+                const meta = STATUS_FA[o.status] ?? { label: o.status, tone: "neutral" as const };
                 return (
-                  <tr key={o.id} className="transition-colors hover:bg-muted">
-                    <td className="px-5 py-3 text-foreground" dir="ltr">
+                  <TableRow key={o.id}>
+                    <TableCell className="text-start" dir="ltr">
                       {o.id.slice(0, 8)}…
-                    </td>
-                    <td className="px-5 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="text-start">{formatTomanFromRial(o.total_rial)}</TableCell>
+                    <TableCell className="text-start text-muted-foreground">
                       {formatJalali(new Date(o.created_at))}
-                    </td>
-                    <td className="px-5 py-3 text-foreground">{formatTomanFromRial(o.total_rial)}</td>
-                    <td className="px-5 py-3">
-                      <Badge tone={status.tone}>{status.label}</Badge>
-                    </td>
-                    <td className="px-5 py-3">
-                      {o.status === "paid" ? (
-                        <Button size="sm" variant="outline" onClick={() => setTarget(o)}>
-                          بازگشت وجه
+                    </TableCell>
+                    <TableCell className="text-start">
+                      <Badge tone={meta.tone}>{meta.label}</Badge>
+                    </TableCell>
+                    <TableCell className="text-start">
+                      <div className="flex flex-wrap items-center gap-1">
+                        <Button size="sm" variant="outline" onClick={() => setDetailId(o.id)}>
+                          جزئیات
                         </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </td>
-                  </tr>
+                        {o.status === "paid" && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive-text"
+                            onClick={() => setTarget(o)}
+                          >
+                            بازگشت وجه
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </Card>
-      )}
+            </TableBody>
+          </Table>
+        )}
+
+        {loaded && total > 0 && (
+          <div className="flex items-center justify-between gap-3 border-t border-border-variant px-4 py-3 text-sm">
+            <span className="text-muted-foreground">
+              صفحهٔ {fa(page)} از {fa(pages)}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                قبلی
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page >= pages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                بعدی
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
+
       <RefundDialog order={target} onClose={() => setTarget(null)} onDone={() => void load()} />
+      <DetailDialog orderId={detailId} onClose={() => setDetailId(null)} />
     </div>
   );
 }

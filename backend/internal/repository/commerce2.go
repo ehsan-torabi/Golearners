@@ -79,10 +79,16 @@ func (r *CouponRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-func (r *CouponRepo) List(ctx context.Context, page, perPage int) ([]*commerce.Coupon, int, error) {
+func (r *CouponRepo) List(ctx context.Context, status string, page, perPage int) ([]*commerce.Coupon, int, error) {
+	where := "TRUE"
+	args := []any{}
+	if status != "" {
+		where = "status = $1"
+		args = append(args, status)
+	}
 	rows, err := querierOf(ctx, r.pool).Query(ctx,
-		`SELECT `+couponColumns+` FROM coupons ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
-		perPage, (page-1)*perPage)
+		`SELECT `+couponColumns+` FROM coupons WHERE `+where+` ORDER BY created_at DESC LIMIT $`+fmt.Sprint(len(args)+1)+` OFFSET $`+fmt.Sprint(len(args)+2),
+		append(append([]any{}, args...), perPage, (page-1)*perPage)...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list coupons: %w", err)
 	}
@@ -99,7 +105,8 @@ func (r *CouponRepo) List(ctx context.Context, page, perPage int) ([]*commerce.C
 		return nil, 0, err
 	}
 	var total int
-	err = r.pool.QueryRow(ctx, `SELECT count(*) FROM coupons`).Scan(&total)
+	err = querierOf(ctx, r.pool).QueryRow(ctx,
+		`SELECT count(*) FROM coupons WHERE `+where, args...).Scan(&total)
 	return out, total, err
 }
 

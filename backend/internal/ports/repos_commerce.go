@@ -34,7 +34,7 @@ type CouponRepo interface {
 	ByCode(ctx context.Context, code string) (*commerce.Coupon, error)
 	Update(ctx context.Context, c *commerce.Coupon) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	List(ctx context.Context, page, perPage int) ([]*commerce.Coupon, int, error)
+	List(ctx context.Context, status string, page, perPage int) ([]*commerce.Coupon, int, error)
 	CountUses(ctx context.Context, couponID uuid.UUID) (int, error)
 	CountUsesByUser(ctx context.Context, couponID, userID uuid.UUID) (int, error)
 	// Redeem inserts a redemption row; unique (coupon, order) keeps it idempotent.

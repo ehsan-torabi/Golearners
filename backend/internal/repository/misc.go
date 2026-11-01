@@ -326,10 +326,17 @@ func (r *ContactRepo) Create(ctx context.Context, m *content.ContactMessage) err
 	return nil
 }
 
-func (r *ContactRepo) List(ctx context.Context, page, perPage int) ([]*content.ContactMessage, int, error) {
+func (r *ContactRepo) List(ctx context.Context, status string, page, perPage int) ([]*content.ContactMessage, int, error) {
+	where := "TRUE"
+	args := []any{}
+	if status != "" {
+		where = "status = $1"
+		args = append(args, status)
+	}
 	rows, err := querierOf(ctx, r.pool).Query(ctx,
 		`SELECT id, user_id, name, contact, subject, body, status, created_at
-		 FROM contact_messages ORDER BY created_at DESC LIMIT $1 OFFSET $2`, perPage, (page-1)*perPage)
+		 FROM contact_messages WHERE `+where+` ORDER BY created_at DESC LIMIT $`+fmt.Sprint(len(args)+1)+` OFFSET $`+fmt.Sprint(len(args)+2),
+		append(append([]any{}, args...), perPage, (page-1)*perPage)...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list contact messages: %w", err)
 	}
@@ -346,7 +353,8 @@ func (r *ContactRepo) List(ctx context.Context, page, perPage int) ([]*content.C
 		return nil, 0, err
 	}
 	var total int
-	err = querierOf(ctx, r.pool).QueryRow(ctx, `SELECT count(*) FROM contact_messages`).Scan(&total)
+	err = querierOf(ctx, r.pool).QueryRow(ctx,
+		`SELECT count(*) FROM contact_messages WHERE `+where, args...).Scan(&total)
 	return out, total, err
 }
 
