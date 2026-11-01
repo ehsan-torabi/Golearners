@@ -12,10 +12,10 @@ import { ApiError, formatTomanFromRial, type CourseSummary } from "@/lib/api";
 import { adminCreateCourse, adminPublishCourse, fetchAdmin } from "@/lib/admin";
 import { fa } from "@/lib/utils";
 
-const STATUS_FA: Record<string, string> = {
-  draft: "پیش‌نویس",
-  published: "منتشرشده",
-  archived: "بایگانی",
+const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "neutral" }> = {
+  published: { label: "منتشرشده", tone: "success" },
+  draft: { label: "پیش‌نویس", tone: "warning" },
+  archived: { label: "بایگانی", tone: "neutral" },
 };
 
 const EMPTY_FORM = {
@@ -85,9 +85,9 @@ export default function AdminCoursesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl">مدیریت دوره‌ها</h1>
-        <Button variant={showForm ? "outline" : "primary"} onClick={() => setShowForm((s) => !s)}>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h1 className="reveal text-xl leading-7 text-foreground">دوره‌ها</h1>
+        <Button variant={showForm ? "outline" : "default"} onClick={() => setShowForm((s) => !s)}>
           {showForm ? "بستن فرم" : "دوره جدید"}
         </Button>
       </div>
@@ -96,6 +96,7 @@ export default function AdminCoursesPage() {
 
       {showForm && (
         <Card className="p-6">
+          <h2 className="mb-4 text-base font-medium">ثبت دوره تازه</h2>
           <form onSubmit={create} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="عنوان" htmlFor="a-title" required className="sm:col-span-2">
               <Input id="a-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
@@ -142,8 +143,8 @@ export default function AdminCoursesPage() {
 
       {!loaded ? (
         <Card className="space-y-3 p-6" aria-label="در حال بارگذاری فهرست دوره‌ها">
-          <div className="h-5 w-1/3 animate-pulse rounded bg-muted" />
-          <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
+          <div className="h-5 w-1/3 animate-pulse rounded bg-accent" />
+          <div className="h-5 w-1/2 animate-pulse rounded bg-accent" />
         </Card>
       ) : courses.length === 0 ? (
         <EmptyState
@@ -151,38 +152,57 @@ export default function AdminCoursesPage() {
           body="اولین دوره را با دکمهٔ «دوره جدید» بساز."
         />
       ) : (
-        <div className="space-y-3">
-          <p className="text-xs text-muted-foreground">{fa(courses.length)} دوره</p>
-          {courses.map((c) => (
-            <Card key={c.id} className="flex flex-wrap items-center justify-between gap-3 p-5">
-              <div>
-                <Link
-                  href={`/courses/${encodeURIComponent(c.slug)}`}
-                  className="font-medium transition-colors duration-(--motion) ease-motion hover:text-accent-strong"
-                >
-                  {c.title}
-                </Link>
-                <p className="mt-0.5 text-xs text-muted-foreground" dir="ltr">
-                  /courses/{c.slug}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm">{c.price_rial === 0 ? "رایگان" : formatTomanFromRial(c.price_rial)}</span>
-                <Badge tone={c.status === "published" ? "success" : c.status === "draft" ? "warning" : "neutral"}>
-                  {STATUS_FA[c.status] ?? c.status}
-                </Badge>
-                <Button
-                  size="sm"
-                  variant={c.status === "published" ? "outline" : "primary"}
-                  loading={toggling === c.id}
-                  onClick={() => togglePublish(c.id, c.status)}
-                >
-                  {c.status === "published" ? "لغو انتشار" : "انتشار"}
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <Card className="overflow-hidden">
+          <div className="border-b border-border-variant px-5 py-3 text-xs text-muted-foreground">
+            {fa(courses.length)} دوره
+          </div>
+          <table className="w-full text-sm">
+            <thead className="bg-muted text-xs text-muted-foreground">
+              <tr>
+                <th scope="col" className="px-5 py-3 text-start font-medium">دوره</th>
+                <th scope="col" className="px-5 py-3 text-start font-medium">قیمت</th>
+                <th scope="col" className="px-5 py-3 text-start font-medium">وضعیت</th>
+                <th scope="col" className="px-5 py-3 text-start font-medium">عملیات</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-variant">
+              {courses.map((c) => {
+                const status = STATUS_FA[c.status] ?? { label: c.status, tone: "neutral" as const };
+                return (
+                  <tr key={c.id} className="transition-colors hover:bg-muted">
+                    <td className="px-5 py-3">
+                      <Link
+                        href={`/courses/${encodeURIComponent(c.slug)}`}
+                        className="font-medium text-foreground hover:text-accent-strong"
+                      >
+                        {c.title}
+                      </Link>
+                      <p className="mt-0.5 text-xs text-muted-foreground" dir="ltr">
+                        /courses/{c.slug}
+                      </p>
+                    </td>
+                    <td className="px-5 py-3 text-foreground">
+                      {c.price_rial === 0 ? "رایگان" : formatTomanFromRial(c.price_rial)}
+                    </td>
+                    <td className="px-5 py-3">
+                      <Badge tone={status.tone}>{status.label}</Badge>
+                    </td>
+                    <td className="px-5 py-3">
+                      <Button
+                        size="sm"
+                        variant={c.status === "published" ? "outline" : "default"}
+                        loading={toggling === c.id}
+                        onClick={() => togglePublish(c.id, c.status)}
+                      >
+                        {c.status === "published" ? "لغو انتشار" : "انتشار"}
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Card>
       )}
     </div>
   );

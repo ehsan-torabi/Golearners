@@ -11,12 +11,12 @@ import { ApiError, formatTomanFromRial } from "@/lib/api";
 import { adminRefundOrder, fetchAdmin } from "@/lib/admin";
 import { formatJalali } from "@/lib/jalali";
 
-const STATUS_FA: Record<string, string> = {
-  awaiting_payment: "در انتظار پرداخت",
-  paid: "پرداخت‌شده",
-  canceled: "لغوشده",
-  expired: "منقضی",
-  refunded: "بازگشت‌خورده",
+const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "destructive" | "neutral" }> = {
+  awaiting_payment: { label: "در انتظار پرداخت", tone: "warning" },
+  paid: { label: "پرداخت‌شده", tone: "success" },
+  canceled: { label: "لغوشده", tone: "neutral" },
+  expired: { label: "منقضی", tone: "neutral" },
+  refunded: { label: "بازگشت‌خورده", tone: "destructive" },
 };
 
 interface OrderRow {
@@ -71,11 +71,11 @@ function RefundDialog({
       ref={ref}
       onClose={onClose}
       onClick={(e) => e.target === ref.current && ref.current.close()}
-      className="m-auto rounded-overlay border border-line bg-card p-0 text-foreground backdrop:bg-black/50"
+      className="m-auto rounded-lg border border-border bg-card p-0 text-foreground backdrop:bg-black/45"
     >
       {order && (
         <form onSubmit={submit} className="w-[min(90vw,26rem)] p-6">
-          <h2 className="font-display text-lg">بازگشت وجه سفارش</h2>
+          <h2 className="text-base font-medium">بازگشت وجه سفارش</h2>
           <p className="mt-1 text-xs text-muted-foreground" dir="ltr">
             {order.id.slice(0, 8)}… · {formatTomanFromRial(order.total_rial)}
           </p>
@@ -125,42 +125,56 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl">سفارش‌ها</h1>
+      <h1 className="reveal text-xl leading-7 text-foreground">سفارش‌ها</h1>
       {error && <Alert>{error}</Alert>}
       {!loaded ? (
         <Card className="space-y-3 p-6" aria-label="در حال بارگذاری سفارش‌ها">
-          <div className="h-5 w-1/3 animate-pulse rounded bg-muted" />
-          <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
+          <div className="h-5 w-1/3 animate-pulse rounded bg-accent" />
+          <div className="h-5 w-1/2 animate-pulse rounded bg-accent" />
         </Card>
       ) : orders.length === 0 ? (
         <EmptyState title="سفارشی ثبت نشده است" body="با اولین خرید، سفارش‌ها همین‌جا فهرست می‌شوند." />
       ) : (
-        <Card className="divide-y divide-line">
-          {orders.map((o) => (
-            <div key={o.id} className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
-              <div className="min-w-0">
-                <p className="font-medium" dir="ltr">
-                  {o.id.slice(0, 8)}…
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{formatJalali(new Date(o.created_at))}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span>{formatTomanFromRial(o.total_rial)}</span>
-                <Badge
-                  tone={
-                    o.status === "paid" ? "success" : o.status === "refunded" ? "destructive" : "neutral"
-                  }
-                >
-                  {STATUS_FA[o.status] ?? o.status}
-                </Badge>
-                {o.status === "paid" && (
-                  <Button size="sm" variant="outline" onClick={() => setTarget(o)}>
-                    بازگشت وجه
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
+        <Card className="overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted text-xs text-muted-foreground">
+              <tr>
+                <th scope="col" className="px-5 py-3 text-start font-medium">شناسه</th>
+                <th scope="col" className="px-5 py-3 text-start font-medium">تاریخ</th>
+                <th scope="col" className="px-5 py-3 text-start font-medium">مبلغ</th>
+                <th scope="col" className="px-5 py-3 text-start font-medium">وضعیت</th>
+                <th scope="col" className="px-5 py-3 text-start font-medium">عملیات</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-variant">
+              {orders.map((o) => {
+                const status = STATUS_FA[o.status] ?? { label: o.status, tone: "neutral" as const };
+                return (
+                  <tr key={o.id} className="transition-colors hover:bg-muted">
+                    <td className="px-5 py-3 text-foreground" dir="ltr">
+                      {o.id.slice(0, 8)}…
+                    </td>
+                    <td className="px-5 py-3 text-muted-foreground">
+                      {formatJalali(new Date(o.created_at))}
+                    </td>
+                    <td className="px-5 py-3 text-foreground">{formatTomanFromRial(o.total_rial)}</td>
+                    <td className="px-5 py-3">
+                      <Badge tone={status.tone}>{status.label}</Badge>
+                    </td>
+                    <td className="px-5 py-3">
+                      {o.status === "paid" ? (
+                        <Button size="sm" variant="outline" onClick={() => setTarget(o)}>
+                          بازگشت وجه
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </Card>
       )}
       <RefundDialog order={target} onClose={() => setTarget(null)} onDone={() => void load()} />

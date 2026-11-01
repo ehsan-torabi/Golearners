@@ -76,7 +76,7 @@ function CheckoutInner() {
       <Card className="p-8">
         {order ? (
           <div className="space-y-3 text-sm">
-            {order.items.map((it) => (
+            {(order.items ?? []).map((it) => (
               <div key={it.course_id} className="flex items-center justify-between gap-4">
                 <span className="text-foreground">{it.title_snapshot}</span>
                 <span className="shrink-0">{formatTomanFromRial(it.unit_price_rial)}</span>

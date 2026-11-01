@@ -75,6 +75,15 @@
   --invert: #001529;
   --invert-foreground: #ffffff;
   --invert-muted: rgba(255, 255, 255, 0.65);
+  /* dashboard sider: Ant dark sider, same in both themes */
+  --sidebar: #001529;
+  --sidebar-foreground: rgba(255, 255, 255, 0.85);
+  --sidebar-primary: #0958d9;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-ring: #4096ff;
 
   --radius: 6px;
   --shape-control: 6px;
@@ -145,6 +154,14 @@
   --invert: #001529;
   --invert-foreground: #ffffff;
   --invert-muted: rgba(255, 255, 255, 0.65);
+  --sidebar: #001529;
+  --sidebar-foreground: rgba(255, 255, 255, 0.85);
+  --sidebar-primary: #0958d9;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-ring: #4096ff;
   --depth-raise: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --depth-pop: 0 6px 16px 0 rgba(0, 0, 0, 0.45), 0 3px 6px -4px rgba(0, 0, 0, 0.5);
 }
@@ -189,6 +206,14 @@
   --color-invert: var(--invert);
   --color-invert-foreground: var(--invert-foreground);
   --color-invert-muted: var(--invert-muted);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 
   --radius-control: var(--shape-control);
   --radius-field: var(--shape-field);

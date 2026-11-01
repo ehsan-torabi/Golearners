@@ -87,7 +87,9 @@ export interface Order {
   discount_rial: number;
   total_rial: number;
   expires_at: string;
-  items: { course_id: string; title_snapshot: string; unit_price_rial: number }[];
+  created_at?: string;
+  paid_at?: string | null;
+  items?: { course_id: string; title_snapshot: string; unit_price_rial: number }[];
   payments?: Payment[];
 }
 
