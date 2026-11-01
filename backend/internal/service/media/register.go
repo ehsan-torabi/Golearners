@@ -34,8 +34,11 @@ func (s *Service) Register(ctx context.Context, actor Actor, in RegisterInput) (
 		course.MediaVideo: "video", course.MediaImage: "image", course.MediaPDF: "pdf",
 	}[kind]
 	prefix := "media/" + dir + "/"
+	// the storage key is generated from the kind (canonical mime), so the
+	// extension check must use the same canonical mime, not the uploaded one
+	// (a PNG upload lands on master.jpg by design).
 	if !strings.HasPrefix(in.StorageKey, prefix) ||
-		path.Ext(in.StorageKey) != "."+extOf(in.Mime) {
+		path.Ext(in.StorageKey) != "."+extOf(mimeFromKind(kind)) {
 		return nil, apperr.ErrValidation.Wrap(fmt.Errorf("storage key does not match issued pattern"))
 	}
 	// size re-check against the stored object (never trust the browser)

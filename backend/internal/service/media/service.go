@@ -120,11 +120,18 @@ func storageKey(kind course.MediaKind) string {
 	return path.Join("media", dir, now.Format("2006"), now.Format("01"), uuid.Must(uuid.NewV7()).String(), name)
 }
 
+// canonicalMime is the single mime per kind used for generated storage keys.
+// It must be deterministic: the key extension and the register check have to
+// agree, and a map lookup would pick a random allowlist entry per call.
+var canonicalMime = map[course.MediaKind]string{
+	course.MediaVideo: "video/mp4",
+	course.MediaImage: "image/jpeg",
+	course.MediaPDF:   "application/pdf",
+}
+
 func mimeFromKind(kind course.MediaKind) string {
-	for mime, m := range mimeAllowlist {
-		if m.Kind == kind {
-			return mime
-		}
+	if mime, ok := canonicalMime[kind]; ok {
+		return mime
 	}
 	return "application/octet-stream"
 }
