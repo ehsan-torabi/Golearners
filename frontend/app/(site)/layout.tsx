@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SiteNavbar, type NavLink } from "@/components/site-navbar";
-import { SiteFooter } from "@/components/site-footer";
+import { SiteFooter, type FooterCategory } from "@/components/site-footer";
+import { api } from "@/lib/api";
 
 const nav: NavLink[] = [
   { href: "/courses", label: "دوره‌ها" },
@@ -9,12 +10,22 @@ const nav: NavLink[] = [
   { href: "/contact", label: "تماس" },
 ];
 
-export default function SiteLayout({ children }: { children: ReactNode }) {
+async function categories(): Promise<FooterCategory[]> {
+  try {
+    const res = await api<{ data: FooterCategory[] }>("/categories");
+    return res.data ?? [];
+  } catch {
+    return []; // footer renders without the directory; ISR retries
+  }
+}
+
+export default async function SiteLayout({ children }: { children: ReactNode }) {
+  const cats = await categories();
   return (
     <>
       <SiteNavbar links={nav} />
-      <main className="mx-auto w-full max-w-6xl px-4 py-8">{children}</main>
-      <SiteFooter />
+      <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6">{children}</main>
+      <SiteFooter categories={cats} />
     </>
   );
 }

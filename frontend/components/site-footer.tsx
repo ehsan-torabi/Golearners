@@ -7,31 +7,64 @@ const links = [
   { href: "/contact", label: "تماس" },
 ];
 
-/** Ant footer: dark #001529 band with a single row of real links. */
-export function SiteFooter() {
+export type FooterCategory = { id: string; slug: string; title: string };
+
+/* «هزاران آموزش» footer: light band, brand note, the real link row and a
+   topic directory built from the categories that actually exist. */
+export function SiteFooter({ categories }: { categories: FooterCategory[] }) {
   return (
-    <footer className="mt-12 bg-invert text-invert-foreground">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:flex-row sm:items-start sm:justify-between">
+    <footer className="mt-16 border-t border-line bg-muted/60">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-[1.2fr_1fr] md:px-6">
         <div>
-          <p className="text-lg font-semibold leading-6">
+          <p className="text-xl font-semibold text-foreground">
             گو<span className="text-accent-display">Learn</span>
           </p>
-          <p className="mt-2 max-w-sm text-sm leading-7 text-invert-muted">
-            دوره‌های ویدیویی برنامه‌نویسی به فارسی، با دسترسی مادام‌العمر و پشتیبانی مستقیم مدرس.
+          <p className="mt-3 max-w-sm text-sm leading-7 text-muted-foreground">
+            دوره‌های ویدیویی برنامه‌نویسی به فارسی، پروژه‌محور و با دسترسی مادام‌العمر.
+            ویدیوها را یک بار بخر، برای همیشه داشته باش.
           </p>
-        </div>
-        <nav aria-label="ناوبری پابرگ" className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          {links.map((l) => (
-            <Link key={l.href} href={l.href} className="text-invert-foreground/90 hover:text-invert-foreground">
-              {l.label}
-            </Link>
-          ))}
-          <a href="mailto:support@golearn.ir" className="text-accent-display hover:underline">
+          <a
+            href="mailto:support@golearn.ir"
+            className="mt-4 inline-block text-sm font-medium text-accent-strong hover:underline"
+          >
             support@golearn.ir
           </a>
+        </div>
+        <nav aria-label="ناوبری پابرگ" className="md:justify-self-end">
+          <p className="text-sm font-semibold text-foreground">دسترسی سریع</p>
+          <ul className="mt-3 space-y-2 text-sm">
+            {links.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="text-muted-foreground transition-colors hover:text-accent-strong">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </nav>
       </div>
-      <div className="border-t border-white/10 py-4 text-center text-xs text-invert-muted">
+
+      {categories.length > 0 && (
+        <div className="border-t border-line">
+          <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+            <p className="text-sm font-semibold text-foreground">موضوع‌های آموزشی</p>
+            <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {categories.map((c) => (
+                <li key={c.id}>
+                  <Link
+                    href={`/courses?category=${encodeURIComponent(c.slug)}`}
+                    className="text-muted-foreground transition-colors hover:text-accent-strong"
+                  >
+                    {c.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      <div className="border-t border-line py-5 text-center text-xs text-muted-foreground">
         گوLearn ،۱۴۰۵. همه محتوا متعلق به این رسانه است.
       </div>
     </footer>

@@ -1,44 +1,53 @@
 import Link from "next/link";
-import { Star } from "lucide-react";
-import { LEVEL_FA, LEVEL_COLORS, formatTomanFromRial, type CourseSummary } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { StarIcon } from "lucide-react";
+import { LEVEL_FA, formatTomanFromRial, type CourseSummary } from "@/lib/api";
 import { fa, faPercent } from "@/lib/utils";
 
 /* No course images exist yet (R-23): the cover is an honest, designed
-   placeholder block with the course initials. */
+   placeholder tinted with the brand primary and the course initials.
+   «هزاران آموزش» card anatomy: cover, level chip, title, rating, price row. */
 export function CourseCard({ course }: { course: CourseSummary }) {
   const hasDiscount = course.compare_at_price_rial != null && course.compare_at_price_rial > course.price_rial;
   const offPct = hasDiscount
     ? Math.round((1 - course.price_rial / (course.compare_at_price_rial as number)) * 100)
     : 0;
   return (
-    <Card className="group overflow-hidden transition-[box-shadow] duration-150 hover:shadow-raise">
-      <Link href={`/courses/${encodeURIComponent(course.slug)}`} className="block">
-        <div className="flex aspect-video items-center justify-center bg-primary-tint">
-          <span aria-hidden className="text-4xl font-semibold text-accent-strong">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-surface border border-line bg-card transition-[box-shadow,border-color,transform] duration-(--motion) ease-motion hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-raise">
+      <Link
+        href={`/courses/${encodeURIComponent(course.slug)}`}
+        className="flex h-full flex-col"
+        aria-label={course.title}
+      >
+        <div className="relative flex aspect-video items-center justify-center bg-primary-tint">
+          <span
+            aria-hidden
+            className="font-display text-5xl font-semibold text-primary/45 transition-transform duration-(--motion-slow) ease-motion group-hover:scale-105"
+          >
             {course.title.slice(0, 2)}
           </span>
+          {hasDiscount && (
+            <span className="absolute top-3 start-3 rounded-tag bg-destructive px-2 py-1 text-xs font-medium text-white">
+              {faPercent(offPct)} تخفیف
+            </span>
+          )}
         </div>
-        <div className="space-y-3 p-5">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="text-base font-medium leading-6 text-foreground transition-colors duration-150 group-hover:text-accent-strong">
-              {course.title}
-            </h3>
-            <Badge tone={LEVEL_COLORS[course.level]}>{LEVEL_FA[course.level]}</Badge>
-          </div>
-          <p className="line-clamp-2 text-sm leading-7 text-muted-foreground">{course.summary}</p>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            {course.rating_count > 0 && (
-              <span className="inline-flex items-center gap-1">
-                <Star className="size-3.5 fill-warning text-warning-text" strokeWidth={2} aria-hidden />
-                {fa((course.rating_avg ?? 0).toFixed(1))} ({fa(course.rating_count)})
-              </span>
-            )}
-            {hasDiscount && <Badge tone="destructive">{faPercent(offPct)} تخفیف</Badge>}
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="font-semibold text-foreground">
+        <div className="flex flex-1 flex-col gap-2.5 p-5">
+          <span className="w-fit rounded-full bg-primary-tint px-2.5 py-0.5 text-xs font-medium text-accent-strong">
+            {LEVEL_FA[course.level]}
+          </span>
+          <h3 className="line-clamp-2 text-[15px] font-medium leading-7 text-foreground transition-colors duration-(--motion) ease-motion group-hover:text-accent-strong">
+            {course.title}
+          </h3>
+          <p className="line-clamp-2 text-xs leading-6 text-muted-foreground">{course.summary}</p>
+          {course.rating_count > 0 && (
+            <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <StarIcon className="size-3.5 fill-warning text-warning" strokeWidth={2} aria-hidden />
+              <span className="font-medium text-foreground">{fa((course.rating_avg ?? 0).toFixed(1))}</span>
+              از {fa(course.rating_count)} نظر
+            </p>
+          )}
+          <div className="mt-auto flex items-baseline justify-between gap-2 border-t border-border-variant pt-3.5">
+            <span className="text-[15px] font-semibold text-foreground">
               {course.price_rial === 0 ? "رایگان" : formatTomanFromRial(course.price_rial)}
             </span>
             {hasDiscount && (
@@ -49,6 +58,6 @@ export function CourseCard({ course }: { course: CourseSummary }) {
           </div>
         </div>
       </Link>
-    </Card>
+    </article>
   );
 }

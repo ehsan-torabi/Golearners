@@ -18,7 +18,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "rounded-surface border border-dashed border-line bg-card/60 px-6 py-12 text-center",
+        "rounded-surface border border-dashed border-line bg-muted/50 px-6 py-12 text-center",
         className,
       )}
     >
@@ -27,7 +27,7 @@ export function EmptyState({
       {actionHref && actionLabel && (
         <Link
           href={actionHref}
-          className="mt-5 inline-flex h-10 items-center rounded-control border border-ink bg-primary px-4 text-sm font-medium text-primary-foreground"
+          className="mt-5 inline-flex h-10 items-center rounded-control bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
         >
           {actionLabel}
         </Link>

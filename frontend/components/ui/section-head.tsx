@@ -1,24 +1,37 @@
+import Link from "next/link";
+import { ChevronLeftIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Ant page-header: 20px/600 title with optional trailing action. */
+/* Section head, «هزاران آموزش» style: right-aligned title with an optional
+   «دیدن همه» trailing link that points at a real destination. */
 export function SectionHead({
   title,
   action,
+  href,
   id,
   className,
 }: {
-  numeral?: string;
   title: string;
   action?: React.ReactNode;
+  href?: string;
   id?: string;
   className?: string;
 }) {
   return (
-    <div className={cn("mb-4 flex items-end justify-between gap-4", className)}>
-      <h2 id={id} className="text-xl leading-7 text-foreground">
+    <div className={cn("mb-5 flex items-end justify-between gap-4", className)}>
+      <h2 id={id} className="text-xl leading-8 text-foreground md:text-2xl">
         {title}
       </h2>
       {action && <div className="shrink-0">{action}</div>}
+      {!action && href && (
+        <Link
+          href={href}
+          className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent-strong transition-colors hover:text-primary-hover"
+        >
+          دیدن همه
+          <ChevronLeftIcon className="size-4" aria-hidden />
+        </Link>
+      )}
     </div>
   );
 }
