@@ -123,10 +123,17 @@ export function MyCoursesPanel({ courses }: { courses: MyCourse[] }) {
       ) : (
         <div className="space-y-3">
           {visible.map((mc) => (
-            <Card key={mc.course.id} className="p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="text-base font-medium leading-6">
+            <Card key={mc.course.id} className="p-0 transition-[box-shadow,border-color] duration-(--motion) ease-motion hover:border-primary/35 hover:shadow-raise">
+              <div className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap sm:p-5">
+                {/* honest cover placeholder (R-23): tinted chip with the initials */}
+                <span
+                  aria-hidden
+                  className="flex size-14 shrink-0 items-center justify-center rounded-surface bg-primary-tint font-display text-lg font-semibold text-primary/45"
+                >
+                  {mc.course.title.slice(0, 2)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-base font-medium leading-6">
                     <Link
                       href={`/dashboard/courses/${encodeURIComponent(mc.course.slug)}`}
                       className="transition-colors duration-150 hover:text-accent-strong"
@@ -134,9 +141,6 @@ export function MyCoursesPanel({ courses }: { courses: MyCourse[] }) {
                       {mc.course.title}
                     </Link>
                   </h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground" dir="ltr">
-                    /dashboard/courses/{mc.course.slug}
-                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {[
                       LEVEL_FA[mc.course.level],
@@ -146,8 +150,8 @@ export function MyCoursesPanel({ courses }: { courses: MyCourse[] }) {
                       .join("، ")}
                   </p>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-lg font-semibold text-accent-strong">
+                <div className="flex shrink-0 items-center gap-4">
+                  <span className="text-lg font-semibold text-accent-strong" aria-hidden>
                     {fa(mc.progress_pct)}٪
                   </span>
                   <ButtonLink
@@ -159,14 +163,14 @@ export function MyCoursesPanel({ courses }: { courses: MyCourse[] }) {
                 </div>
               </div>
               <div
-                className="mt-4 h-2 overflow-hidden rounded-sm bg-accent"
+                className="mx-4 mb-4 h-1.5 overflow-hidden rounded-full bg-accent sm:mx-5 sm:mb-5"
                 role="progressbar"
                 aria-valuenow={mc.progress_pct}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label={`پیشرفت دوره ${mc.course.title}`}
               >
-                <div className="h-full bg-primary" style={{ width: `${mc.progress_pct}%` }} />
+                <div className="h-full rounded-full bg-primary" style={{ width: `${mc.progress_pct}%` }} />
               </div>
             </Card>
           ))}

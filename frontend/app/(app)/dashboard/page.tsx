@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -53,37 +52,37 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* profile header, adapted from the profile-05 block with real data */}
-      <Card className="reveal overflow-hidden">
-        <div className="h-16 bg-primary-tint" aria-hidden />
-        <div className="flex flex-col gap-4 border-b border-border-variant px-6 pb-5 sm:flex-row sm:items-end">
-          <div className="-mt-9 flex items-end gap-4">
-            <Avatar className="size-20 border-4 border-card">
-              <AvatarFallback className="bg-primary text-xl text-primary-foreground">
-                {initials(me.full_name) || "گ"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="pb-1">
-              <h1 className="text-xl leading-7 text-foreground">{me.full_name}</h1>
-              <p className="mt-1 text-sm text-muted-foreground" dir="ltr">
-                {me.mobile}
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 sm:ms-auto sm:pb-1">
-            {me.roles.map((r) => (
-              <Badge key={r} tone="accent">
-                {ROLE_FA[r] ?? r}
-              </Badge>
-            ))}
-            <span className="text-xs text-muted-foreground">
+      {/* account header, «حساب کاربری» style: identity row over the learning stats */}
+      <Card className="reveal overflow-hidden p-0">
+        <div className="hero-band flex flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center">
+          <Avatar className="size-16 border-2 border-card shadow-raise">
+            <AvatarFallback className="bg-primary text-lg text-primary-foreground">
+              {initials(me.full_name) || "گ"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl leading-7 text-foreground">{me.full_name}</h1>
+            <p className="mt-1 text-sm text-muted-foreground" dir="ltr">
+              {me.mobile}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
               عضو از {formatJalali(new Date(me.created_at))}
-            </span>
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:ms-auto">
+            {me.roles.map((r) => (
+              <span
+                key={r}
+                className="rounded-full bg-primary-tint px-2.5 py-0.5 text-xs font-medium text-accent-strong"
+              >
+                {ROLE_FA[r] ?? r}
+              </span>
+            ))}
           </div>
         </div>
 
         {/* real learning stats */}
-        <dl className="grid grid-cols-2 divide-border-variant sm:grid-cols-4 sm:divide-x sm:divide-x-reverse">
+        <dl className="grid grid-cols-2 divide-border-variant border-t border-line sm:grid-cols-4 sm:divide-x sm:divide-x-reverse">
           {stats.map(([label, value]) => (
             <div key={label} className="p-5">
               <dt className="text-xs text-muted-foreground">{label}</dt>
@@ -94,7 +93,7 @@ export default async function DashboardPage() {
       </Card>
 
       {me.roles?.includes("admin") && (
-        <Card className="flex flex-wrap items-center justify-between gap-3 border-ink p-5">
+        <Card className="flex flex-wrap items-center justify-between gap-3 border-primary/30 bg-primary-tint/40 p-5">
           <div>
             <p className="text-sm font-medium text-foreground">پنل مدیریت در دسترس است</p>
             <p className="mt-1 text-xs text-muted-foreground">
