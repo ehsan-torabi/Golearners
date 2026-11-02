@@ -67,7 +67,7 @@ export default async function ProfilePage() {
       <div className="space-y-6">
         <Card className="p-0">
           <div className="border-b border-line px-6 py-4">
-            <h2 className="text-base font-semibold text-foreground">اطلاعات شخصی</h2>
+            <h2 className="text-base font-semibold text-foreground">اطلاعات حساب</h2>
           </div>
           <dl className="grid gap-x-8 gap-y-4 px-6 py-5 text-sm sm:grid-cols-2">
             <div>

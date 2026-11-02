@@ -55,8 +55,21 @@ wait_for() { # url, label, tries
   echo "  TIMEOUT: $2 ($1)"; return 1
 }
 
+wait_gateway() { # label, tries — the gateway 404s unknown /start refs, so the
+  # health probe opens (and throws away) a real session via POST /api/start
+  for _ in $(seq 1 "${2:-30}"); do
+    if curl -fsS -o /dev/null -X POST http://localhost:8082/api/start \
+      -H 'Content-Type: application/json' \
+      -d '{"ref":"healthz-e2e","callback":"http://localhost:3000/checkout/result"}' 2>/dev/null; then
+      echo "  ok: $1"; return 0
+    fi
+    sleep 1
+  done
+  echo "  TIMEOUT: $1 (POST /api/start)"; return 1
+}
+
 wait_for http://localhost:8080/healthz "api" 90
-wait_for http://localhost:8082/start/x "mock gateway" 30
+wait_gateway "mock gateway" 30
 wait_for http://localhost:3000/ "frontend" 120
 
 log "playwright"
