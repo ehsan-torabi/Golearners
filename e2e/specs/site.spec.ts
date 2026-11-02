@@ -95,7 +95,16 @@ test.describe("public site", () => {
     await page.getByLabel("نام").fill("کاربر تست E2E");
     await page.getByLabel("موبایل یا ایمیل").fill("09121110099");
     await page.getByLabel("پیام").fill("این یک پیام تست خودکار از تست E2E است.");
+
+    const contactResponse = page
+      .waitForResponse((r) => r.url().includes("/api/v1/contact"), { timeout: 20000 })
+      .catch(() => null);
     await page.getByRole("button", { name: "ارسال پیام" }).click();
+    const response = await contactResponse;
+
+    if (response && response.status() === 429) {
+      test.skip(true, "the contact endpoint is rate limited (5/hour per IP)");
+    }
 
     await expect(page.getByText("پیام شما ثبت شد؛ در اولین فرصت پاسخ می‌دهیم.")).toBeVisible();
 

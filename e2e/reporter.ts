@@ -395,10 +395,17 @@ function markdown(s: {
   if (s.observations.length) {
     lines.push("## Observations — tests passed but the page logged errors");
     lines.push("");
+    const groups = new Map<string, { count: number; tests: string[] }>();
     for (const o of s.observations) {
-      lines.push(`- **${o.area} › ${o.title}** (\`${o.test}\`)`);
-      for (const e of o.consoleErrors) lines.push(`  - console: ${e}`);
-      for (const e of o.serverErrors) lines.push(`  - http: ${e}`);
+      const signature = o.serverErrors[0] ?? o.consoleErrors[0] ?? "unknown";
+      const entry = groups.get(signature) ?? { count: 0, tests: [] };
+      entry.count += 1;
+      if (entry.tests.length < 5) entry.tests.push(o.title);
+      groups.set(signature, entry);
+    }
+    for (const [signature, g] of groups) {
+      lines.push(`- **${g.count}×** ${escape(signature)}`);
+      lines.push(`  - e.g. ${g.tests.map((t) => `“${escape(t)}”`).join(", ")}`);
     }
     lines.push("");
   }

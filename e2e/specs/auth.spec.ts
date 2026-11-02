@@ -118,12 +118,13 @@ test.describe("authentication", () => {
     // the site navbar only renders on (site) routes — /dashboard uses the app shell
     await page.goto("/");
 
-    // the session entry sits next to the nav links, not inside the <nav>
+    // the session entry is an <a role="button"> next to the nav links
+    const entry = page.locator('header a[href="/dashboard"]');
     await expect(async () => {
-      if (!(await page.getByRole("link", { name: "داشبورد" }).first().isVisible())) {
+      if (!(await entry.isVisible())) {
         await page.reload();
       }
-      await expect(page.getByRole("link", { name: "داشبورد" }).first()).toBeVisible({ timeout: 5000 });
+      await expect(entry).toBeVisible({ timeout: 5000 });
     }).toPass({ timeout: 60000 });
     expectNoClientErrors(diag);
   });
