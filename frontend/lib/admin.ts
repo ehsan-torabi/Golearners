@@ -223,6 +223,7 @@ export interface CourseCategory {
   id: string;
   slug: string;
   title: string;
+  icon: string;
   position: number;
 }
 
@@ -230,14 +231,14 @@ export function adminListCategories() {
   return fetchAdmin<{ data: CourseCategory[] }>("/admin/categories");
 }
 
-export async function adminCreateCategory(title: string, position = 0) {
-  return api("/admin/categories", { method: "POST", body: JSON.stringify({ title, position }) });
+export async function adminCreateCategory(title: string, position = 0, icon = "") {
+  return api("/admin/categories", { method: "POST", body: JSON.stringify({ title, position, icon }) });
 }
 
-export async function adminUpdateCategory(id: string, title: string, position: number) {
+export async function adminUpdateCategory(id: string, title: string, position: number, icon = "") {
   return api(`/admin/categories/${id}`, {
     method: "PUT",
-    body: JSON.stringify({ title, position }),
+    body: JSON.stringify({ title, position, icon }),
   });
 }
 
@@ -356,3 +357,55 @@ export function fetchMedia(kind: "image" | "video") {
   }));
 }
 
+
+// ---------- instructor profile ----------
+
+export interface InstructorProfile {
+  headline: string;
+  bio_html: string;
+  avatar_media_id: string | null;
+  socials: Record<string, string>;
+}
+
+export function fetchInstructorProfile() {
+  return fetchAdmin<InstructorProfile>("/admin/instructor");
+}
+
+export function updateInstructorProfile(input: InstructorProfile) {
+  return api("/admin/instructor", { method: "PUT", body: JSON.stringify(input) });
+}
+
+// ---------- admin orders ----------
+
+export interface AdminOrderDetail {
+  id: string;
+  status: string;
+  subtotal_rial: number;
+  discount_rial: number;
+  total_rial: number;
+  expires_at: string;
+  created_at?: string;
+  paid_at?: string | null;
+  items?: { course_id: string; title_snapshot: string; unit_price_rial: number }[];
+  payments?: {
+    id: string;
+    gateway: string;
+    status: string;
+    amount_rial: number;
+    card_masked: string | null;
+    created_at?: string;
+    verified_at?: string | null;
+  }[];
+  /** the API names the event list `events` */
+  events?: {
+    id: string;
+    payment_id: string;
+    kind: string;
+    detail: string | null;
+    created_at: string;
+  }[];
+}
+
+export function adminGetOrder(id: string) {
+  return fetchAdmin<AdminOrderDetail>(`/admin/orders/${id}`);
+}

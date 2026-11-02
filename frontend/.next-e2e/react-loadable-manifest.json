@@ -4,11 +4,5 @@
     "files": [
       "static/chunks/_app-pages-browser_lib_api_ts.js"
     ]
-  },
-  "app/(app)/dashboard/courses/[slug]/player.tsx -> hls.js": {
-    "id": "app/(app)/dashboard/courses/[slug]/player.tsx -> hls.js",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_hls_js_dist_hls_mjs.js"
-    ]
   }
 }

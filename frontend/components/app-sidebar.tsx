@@ -52,6 +52,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/admin/courses": BookOpenIcon,
   "/admin/categories": FolderOpenIcon,
   "/admin/reviews": StarIcon,
+  "/admin/instructor": UserRoundIcon,
   "/admin/posts": NewspaperIcon,
   "/admin/media": CreditCardIcon,
   "/admin/orders": ShoppingBagIcon,

@@ -37,9 +37,73 @@ import {
   fetchBlogTaxonomy,
   type TaxonomyItem,
 } from "@/lib/admin";
+import { CATEGORY_ICONS, CATEGORY_ICON_KEYS, CategoryMark } from "@/components/site/category-icon";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fa } from "@/lib/utils";
 
-type Row = { id: string; slug: string; title: string; position: number };
+type Row = { id: string; slug: string; title: string; position: number; icon?: string };
+
+/* icon picker: a popover grid over the curated topic set; «بدون آیکون» keeps
+   the initials fallback. */
+function IconPicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <Button type="button" variant="outline" size="sm" className="gap-1.5">
+            <CategoryMark icon={value} title="" className="size-4 text-foreground" />
+            آیکون
+          </Button>
+        }
+      />
+      <PopoverContent className="w-72 p-3" dir="rtl" lang="fa">
+        <p className="mb-2 text-xs font-medium text-muted-foreground">آیکون دسته</p>
+        <div className="grid grid-cols-6 gap-1.5">
+          <button
+            type="button"
+            aria-label="بدون آیکون"
+            onClick={() => {
+              onChange("");
+              setOpen(false);
+            }}
+            className={`flex size-9 items-center justify-center rounded-field border text-[10px] transition-colors ${
+              value === "" ? "border-primary bg-primary-tint text-accent-strong" : "border-line text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            هیچ
+          </button>
+          {CATEGORY_ICON_KEYS.map((key) => {
+            const Icon = CATEGORY_ICONS[key];
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-label={key}
+                title={key}
+                onClick={() => {
+                  onChange(key);
+                  setOpen(false);
+                }}
+                className={`flex size-9 items-center justify-center rounded-field border transition-colors ${
+                  value === key ? "border-primary bg-primary-tint text-accent-strong" : "border-line text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                <Icon className="size-4" aria-hidden />
+              </button>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export default function AdminCategoriesPage() {
   const [courseCategories, setCourseCategories] = React.useState<Row[]>([]);
@@ -48,8 +112,10 @@ export default function AdminCategoriesPage() {
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState("");
   const [draft, setDraft] = React.useState({ course: "", blog: "" });
+  const [draftIcon, setDraftIcon] = React.useState("");
   const [editing, setEditing] = React.useState<string | null>(null);
   const [editTitle, setEditTitle] = React.useState("");
+  const [editIcon, setEditIcon] = React.useState("");
   const [editPosition, setEditPosition] = React.useState("0");
   const [removing, setRemoving] = React.useState<{ id: string; title: string; scope: "course" | "blog" } | null>(null);
 
@@ -139,7 +205,14 @@ export default function AdminCategoriesPage() {
                     className="h-7 max-w-64"
                   />
                 ) : (
-                  <span className="font-medium text-foreground">{row.title}</span>
+                  <span className="inline-flex items-center gap-2 font-medium text-foreground">
+                    {scope === "course" && (
+                      <span className="flex size-6 items-center justify-center rounded-full bg-primary-tint text-accent-strong [&_svg]:size-3.5 [&_span]:text-[10px]">
+                        <CategoryMark icon={row.icon} title={row.title} />
+                      </span>
+                    )}
+                    {row.title}
+                  </span>
                 )}
               </TableCell>
               <TableCell className="text-start text-xs text-muted-foreground" dir="ltr">
@@ -163,6 +236,9 @@ export default function AdminCategoriesPage() {
                 <div className="flex flex-wrap items-center gap-1">
                   {editing === row.id ? (
                     <>
+                      {scope === "course" && (
+                        <IconPicker value={editIcon} onChange={setEditIcon} />
+                      )}
                       <Button
                         size="sm"
                         loading={busy === `save-${row.id}`}
@@ -170,7 +246,7 @@ export default function AdminCategoriesPage() {
                           void run(`save-${row.id}`, async () => {
                             const position = Number(editPosition || "0") || 0;
                             if (scope === "course") {
-                              await adminUpdateCategory(row.id, editTitle.trim() || row.title, position);
+                              await adminUpdateCategory(row.id, editTitle.trim() || row.title, position, editIcon);
                             } else {
                               await adminUpdateBlogCategory(row.id, editTitle.trim() || row.title, position);
                             }
@@ -192,6 +268,7 @@ export default function AdminCategoriesPage() {
                         onClick={() => {
                           setEditing(row.id);
                           setEditTitle(row.title);
+                          setEditIcon(row.icon ?? "");
                           setEditPosition(String(row.position));
                         }}
                       >
@@ -253,20 +330,23 @@ export default function AdminCategoriesPage() {
                       const title = draft.course.trim();
                       if (!title) return;
                       void run("add-course", async () => {
-                        await adminCreateCategory(title, courseCategories.length);
+                        await adminCreateCategory(title, courseCategories.length, draftIcon);
                         setDraft((d) => ({ ...d, course: "" }));
+                        setDraftIcon("");
                       });
                     }
                   }}
                 />
               </div>
+              <IconPicker value={draftIcon} onChange={setDraftIcon} />
               <Button
                 loading={busy === "add-course"}
                 disabled={!draft.course.trim()}
                 onClick={() =>
                   void run("add-course", async () => {
-                    await adminCreateCategory(draft.course.trim(), courseCategories.length);
+                    await adminCreateCategory(draft.course.trim(), courseCategories.length, draftIcon);
                     setDraft((d) => ({ ...d, course: "" }));
+                    setDraftIcon("");
                   })
                 }
               >

@@ -76,7 +76,7 @@ export function MediaUploader({
           checksum: "",
         }),
       });
-      setDone("فایل بارگذاری شد و در حال پردازش است.");
+      setDone(kind === "video" ? "فایل بارگذاری شد و در حال پردازش است." : "فایل بارگذاری شد.");
       onUploaded(asset);
     } catch (err) {
       setError(err instanceof Error ? err.message : "بارگذاری فایل ناموفق بود.");

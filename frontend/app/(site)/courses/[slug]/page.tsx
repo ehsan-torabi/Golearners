@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card";
 import { api, LEVEL_FA, formatTomanFromRial } from "@/lib/api";
 import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 import { ReviewForm } from "@/components/site/review-form";
+import { PromoPlayer } from "@/components/site/promo-player";
+import { PreviewLessonItem } from "@/components/site/preview-lesson";
 import { cn, fa, faPercent } from "@/lib/utils";
 
 /* per-viewer state (owned, lesson progress) needs the session cookie */
@@ -19,6 +21,7 @@ interface Detail {
     level: "beginner" | "intermediate" | "advanced";
     price_rial: number; compare_at_price_rial: number | null;
     cover_url?: string;
+    has_promo?: boolean;
   };
   description_html: string;
   prerequisites_html: string;
@@ -238,13 +241,15 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                       .map((l) => {
                         const state = ownerLessons?.find((o) => o.id === l.id);
                         const playable = Boolean(state?.accessible);
-                        const preview = !state && l.is_preview;
+                        // anonymous / not-owned visitors: preview lessons play
+                        // inline, the rest stay honest locked teasers
+                        if (!state && l.is_preview) {
+                          return <PreviewLessonItem key={l.id} lesson={l} />;
+                        }
                         const title = <span className="text-foreground/90">{l.title}</span>;
                         return (
                           <li key={l.id} className="flex items-center gap-3 px-4 py-2.5 text-sm md:px-5">
-                            <LessonMark
-                              state={state ? (state.completed ? "done" : playable ? "play" : "locked") : preview ? "preview" : "locked"}
-                            />
+                            <LessonMark state={state ? (state.completed ? "done" : playable ? "play" : "locked") : "locked"} />
                             {playable ? (
                               <Link
                                 href={`/dashboard/courses/${encodeURIComponent(d.course.slug)}?lesson=${l.id}`}
@@ -271,8 +276,6 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                                 ) : (
                                   <span className="text-muted-foreground">با درس قبلی باز می‌شود</span>
                                 )
-                              ) : preview ? (
-                                <span className="font-medium text-success-text">پیش‌نمایش رایگان</span>
                               ) : (
                                 <span className="text-muted-foreground">با خرید باز می‌شود</span>
                               )}
@@ -316,20 +319,25 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
         <aside className="h-fit lg:sticky lg:top-24">
           <Card className="overflow-hidden border-ink/20 p-0 shadow-raise">
-            {/* the uploaded cover when set; otherwise the honest tinted placeholder */}
-            <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-primary-tint">
-              {d.course.cover_url ? (
-                <img
-                  src={d.course.cover_url}
-                  alt={`کاور دورهٔ ${d.course.title}`}
-                  className="absolute inset-0 size-full object-cover"
-                />
-              ) : (
-                <span aria-hidden className="font-display text-6xl font-semibold text-primary/40">
-                  {d.course.title.slice(0, 2)}
-                </span>
-              )}
-            </div>
+            {/* promo video with the cover as poster when present; otherwise
+                the uploaded cover; otherwise the honest tinted placeholder */}
+            {d.course.has_promo ? (
+              <PromoPlayer slug={d.course.slug} poster={d.course.cover_url} title={d.course.title} />
+            ) : (
+              <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-primary-tint">
+                {d.course.cover_url ? (
+                  <img
+                    src={d.course.cover_url}
+                    alt={`کاور دورهٔ ${d.course.title}`}
+                    className="absolute inset-0 size-full object-cover"
+                  />
+                ) : (
+                  <span aria-hidden className="font-display text-6xl font-semibold text-primary/40">
+                    {d.course.title.slice(0, 2)}
+                  </span>
+                )}
+              </div>
+            )}
             <div className="p-6">
               {owned ? (
                 <>

@@ -1,109 +1,115 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import { VideoPlayer as VibefarsiPlayer } from "@/components/ui/video-player";
 import { Skeleton } from "@/components/ui/section-head";
 
-// Dynamically-typed import keeps hls.js out of SSR bundles.
-export function VideoPlayer({ lessonId }: { lessonId: string }) {
-  const ref = React.useRef<HTMLVideoElement>(null);
-  const [error, setError] = React.useState("");
+/**
+ * Lesson player on the vibefarsi VideoPlayer: a signed URL per lesson,
+ * resume from the server-side position, progress saved while watching
+ * (every 10s of progress, once on unmount, and completed on end).
+ * The local VOD adapter issues MP4 URLs; HLS (Arvan) will need player-level
+ * support when that provider lands.
+ */
+export function VideoPlayer({
+  lessonId,
+  title,
+  startAt = 0,
+}: {
+  lessonId: string;
+  title?: string;
+  startAt?: number;
+}) {
+  const router = useRouter();
+  const [state, setState] = React.useState<"loading" | "ready" | "error">("loading");
   const [url, setUrl] = React.useState("");
-  const [loading, setLoading] = React.useState(true);
+  const lastSent = React.useRef(0);
+  const lastTime = React.useRef(startAt);
 
   React.useEffect(() => {
     let cancelled = false;
-    let hls: { destroy: () => void } | null = null;
-
     (async () => {
       try {
-        setLoading(true);
+        setState("loading");
         const { api } = await import("@/lib/api");
         const res = await api<{ playback_url: string }>(`/playback/lessons/${lessonId}`, {
           cache: "no-store",
         });
         if (cancelled) return;
         setUrl(res.playback_url);
-        const video = ref.current;
-        if (!video) return;
-
-        if (res.playback_url.includes(".m3u8") && !video.canPlayType("application/vnd.apple.mpegurl")) {
-          const mod = await import("hls.js");
-          if (cancelled) return;
-          const hlsInstance = new mod.default({ maxBufferLength: 30 });
-          hls = hlsInstance;
-          hlsInstance.loadSource(res.playback_url);
-          hlsInstance.attachMedia(video);
-        } else {
-          video.src = res.playback_url;
-        }
+        setState("ready");
       } catch {
-        if (!cancelled) {
-          setError("پخش در دسترس نیست؛ احتمالاً نشست منقضی شده. صفحه را تازه‌سازی کن یا دوباره وارد شو.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setState("error");
       }
     })();
-
     return () => {
       cancelled = true;
-      hls?.destroy();
     };
   }, [lessonId]);
 
-  // progress persistence: every 10s + on pause
-  React.useEffect(() => {
-    const video = ref.current;
-    if (!video || !url) return;
-    let lastSent = 0;
-
-    const save = async (completed?: boolean) => {
+  const save = React.useCallback(
+    async (completed?: boolean, position?: number) => {
       try {
         const { api } = await import("@/lib/api");
         await api(`/me/progress/${lessonId}`, {
           method: "PUT",
-          body: JSON.stringify({ position_seconds: Math.floor(video.currentTime), completed }),
+          body: JSON.stringify({
+            position_seconds: Math.floor(position ?? lastTime.current),
+            completed,
+          }),
         });
       } catch {
         // offline progress save is best-effort
       }
-    };
-    const timer = setInterval(() => {
-      if (video.currentTime - lastSent >= 10) {
-        lastSent = video.currentTime;
-        void save();
-      }
-    }, 5000);
-    const onPause = () => void save();
-    video.addEventListener("pause", onPause);
-    return () => {
-      clearInterval(timer);
-      video.removeEventListener("pause", onPause);
-    };
-  }, [lessonId, url]);
+    },
+    [lessonId],
+  );
 
-  if (error) {
+  // final flush when the lesson is switched or the page is left
+  React.useEffect(() => {
+    if (state !== "ready") return;
+    return () => {
+      void save(false, lastTime.current);
+    };
+  }, [lessonId, state, save]);
+
+  if (state === "error") {
     return (
-      <div role="alert" className="rounded-surface border border-destructive/30 bg-destructive/10 p-6 text-sm leading-7 text-destructive">
-        {error}
+      <div
+        role="alert"
+        className="rounded-surface border border-destructive/30 bg-destructive/10 p-6 text-sm leading-7 text-destructive"
+      >
+        پخش در دسترس نیست؛ احتمالاً نشست منقضی شده. صفحه را تازه‌سازی کن یا دوباره وارد شو.
       </div>
     );
   }
 
-  /* the <video> stays mounted (hls.js attaches to it); the skeleton overlays while loading */
+  if (state !== "ready") {
+    return (
+      <div className="overflow-hidden rounded-surface border border-line bg-black">
+        <Skeleton className="aspect-video w-full rounded-none" aria-label="در حال بارگذاری ویدیو" />
+      </div>
+    );
+  }
+
   return (
-    <div className="relative overflow-hidden rounded-surface border border-line bg-black">
-      {loading && (
-        <Skeleton className="absolute inset-0 z-10 rounded-none" aria-label="در حال بارگذاری ویدیو" />
-      )}
-      <video
-        ref={ref}
-        controls
-        controlsList="nodownload"
-        disablePictureInPicture
-        className="aspect-video w-full"
-        playsInline
-      />
-    </div>
+    <VibefarsiPlayer
+      src={url}
+      title={title}
+      startAt={startAt}
+      className="overflow-hidden rounded-surface border border-line bg-black"
+      onTimeUpdate={(seconds) => {
+        lastTime.current = seconds;
+        if (seconds - lastSent.current >= 10) {
+          lastSent.current = seconds;
+          void save(false, seconds);
+        }
+      }}
+      onEnded={() => {
+        lastSent.current = Number.MAX_SAFE_INTEGER;
+        void save(true).then(() => router.refresh());
+      }}
+    />
   );
 }

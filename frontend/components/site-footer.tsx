@@ -7,7 +7,7 @@ const links = [
   { href: "/contact", label: "تماس" },
 ];
 
-export type FooterCategory = { id: string; slug: string; title: string };
+export type FooterCategory = { id: string; slug: string; title: string; icon?: string };
 
 /* «هزاران آموزش» footer: light band, brand note, the real link row and a
    topic directory built from the categories that actually exist. */

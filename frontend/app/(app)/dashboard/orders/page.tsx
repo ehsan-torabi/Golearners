@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -53,35 +54,41 @@ export default async function MyOrdersPage() {
         {orders.map((o) => {
           const status = STATUS_FA[o.status] ?? { label: o.status, tone: "neutral" as const };
           return (
-            <Card key={o.id} className="p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium text-foreground" dir="ltr">
-                    {o.id.slice(0, 8)}…
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {formatJalali(new Date(o.created_at ?? Date.now()))}
-                  </p>
+            <Card key={o.id} className="p-0 transition-[box-shadow,border-color] duration-(--motion) ease-motion hover:border-primary/35 hover:shadow-raise">
+              <Link
+                href={`/dashboard/orders/${encodeURIComponent(o.id)}`}
+                className="block rounded-surface p-5"
+                aria-label={`جزئیات سفارش ${o.id.slice(0, 8)}`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-foreground" dir="ltr">
+                      {o.id.slice(0, 8)}…
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {formatJalali(new Date(o.created_at ?? Date.now()))}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-semibold text-foreground">
+                      {formatTomanFromRial(o.total_rial)}
+                    </span>
+                    <Badge tone={status.tone}>{status.label}</Badge>
+                    {o.status === "awaiting_payment" && (
+                      <span className="text-xs text-warning-text">مهلت پرداخت فعال است</span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-foreground">
-                    {formatTomanFromRial(o.total_rial)}
-                  </span>
-                  <Badge tone={status.tone}>{status.label}</Badge>
-                  {o.status === "awaiting_payment" && (
-                    <span className="text-xs text-warning-text">مهلت پرداخت فعال است</span>
+                <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 border-t border-border-variant pt-3 text-xs text-muted-foreground">
+                  {o.paid_at && <span>پرداخت: {formatJalali(new Date(o.paid_at))}</span>}
+                  {o.discount_rial > 0 && (
+                    <span className="text-success-text">تخفیف: {formatTomanFromRial(o.discount_rial)}</span>
                   )}
+                  {o.items?.map((it) => (
+                    <span key={it.course_id}>{it.title_snapshot}</span>
+                  ))}
                 </div>
-              </div>
-              <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 border-t border-border-variant pt-3 text-xs text-muted-foreground">
-                {o.paid_at && <span>پرداخت: {formatJalali(new Date(o.paid_at))}</span>}
-                {o.discount_rial > 0 && (
-                  <span className="text-success-text">تخفیف: {formatTomanFromRial(o.discount_rial)}</span>
-                )}
-                {o.items?.map((it) => (
-                  <span key={it.course_id}>{it.title_snapshot}</span>
-                ))}
-              </div>
+              </Link>
             </Card>
           );
         })}

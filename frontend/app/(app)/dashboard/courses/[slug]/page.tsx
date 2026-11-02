@@ -145,7 +145,12 @@ export default async function LearnCoursePage({
         </aside>
 
         <div className="space-y-4">
-          <VideoPlayer key={current.id} lessonId={current.id} />
+          <VideoPlayer
+            key={current.id}
+            lessonId={current.id}
+            title={current.title}
+            startAt={current.position_seconds}
+          />
           <h1 className="font-semibold text-xl leading-8">{current.title}</h1>
           <p className="text-sm text-muted-foreground">درس {fa(current.position)}</p>
         </div>

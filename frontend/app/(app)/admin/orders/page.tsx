@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -137,114 +138,6 @@ function RefundDialog({
   );
 }
 
-function DetailDialog({ orderId, onClose }: { orderId: string | null; onClose: () => void }) {
-  const ref = React.useRef<HTMLDialogElement>(null);
-  const [detail, setDetail] = React.useState<OrderDetail | null>(null);
-  const [error, setError] = React.useState("");
-
-  React.useEffect(() => {
-    const dlg = ref.current;
-    if (!dlg) return;
-    if (orderId && !dlg.open) dlg.showModal();
-    if (!orderId && dlg.open) dlg.close();
-  }, [orderId]);
-
-  React.useEffect(() => {
-    if (!orderId) return;
-    setDetail(null);
-    setError("");
-    fetchAdmin<OrderDetail>(`/admin/orders/${orderId}`)
-      .then(setDetail)
-      .catch(() => setError("دریافت جزئیات سفارش ناموفق بود."));
-  }, [orderId]);
-
-  return (
-    <dialog
-      ref={ref}
-      onClose={onClose}
-      onClick={(e) => e.target === ref.current && ref.current.close()}
-      className="m-auto max-h-[85vh] w-[min(92vw,40rem)] overflow-y-auto rounded-lg border border-border bg-card p-0 text-foreground backdrop:bg-black/45"
-    >
-      <div className="space-y-4 p-6">
-        <h2 className="text-base font-medium">جزئیات سفارش</h2>
-        {error && <Alert>{error}</Alert>}
-        {!detail && !error && <p className="text-sm text-muted-foreground">در حال دریافت جزئیات…</p>}
-        {detail && (
-          <>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <p className="text-sm">
-                <span className="text-muted-foreground">جمع کل: </span>
-                {formatTomanFromRial(detail.total_rial)}
-              </p>
-              <p className="text-sm">
-                <span className="text-muted-foreground">تخفیف: </span>
-                {formatTomanFromRial(detail.discount_rial ?? 0)}
-              </p>
-              <p className="text-sm">
-                <span className="text-muted-foreground">تاریخ: </span>
-                {formatJalali(new Date(detail.created_at))}
-              </p>
-            </div>
-
-            <div>
-              <h3 className="mb-2 text-sm font-medium">اقلام سفارش</h3>
-              {(detail.items ?? []).length === 0 ? (
-                <p className="text-xs text-muted-foreground">قلمی ثبت نشده است.</p>
-              ) : (
-                <ul className="space-y-1">
-                  {(detail.items ?? []).map((item, i) => (
-                    <li key={i} className="flex justify-between text-sm">
-                      <span>{item.title_snapshot}</span>
-                      <span className="text-muted-foreground">
-                        {formatTomanFromRial(item.unit_price_rial)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div>
-              <h3 className="mb-2 text-sm font-medium">پرداخت‌ها</h3>
-              {(detail.payments ?? []).length === 0 ? (
-                <p className="text-xs text-muted-foreground">پرداختی ثبت نشده است.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {(detail.payments ?? []).map((p) => (
-                    <li key={p.id} className="rounded-md border border-border-variant p-3 text-sm">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge tone={p.status === "verified" ? "success" : "warning"}>{p.status}</Badge>
-                        <span dir="ltr">{p.gateway}</span>
-                        <span className="text-muted-foreground">
-                          {formatTomanFromRial(p.amount_rial)}
-                        </span>
-                        {p.card_masked && (
-                          <span className="text-muted-foreground" dir="ltr">
-                            {p.card_masked}
-                          </span>
-                        )}
-                      </div>
-                      {p.failure_reason && (
-                        <p className="mt-1 text-xs text-destructive-text">{p.failure_reason}</p>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div className="flex justify-start">
-              <Button type="button" variant="outline" onClick={() => ref.current?.close()}>
-                بستن
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    </dialog>
-  );
-}
-
 export default function AdminOrdersPage() {
   const [orders, setOrders] = React.useState<OrderRow[]>([]);
   const [total, setTotal] = React.useState(0);
@@ -253,7 +146,6 @@ export default function AdminOrdersPage() {
   const [loaded, setLoaded] = React.useState(false);
   const [error, setError] = React.useState("");
   const [target, setTarget] = React.useState<OrderRow | null>(null);
-  const [detailId, setDetailId] = React.useState<string | null>(null);
 
   const load = React.useCallback(async () => {
     setError("");
@@ -342,7 +234,12 @@ export default function AdminOrdersPage() {
                     </TableCell>
                     <TableCell className="text-start">
                       <div className="flex flex-wrap items-center gap-1">
-                        <Button size="sm" variant="outline" onClick={() => setDetailId(o.id)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          render={<Link href={`/admin/orders/${o.id}`} />}
+                          nativeButton={false}
+                        >
                           جزئیات
                         </Button>
                         {o.status === "paid" && (
@@ -392,7 +289,6 @@ export default function AdminOrdersPage() {
       </Card>
 
       <RefundDialog order={target} onClose={() => setTarget(null)} onDone={() => void load()} />
-      <DetailDialog orderId={detailId} onClose={() => setDetailId(null)} />
     </div>
   );
 }

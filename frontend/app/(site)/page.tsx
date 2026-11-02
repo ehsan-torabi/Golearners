@@ -4,13 +4,14 @@ import { Card } from "@/components/ui/card";
 import { SectionHead } from "@/components/ui/section-head";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CourseCard } from "@/components/course-card";
+import { CategoryMark } from "@/components/site/category-icon";
 import { api, LEVEL_FA, formatTomanFromRial, type CourseSummary } from "@/lib/api";
 import { fa } from "@/lib/utils";
 
 export const revalidate = 300;
 
 type Faq = { id: string; question: string; answer: string };
-type Category = { id: string; slug: string; title: string };
+type Category = { id: string; slug: string; title: string; icon?: string };
 
 async function featured(): Promise<CourseSummary[]> {
   try {
@@ -93,9 +94,9 @@ export default async function HomePage() {
                 >
                   <span
                     aria-hidden
-                    className="flex size-16 items-center justify-center rounded-full border border-line bg-card font-display text-lg font-semibold text-accent-strong transition-[border-color,box-shadow] duration-(--motion) ease-motion group-hover:border-primary/40 group-hover:shadow-raise"
+                    className="flex size-16 items-center justify-center rounded-full border border-line bg-card text-accent-strong transition-[border-color,box-shadow] duration-(--motion) ease-motion group-hover:border-primary/40 group-hover:shadow-raise"
                   >
-                    {c.title.slice(0, 2)}
+                    <CategoryMark icon={c.icon} title={c.title} />
                   </span>
                   <span className="text-xs leading-5 text-muted-foreground transition-colors group-hover:text-foreground">
                     {c.title}
