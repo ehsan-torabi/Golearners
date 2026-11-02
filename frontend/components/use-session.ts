@@ -57,6 +57,7 @@ export function useSession(): SessionState {
   return {
     status,
     session,
-    isAdmin: Boolean(session?.roles?.includes("admin")),
+    // the owner passes every admin gate, so the header must treat it as admin
+    isAdmin: Boolean(session?.roles?.some((r) => r === "admin" || r === "owner")),
   };
 }

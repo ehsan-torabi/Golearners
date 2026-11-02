@@ -2839,11 +2839,22 @@
       --tw-scale-z: 105%;
       scale: var(--tw-scale-x) var(--tw-scale-y);
     }
+    .hover\:border-destructive\/40:hover {
+      border-color: var(--destructive);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:border-destructive\/40:hover {
+        border-color: color-mix(in oklab, var(--destructive) 40%, transparent);
+      }
+    }
     .hover\:border-primary:hover {
       border-color: var(--primary);
     }
     .hover\:bg-\[var\(--scrollbar-thumb-hover\)\]:hover {
       background-color: var(--scrollbar-thumb-hover);
+    }
+    .hover\:bg-destructive-bg:hover {
+      background-color: var(--destructive-bg);
     }
     .hover\:bg-destructive\/20:hover {
       background-color: var(--destructive);
@@ -2872,6 +2883,9 @@
     }
     .hover\:text-accent-strong:hover {
       color: var(--accent-strong);
+    }
+    .hover\:text-destructive-text:hover {
+      color: var(--destructive-text);
     }
     .hover\:text-foreground:hover {
       color: var(--foreground);

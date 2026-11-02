@@ -97,7 +97,12 @@ test.describe("authentication", () => {
   test("logout clears the session and returns to the login page", async ({ page, diag }) => {
     await loginThroughUi(page, credentials().learner.mobile, credentials().learner.password);
 
-    await page.getByRole("button", { name: "خروج از حساب" }).click();
+    await page.getByRole("button", { name: "خروج از حساب" }).first().click();
+    // the header control asks for confirmation before ending the session
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "خروج", exact: true })
+      .click();
     await page.waitForURL("**/login", { timeout: 20000 });
 
     await expect(page.getByRole("button", { name: "ورود", exact: true }).first()).toBeVisible();

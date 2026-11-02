@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useSession } from "@/components/use-session";
+import { LogoutButton } from "@/components/logout-button";
 import { cn } from "@/lib/utils";
 
 export type NavLink = { href: string; label: string };
@@ -51,7 +52,11 @@ export function SiteNavbar({ links }: { links: NavLink[] }) {
         </nav>
         <div className="ms-auto flex items-center gap-2">
           <ThemeToggle />
-          <AuthActions status={status} isAdmin={isAdmin} loggedIn={Boolean(session)} />
+          <AuthActions
+            status={status}
+            isAdmin={isAdmin}
+            loggedIn={Boolean(session)}
+          />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger
               render={
@@ -82,7 +87,12 @@ export function SiteNavbar({ links }: { links: NavLink[] }) {
                 ))}
               </nav>
               <div className="mt-6 flex flex-col gap-2 px-1">
-                <AuthActions status={status} isAdmin={isAdmin} loggedIn={Boolean(session)} stacked />
+                <AuthActions
+                  status={status}
+                  isAdmin={isAdmin}
+                  loggedIn={Boolean(session)}
+                  stacked
+                />
               </div>
             </SheetContent>
           </Sheet>
@@ -138,18 +148,34 @@ function AuthActions({
         >
           پنل مدیریت
         </Button>
+        <LogoutButton
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-lg border border-border text-sm text-muted-foreground transition-colors duration-150 hover:border-destructive/40 hover:bg-destructive-bg hover:text-destructive-text",
+            stacked ? "h-9 justify-center px-3" : "size-8 justify-center",
+          )}
+          iconOnly={!stacked}
+        />
       </>
     );
   }
 
   return (
-    <Button
-      size="sm"
-      className={cn("hidden sm:inline-flex", stacked && "w-full")}
-      render={<Link href="/dashboard" />}
-      nativeButton={false}
-    >
-      داشبورد
-    </Button>
+    <>
+      <Button
+        size="sm"
+        className={cn("hidden sm:inline-flex", stacked && "w-full")}
+        render={<Link href="/dashboard" />}
+        nativeButton={false}
+      >
+        داشبورد
+      </Button>
+      <LogoutButton
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-lg border border-border text-sm text-muted-foreground transition-colors duration-150 hover:border-destructive/40 hover:bg-destructive-bg hover:text-destructive-text",
+          stacked ? "h-9 justify-center px-3" : "size-8 justify-center",
+        )}
+        iconOnly={!stacked}
+      />
+    </>
   );
 }

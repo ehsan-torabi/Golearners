@@ -12,6 +12,15 @@ import { Alert } from "@/components/ui/alert";
 import { ApiError, api } from "@/lib/api";
 import { cn, fa } from "@/lib/utils";
 
+/** ?next= wins when it is a safe in-app path; otherwise admins land on the
+    management console and everyone else on the learner dashboard. */
+function landingFor(roles: string[] | undefined): string {
+  const next = new URLSearchParams(window.location.search).get("next");
+  if (next && next.startsWith("/") && !next.startsWith("//")) return next;
+  const admin = roles?.includes("admin") || roles?.includes("owner");
+  return admin ? "/admin" : "/dashboard";
+}
+
 type Mode = "password" | "otp";
 type Step = "phone" | "code";
 type OtpPurpose = "login" | "verify";
@@ -46,8 +55,12 @@ export default function LoginPage() {
       if (mode === "otp") {
         await requestOtp(otpPurpose);
       } else {
-        await api("/auth/login", { method: "POST", body: JSON.stringify({ mobile, password }) });
-        router.push("/dashboard");
+        const me = await api<{ roles?: string[] }>("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ mobile, password }),
+        });
+        router.push(landingFor(me.roles));
+        router.refresh();
       }
     } catch (err) {
       if (err instanceof ApiError && err.code === "MOBILE_NOT_VERIFIED") {
@@ -69,11 +82,12 @@ export default function LoginPage() {
     setError("");
     setBusy(true);
     try {
-      await api("/auth/otp/verify", {
+      const me = await api<{ roles?: string[] }>("/auth/otp/verify", {
         method: "POST",
         body: JSON.stringify({ mobile, code, purpose: otpPurpose }),
       });
-      router.push("/dashboard");
+      router.push(landingFor(me.roles));
+      router.refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
     } finally {
