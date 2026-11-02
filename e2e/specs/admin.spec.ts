@@ -102,14 +102,18 @@ test.describe("admin console", () => {
     expectNoClientErrors(diag);
   });
 
-  test("the cover image is uploaded through the media field", async ({
+  test("the cover image is uploaded, applied and shown on the public course", async ({
     page,
     diag,
     playwright,
   }) => {
     const title = `دورهٔ کاور تست ${tag()}`;
     const api = await playwright.request.newContext({ baseURL: API_URL });
-    const course = await createPublishedCourse(api, title, await sessionCookies(playwright, "admin"));
+    const course = await createPublishedCourse(
+      api,
+      title,
+      await sessionCookies(playwright, "admin"),
+    );
     await api.dispose();
 
     await page.goto("/admin/courses");
@@ -124,14 +128,29 @@ test.describe("admin console", () => {
     await page.getByRole("tab", { name: "رسانه و سئو" }).click();
     await page.getByLabel("بارگذاری تصویر کاور").setInputFiles(FIXTURE_PNG);
 
-    await expect(page.getByText("فایل بارگذاری شد و در حال پردازش است.")).toBeVisible({
-      timeout: 30000,
-    });
+    // images skip the ingest pipeline and are ready immediately
+    await expect(page.getByText("فایل بارگذاری شد.")).toBeVisible({ timeout: 30000 });
 
-    // the asset is listed in the media library
+    // the picker lists the original filename with the ready status and the
+    // freshly uploaded asset is selected automatically
+    await expect(page.locator("#c-cover option").filter({ hasText: "sample.png" })).toBeVisible();
+    await expect(page.locator("#c-cover option").filter({ hasText: "آماده" }).first()).toBeVisible();
+
+    // applied: the cover select already points at the new asset — save
+    await page.getByRole("button", { name: "ذخیرهٔ دوره" }).click();
+    await expect(page.getByText("ذخیره شد")).toBeVisible({ timeout: 30000 });
+
+    // and the public course page renders the uploaded cover image
+    const cover = page.locator("img[src*='/api/v1/media/']");
+    await page.goto(`/courses/${course.slug}`);
+    await expect(cover.first()).toBeVisible();
+    await expect(cover.first()).toHaveAttribute("src", /\/api\/v1\/media\/[0-9a-f-]{36}$/);
+
+    // the media library row shows the original filename with a thumbnail
     await page.goto("/admin/media");
-    await expect(page.getByRole("heading", { name: "رسانه‌ها" })).toBeVisible();
-    await expect(page.locator("table")).toBeVisible();
+    const mediaRow = page.getByRole("row").filter({ hasText: "sample.png" }).first();
+    await expect(mediaRow).toBeVisible();
+    await expect(mediaRow.locator("img[src*='/api/v1/media/']")).toBeAttached();
 
     expectNoClientErrors(diag);
   });
@@ -148,6 +167,11 @@ test.describe("admin console", () => {
     await page.locator("#p-title").fill(postTitle);
     await page.locator("#p-slug").fill(postSlug);
     await page.locator("#p-excerpt").fill("خلاصهٔ نوشتهٔ تست خودکار.");
+    // a cover image uploaded in place; images are ready without processing
+    await page.getByRole("tab", { name: "رسانه و سئو" }).click();
+    await page.getByLabel("بارگذاری تصویر کاور").setInputFiles(FIXTURE_PNG);
+    await expect(page.getByText("فایل بارگذاری شد.")).toBeVisible({ timeout: 30000 });
+    await expect(page.locator("#p-cover option").filter({ hasText: "sample.png" })).toBeVisible();
     await page.getByRole("tab", { name: "بدنه" }).click();
     await page.locator('#p-body [contenteditable="true"]').click();
     await page.locator('#p-body [contenteditable="true"]').pressSequentially("متن نوشتهٔ تست خودکار.");
@@ -164,9 +188,10 @@ test.describe("admin console", () => {
     await row.getByRole("button", { name: "انتشار" }).click();
     await expect(row.getByText("منتشرشده").first()).toBeVisible({ timeout: 30000 });
 
-    // it shows up on the public blog
+    // it shows up on the public blog with its cover image
     await page.goto(`/blog/${postSlug}`);
     await expect(page.getByRole("heading", { name: postTitle })).toBeVisible();
+    await expect(page.locator("img[src*='/api/v1/media/']")).toBeVisible();
 
     // and can be deleted again
     await page.goto("/admin/posts");
