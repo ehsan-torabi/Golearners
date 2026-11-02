@@ -111,7 +111,7 @@ func (r *EntitlementRepo) HasActive(ctx context.Context, userID, courseID uuid.U
 func (r *EntitlementRepo) Grant(ctx context.Context, e *course.Entitlement) error {
 	_, err := querierOf(ctx, r.pool).Exec(ctx,
 		`INSERT INTO entitlements (id, user_id, course_id, source, granted_at, expires_at, order_id)
-		 VALUES ($1,$2,$3,$4,coalesce(nullif($5, '0001-01-01'), now()),$6,$7)
+		 VALUES ($1,$2,$3,$4,coalesce(nullif($5::timestamptz, '0001-01-01'::timestamptz), now()),$6,$7)
 		 ON CONFLICT (user_id, course_id) WHERE revoked_at IS NULL DO NOTHING`,
 		e.ID, e.UserID, e.CourseID, string(e.Source), e.GrantedAt, e.ExpiresAt, e.OrderID)
 	if err != nil {

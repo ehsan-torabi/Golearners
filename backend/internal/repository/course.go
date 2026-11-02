@@ -165,7 +165,7 @@ func courseListWhere(f ports.CourseFilter, publicOnly bool) (string, []any) {
 		args = append(args, f.Status)
 	}
 	if f.Q != "" {
-		where = append(where, "(c.title ILIKE '%'||$"+fmt.Sprint(len(args)+1)+"||'%' OR c.summary ILIKE '%'||$"+fmt.Sprint(len(args)+1)+"||'%')")
+		where = append(where, "(c.title ILIKE '%'||$"+fmt.Sprint(len(args)+1)+"||'%' OR c.summary ILIKE '%'||$"+fmt.Sprint(len(args)+1)+"||'%' OR c.slug ILIKE '%'||$"+fmt.Sprint(len(args)+1)+"||'%')")
 		args = append(args, f.Q)
 	}
 	if f.FeaturedOnly {

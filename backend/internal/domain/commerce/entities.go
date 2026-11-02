@@ -106,19 +106,19 @@ const (
 
 // Coupon is a discount code.
 type Coupon struct {
-	ID            uuid.UUID
-	Code          string
-	Type          CouponType
-	Value         int64 // percent (1..100) or fixed Rials
-	MaxUses       *int
-	PerUserLimit  *int
-	MinAmountRial *int64
-	StartsAt      *time.Time
-	EndsAt        *time.Time
-	CourseScope   *uuid.UUID
-	Status        string // active | disabled
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID            uuid.UUID  `json:"id"`
+	Code          string     `json:"code"`
+	Type          CouponType `json:"type"`
+	Value         int64      `json:"value"` // percent (1..100) or fixed Rials
+	MaxUses       *int       `json:"max_uses"`
+	PerUserLimit  *int       `json:"per_user_limit"`
+	MinAmountRial *int64     `json:"min_amount_rial"`
+	StartsAt      *time.Time `json:"starts_at"`
+	EndsAt        *time.Time `json:"ends_at"`
+	CourseScope   *uuid.UUID `json:"course_scope"`
+	Status        string     `json:"status"` // active | disabled
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
 }
 
 // Active reports the window + status checks.

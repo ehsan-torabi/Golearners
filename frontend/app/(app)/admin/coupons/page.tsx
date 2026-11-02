@@ -201,8 +201,7 @@ export default function AdminCouponsPage() {
         <EmptyState title="کد تخفیفی ثبت نشده است" body="کد بساز تا در صفحهٔ پرداخت قابل استفاده باشد." />
       ) : (
         <Card className="overflow-hidden">
-          <table className="w-full text-sm">
-            <Table>
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-start">کد</TableHead>
@@ -245,7 +244,6 @@ export default function AdminCouponsPage() {
                 ))}
               </TableBody>
             </Table>
-          </table>
         </Card>
       )}
 

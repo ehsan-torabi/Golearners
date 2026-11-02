@@ -110,7 +110,9 @@ function AuthActions({
 
   if (!loggedIn) {
     return (
-      <Button size="sm" variant="ghost" className={stacked ? "w-full" : "hidden sm:inline-flex"} render={<Link href="/login" />}>
+      <Button size="sm" variant="ghost" className={stacked ? "w-full" : "hidden sm:inline-flex"} render={<Link href="/login" />}
+        nativeButton={false}
+      >
         ورود
       </Button>
     );
@@ -124,6 +126,7 @@ function AuthActions({
           variant="ghost"
           className={cn("hidden sm:inline-flex", stacked && "w-full")}
           render={<Link href="/dashboard" />}
+          nativeButton={false}
         >
           داشبورد من
         </Button>
@@ -131,6 +134,7 @@ function AuthActions({
           size="sm"
           className={cn("hidden sm:inline-flex", stacked && "w-full")}
           render={<Link href="/admin" />}
+          nativeButton={false}
         >
           پنل مدیریت
         </Button>
@@ -143,6 +147,7 @@ function AuthActions({
       size="sm"
       className={cn("hidden sm:inline-flex", stacked && "w-full")}
       render={<Link href="/dashboard" />}
+      nativeButton={false}
     >
       داشبورد
     </Button>

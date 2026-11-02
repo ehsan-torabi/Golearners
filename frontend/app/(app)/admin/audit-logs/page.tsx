@@ -76,8 +76,7 @@ export default function AdminAuditLogsPage() {
         <EmptyState title="رویدادی ثبت نشده است" body="با انجام عملیات مدیریتی، رویدادها اینجا فهرست می‌شوند." />
       ) : (
         <Card className="overflow-hidden">
-          <table className="w-full text-sm">
-            <Table>
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-start">رویداد</TableHead>
@@ -105,7 +104,6 @@ export default function AdminAuditLogsPage() {
                 ))}
               </TableBody>
             </Table>
-          </table>
         </Card>
       )}
 

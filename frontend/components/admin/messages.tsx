@@ -32,14 +32,14 @@ interface MessageRow {
 const FILTERS = [
   { value: "", label: "همه" },
   { value: "new", label: "خوانده‌نشده" },
-  { value: "open", label: "باز" },
+  { value: "read", label: "خوانده‌شده" },
   { value: "replied", label: "پاسخ‌داده‌شده" },
   { value: "closed", label: "بسته" },
 ];
 
 const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "neutral" }> = {
   new: { label: "خوانده‌نشده", tone: "warning" },
-  open: { label: "باز", tone: "warning" },
+  read: { label: "خوانده‌شده", tone: "neutral" },
   replied: { label: "پاسخ‌داده‌شده", tone: "success" },
   closed: { label: "بسته", tone: "neutral" },
 };

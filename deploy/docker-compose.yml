@@ -76,3 +76,12 @@ volumes:
   pgdata:
   miniodata:
   caddydata:
+
+# Explicit subnet: the default bridge can land inside a VPN tunnel range on the
+# host (the xray_tun route shadows 172.18.0.0/30) and make containers
+# unreachable from the host. 172.30.0.0/16 stays clear of those routes.
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16

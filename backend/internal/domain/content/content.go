@@ -25,7 +25,17 @@ const (
 	ContactNew     ContactStatus = "new"
 	ContactRead    ContactStatus = "read"
 	ContactReplied ContactStatus = "replied"
+	ContactClosed  ContactStatus = "closed"
 )
+
+// ValidContactStatus reports whether a status is part of the inbox lifecycle.
+func ValidContactStatus(s ContactStatus) bool {
+	switch s {
+	case ContactNew, ContactRead, ContactReplied, ContactClosed:
+		return true
+	}
+	return false
+}
 
 // BlogPost is a blog article.
 type BlogPost struct {

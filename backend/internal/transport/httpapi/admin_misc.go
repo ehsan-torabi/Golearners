@@ -296,6 +296,10 @@ func (a *App) handleAdminMessageStatus(w http.ResponseWriter, r *http.Request) {
 		a.writeError(w, r, err)
 		return
 	}
+	if !content.ValidContactStatus(in.Status) {
+		a.writeError(w, r, apperr.ErrValidation)
+		return
+	}
 	if err := a.Content.SetContactStatus(r.Context(), contentActor(r), id, in.Status); err != nil {
 		a.writeError(w, r, err)
 		return
