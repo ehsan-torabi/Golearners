@@ -82,7 +82,7 @@ export function MediaField({
           onChange={(e) => onChange(e.target.value || null)}
         >
           <option value="">
-            {state === "loading" ? "در حال بارگذاری…" : "— انتخاب نشده —"}
+            {state === "loading" ? "در حال بارگذاری…" : "انتخاب نشده"}
           </option>
           {items.map((m) => (
             <option key={m.id} value={m.id}>

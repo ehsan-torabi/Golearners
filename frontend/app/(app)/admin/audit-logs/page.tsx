@@ -95,7 +95,7 @@ export default function AdminAuditLogsPage() {
                       {r.EntityType} {r.EntityID.slice(0, 8)}…
                     </TableCell>
                     <TableCell className="text-start text-muted-foreground" dir="ltr">
-                      {r.IP || "—"}
+                      {r.IP || "ثبت نشده"}
                     </TableCell>
                     <TableCell className="text-start text-muted-foreground">
                       {formatJalali(new Date(r.CreatedAt))}

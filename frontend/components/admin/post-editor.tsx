@@ -176,7 +176,7 @@ export function PostEditor({ postId }: { postId: string | null }) {
                     value={form.category_id ?? ""}
                     onChange={(e) => set("category_id", e.target.value || null)}
                   >
-                    <option value="">— انتخاب نشده —</option>
+                    <option value="">انتخاب نشده</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.title}

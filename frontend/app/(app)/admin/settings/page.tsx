@@ -146,8 +146,8 @@ export default function AdminSettingsPage() {
         <CardHeader>
           <CardTitle>درگاه‌های پرداخت</CardTitle>
           <CardDescription>
-            درگاه فعال: <span dir="ltr">{settings?.gateways?.default ?? "—"}</span> · فعال‌ها:{" "}
-            <span dir="ltr">{(settings?.gateways?.enabled ?? []).join(", ") || "—"}</span>
+            درگاه فعال: <span dir="ltr">{settings?.gateways?.default ?? "ثبت نشده"}</span> · فعال‌ها:{" "}
+            <span dir="ltr">{(settings?.gateways?.enabled ?? []).join(", ") || "ثبت نشده"}</span>
           </CardDescription>
         </CardHeader>
       </Card>

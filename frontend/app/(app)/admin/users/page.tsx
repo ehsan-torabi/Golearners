@@ -161,7 +161,7 @@ export default function AdminUsersPage() {
               {users.map((u) => (
                 <TableRow key={u.id}>
                   <TableCell className="text-start">
-                    <span className="font-medium text-foreground">{u.full_name || "—"}</span>
+                    <span className="font-medium text-foreground">{u.full_name || "بدون نام"}</span>
                     {u.email && (
                       <p className="mt-0.5 text-xs text-muted-foreground" dir="ltr">
                         {u.email}
