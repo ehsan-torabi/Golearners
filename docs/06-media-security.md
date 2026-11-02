@@ -62,8 +62,15 @@ sequenceDiagram
 Guards: presign only for logged-in admins; content-type/extension allowlist
 (`video/mp4`, `video/quicktime`, `image/*`, `application/pdf`); max size enforced
 presign-side and re-checked at registration; checksum recorded; keys are
-`media/{yyyy}/{mm}/{uuid}/master.mp4` — never user-controlled strings (no traversal,
-no enumeration).
+`media/{kind}/{yyyy}/{mm}/{uuid}/{sanitized-original-name}.{ext}` — the UUID
+directory is server-generated and unique, the name portion is sanitized
+(unicode letters/digits only, folded dashes, capped) and the extension comes
+from the mime allowlist, so keys stay traversal-free and non-enumerable.
+The original filename is also stored on the row (`media_assets.filename`)
+for display; images/PDFs are `ready` at registration (no transcoding) and
+publicly read via `GET /api/v1/media/{id}` (image kind only, ETag +
+`Cache-Control: public, max-age=86400`), while videos stay behind the
+entitlement-checked playback endpoint.
 
 ## 3. Playback flow (entitlement → signed URL)
 

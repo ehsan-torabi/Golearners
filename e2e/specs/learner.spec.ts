@@ -128,8 +128,13 @@ test.describe("learner dashboard", () => {
       )
       .toBe(true);
 
+    // the vibefarsi player saves progress on time updates (10s throttle):
+    // jump the playhead and fire the same native event the element would
     await page.evaluate(() => {
-      document.querySelector("video")?.dispatchEvent(new Event("pause"));
+      const video = document.querySelector("video");
+      if (!video) return;
+      Object.defineProperty(video, "currentTime", { value: 61, configurable: true });
+      video.dispatchEvent(new Event("timeupdate"));
     });
 
     await expect

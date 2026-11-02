@@ -73,6 +73,10 @@ func (s *Service) ForLesson(ctx context.Context, viewer *uuid.UUID, lessonID uui
 
 	m, err := s.mediaOf(ctx, l)
 	if err != nil {
+		// a lesson without playable media is a client-facing 404, not a 500
+		if errors.Is(err, errNoMedia) {
+			return nil, apperr.ErrNotFound
+		}
 		return nil, err
 	}
 	// per-user issuance limit (anonymous users are throttled per-IP at the router)

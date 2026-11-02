@@ -1,1 +1,0 @@
-self.__REACT_LOADABLE_MANIFEST="{\"app/(app)/dashboard/courses/[slug]/player.tsx -> @/lib/api\":{\"id\":\"app/(app)/dashboard/courses/[slug]/player.tsx -> @/lib/api\",\"files\":[\"static/chunks/_app-pages-browser_lib_api_ts.js\"]}}"
