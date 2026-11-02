@@ -138,6 +138,7 @@ func run() error {
 		Lessons: lessons, Sections: sections, Entitlements: entitlements,
 		Media: repository.NewMediaRepo(pool), Video: video,
 		Sessions: repository.NewPlaybackSessionRepo(pool),
+		Courses:  courses,
 		Throttle: throttler, TTL: cfg.PlaybackTTL,
 	})
 
@@ -176,7 +177,8 @@ func run() error {
 	})
 	courseAdminSvc := courseadmin.NewService(courseadmin.Deps{
 		Courses: courses, Sections: sections, Lessons: lessons,
-		Categories: categories, Reviews: reviews, Audit: audit,
+		Categories: categories, Instructors: instructors,
+		Reviews: reviews, Audit: audit,
 		TX: txr, Sanitize: cleanHTML,
 	})
 	contentAdminSvc := contentadmin.NewService(contentadmin.Deps{

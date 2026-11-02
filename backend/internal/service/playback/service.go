@@ -27,6 +27,7 @@ type Deps struct {
 	Media        ports.MediaRepo
 	Video        ports.VideoPlatform
 	Sessions     ports.PlaybackSessionRepo
+	Courses      ports.CourseRepo
 	Throttle     ports.Throttler
 	TTL          time.Duration
 }
@@ -96,6 +97,44 @@ func (s *Service) ForLesson(ctx context.Context, viewer *uuid.UUID, lessonID uui
 		return nil, err
 	}
 	return &Playback{URL: url, ExpiresAt: exp, LessonID: l.ID}, nil
+}
+
+// PromoPlayback is the promo response payload (no lesson id — not a lesson).
+type PromoPlayback struct {
+	URL       string
+	ExpiresAt time.Time
+}
+
+// ForPromo issues a signed URL for a published course's promo video. Promos
+// are public marketing material: no entitlement check and no playback-session
+// row (the schema is lesson-keyed); abuse is bounded by the router's per-IP
+// playback limit.
+func (s *Service) ForPromo(ctx context.Context, slug, ip string) (*PromoPlayback, error) {
+	c, err := s.d.Courses.BySlug(ctx, slug)
+	if err != nil {
+		if errors.Is(err, ports.ErrNotFound) {
+			return nil, apperr.ErrNotFound
+		}
+		return nil, err
+	}
+	if c.Status != course.StatusPublished || c.PromoVideoMediaID == nil {
+		return nil, apperr.ErrNotFound
+	}
+	m, err := s.d.Media.ByID(ctx, *c.PromoVideoMediaID)
+	if err != nil {
+		if errors.Is(err, ports.ErrNotFound) {
+			return nil, apperr.ErrNotFound
+		}
+		return nil, err
+	}
+	if m.Kind != course.MediaVideo || m.Status != course.MediaReady {
+		return nil, apperr.ErrNotFound
+	}
+	url, exp, err := s.d.Video.Playback(ctx, deref(m.VODRemoteID), ports.PlaybackOptions{TTL: s.d.TTL, BindIP: ip})
+	if err != nil {
+		return nil, err
+	}
+	return &PromoPlayback{URL: url, ExpiresAt: exp}, nil
 }
 
 // mediaOf validates the lesson has ready video media.

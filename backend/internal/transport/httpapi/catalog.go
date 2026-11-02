@@ -32,6 +32,7 @@ func courseJSON(c *course.Course) map[string]any {
 		"price_rial": c.PriceRial, "compare_at_price_rial": c.CompareAtPriceRial,
 		"is_featured": c.IsFeatured, "published_at": c.PublishedAt,
 		"cover_media_id": c.CoverMediaID, "cover_url": mediaRef(c.CoverMediaID),
+		"has_promo":      c.PromoVideoMediaID != nil,
 		"meta_title":     c.MetaTitle,
 		"meta_description": c.MetaDescription, "created_at": c.CreatedAt,
 	}

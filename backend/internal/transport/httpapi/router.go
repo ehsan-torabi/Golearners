@@ -114,6 +114,7 @@ func NewRouter(a *App) http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(a.optionalAuth)
 			r.With(a.rateLimit("playback", 60, time.Minute)).Get("/playback/lessons/{lesson_id}", a.handlePlaybackLesson)
+			r.With(a.rateLimit("playback", 30, time.Minute)).Get("/playback/courses/{slug}/promo", a.handlePlaybackPromo)
 			r.With(a.rateLimit("playback", 30, time.Minute)).Get("/playback/attachments/{id}", a.handlePlaybackAttachment)
 		})
 
@@ -171,6 +172,9 @@ func NewRouter(a *App) http.Handler {
 			r.Get("/admin/categories", a.handleAdminCategoryList)
 			r.Put("/admin/categories/{id}", a.handleAdminCategoryUpdate)
 			r.Delete("/admin/categories/{id}", a.handleAdminCategoryDelete)
+
+			r.Get("/admin/instructor", a.handleAdminInstructorGet)
+			r.Put("/admin/instructor", a.handleAdminInstructorPut)
 
 			r.Post("/admin/posts", a.handleAdminPostCreate)
 			r.Get("/admin/posts", a.handleAdminPostList)

@@ -16,14 +16,15 @@ import (
 )
 
 type Deps struct {
-	Courses    ports.CourseRepo
-	Sections   ports.SectionRepo
-	Lessons    ports.LessonRepo
-	Categories ports.CategoryRepo
-	Reviews    ports.ReviewRepo
-	Audit      ports.AuditRepo
-	TX         ports.Transactor
-	Sanitize   func(string) string
+	Courses     ports.CourseRepo
+	Sections    ports.SectionRepo
+	Lessons     ports.LessonRepo
+	Categories  ports.CategoryRepo
+	Instructors ports.InstructorRepo
+	Reviews     ports.ReviewRepo
+	Audit       ports.AuditRepo
+	TX          ports.Transactor
+	Sanitize    func(string) string
 }
 
 type Service struct{ d Deps }

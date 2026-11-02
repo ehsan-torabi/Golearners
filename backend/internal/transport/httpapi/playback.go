@@ -33,6 +33,19 @@ func (a *App) handlePlaybackLesson(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GET /api/v1/playback/courses/{slug}/promo — public promo clip of a
+// published course (no session row; see playback.Service.ForPromo).
+func (a *App) handlePlaybackPromo(w http.ResponseWriter, r *http.Request) {
+	p, err := a.Playback.ForPromo(r.Context(), chiSlug(r), clientIP(r))
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"playback_url": p.URL, "expires_at": p.ExpiresAt,
+	})
+}
+
 // GET /api/v1/playback/attachments/{id} - downloadable lesson files.
 func (a *App) handlePlaybackAttachment(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))

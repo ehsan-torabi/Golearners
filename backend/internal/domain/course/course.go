@@ -133,6 +133,7 @@ type Category struct {
 	ID       uuid.UUID `json:"id"`
 	Slug     string    `json:"slug"`
 	Title    string    `json:"title"`
+	Icon     string    `json:"icon"`
 	Position int       `json:"position"`
 }
 

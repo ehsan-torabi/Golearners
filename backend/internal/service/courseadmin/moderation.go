@@ -28,6 +28,7 @@ func (s *Service) ModerateReview(ctx context.Context, actor Actor, reviewID uuid
 // ports.ReviewRepo.ApprovedByCourse? No — dedicated listing below.
 type CategoryInput struct {
 	Title    string
+	Icon     string
 	Position int
 }
 
@@ -35,11 +36,14 @@ func (s *Service) CreateCategory(ctx context.Context, actor Actor, in CategoryIn
 	if len(in.Title) < 1 || len(in.Title) > 120 {
 		return nil, apperr.ErrValidation
 	}
+	if len(in.Icon) > 40 {
+		return nil, apperr.ErrValidation
+	}
 	slug, err := course.NormalizeSlug(in.Title)
 	if err != nil {
 		return nil, apperr.ErrValidation.Wrap(err)
 	}
-	c := &course.Category{ID: uuid.Must(uuid.NewV7()), Slug: slug, Title: in.Title, Position: in.Position}
+	c := &course.Category{ID: uuid.Must(uuid.NewV7()), Slug: slug, Title: in.Title, Icon: in.Icon, Position: in.Position}
 	if err := s.d.TX.WithinTx(ctx, func(ctx context.Context) error {
 		if err := s.d.Categories.Create(ctx, c); err != nil {
 			return err
@@ -55,12 +59,15 @@ func (s *Service) UpdateCategory(ctx context.Context, actor Actor, id uuid.UUID,
 	if len(in.Title) < 1 || len(in.Title) > 120 {
 		return apperr.ErrValidation
 	}
+	if len(in.Icon) > 40 {
+		return apperr.ErrValidation
+	}
 	slug, err := course.NormalizeSlug(in.Title)
 	if err != nil {
 		return apperr.ErrValidation.Wrap(err)
 	}
 	return s.d.TX.WithinTx(ctx, func(ctx context.Context) error {
-		if err := s.d.Categories.Update(ctx, &course.Category{ID: id, Slug: slug, Title: in.Title, Position: in.Position}); err != nil {
+		if err := s.d.Categories.Update(ctx, &course.Category{ID: id, Slug: slug, Title: in.Title, Icon: in.Icon, Position: in.Position}); err != nil {
 			return err
 		}
 		return s.audit(ctx, actor, "category.update", "course_category", id.String(), nil, in)
