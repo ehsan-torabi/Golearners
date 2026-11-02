@@ -14,10 +14,10 @@ export type Crumb = { href?: string; label: string };
 /* breadcrumb-block-01: last crumb is the current page, earlier ones link back.
    The separator is a sibling of the item, never a child: an <li> inside an
    <li> is invalid HTML and breaks hydration on every page that uses it. */
-export function SiteBreadcrumb({ items }: { items: Crumb[] }) {
+export function SiteBreadcrumb({ items, className }: { items: Crumb[]; className?: string }) {
   if (items.length === 0) return null;
   return (
-    <nav aria-label="مسیر صفحه" className="mb-5">
+    <nav aria-label="مسیر صفحه" className={className ?? "mb-5"}>
       <Breadcrumb>
         <BreadcrumbList>
           {items.map((item, i) => {
