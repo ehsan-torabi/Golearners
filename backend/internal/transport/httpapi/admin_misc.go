@@ -323,6 +323,20 @@ type moderateRequest struct {
 	Approve bool `json:"approve"`
 }
 
+// GET /api/v1/admin/reviews?status=&page= — the moderation queue.
+func (a *App) handleAdminReviewList(w http.ResponseWriter, r *http.Request) {
+	page, perPage := pageParams(r)
+	list, total, err := a.CourseAdmin.ListReviews(r.Context(), r.URL.Query().Get("status"), page, perPage)
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"data": list,
+		"meta": map[string]any{"page": page, "per_page": perPage, "total": total},
+	})
+}
+
 func (a *App) handleAdminReviewModerate(w http.ResponseWriter, r *http.Request) {
 	id, err := uuidParam(r, "id")
 	if err != nil {

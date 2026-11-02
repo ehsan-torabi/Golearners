@@ -1,25 +1,18 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { cookies } from "next/headers";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { MyCoursesPanel, type MyCourse } from "@/components/dashboard/my-courses";
+import { MyOrdersPanel, type OrderRow } from "@/components/dashboard/my-orders";
 import { getMe } from "@/lib/me-server";
-import { LEVEL_FA, type CourseSummary } from "@/lib/api";
 import { fa } from "@/lib/utils";
 import { formatJalali } from "@/lib/jalali";
 
 export const metadata: Metadata = { title: "داشبورد", robots: { index: false } };
 export const dynamic = "force-dynamic";
-
-interface MyCourse {
-  course: CourseSummary;
-  granted_at: string;
-  progress_pct: number;
-  resume_lesson_id: string | null;
-}
 
 const ROLE_FA: Record<string, string> = { learner: "دانشجو", admin: "مدیر", instructor: "مدرس" };
 
@@ -32,7 +25,7 @@ function initials(name: string) {
 }
 
 export default async function DashboardPage() {
-  const [me, courses] = await Promise.all([getMe(), myCourses()]);
+  const [me, courses, orders] = await Promise.all([getMe(), myCourses(), myOrders()]);
 
   if (!me) {
     return (
@@ -114,72 +107,20 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      <section aria-labelledby="my-courses">
-        <div className="mb-4 flex items-end justify-between gap-4">
+      <section aria-labelledby="my-courses" className="space-y-4">
+        <div className="flex items-end justify-between gap-4">
           <h2 id="my-courses" className="text-xl leading-7 text-foreground">
             دوره‌های من
           </h2>
-          <ButtonLink href="/courses" variant="outline" size="sm">
-            فروشگاه دوره‌ها
-          </ButtonLink>
         </div>
+        <MyCoursesPanel courses={courses} />
+      </section>
 
-        {courses.length === 0 ? (
-          <EmptyState
-            title="هنوز دوره‌ای نخریده‌ای"
-            body="با اولین خرید، دوره اینجا اضافه می‌شود و یادگیری را از همان‌جا شروع می‌کنی."
-            actionHref="/courses"
-            actionLabel="دیدن دوره‌ها"
-          />
-        ) : (
-          <div className="space-y-3">
-            {courses.map((mc) => (
-              <Card key={mc.course.id} className="p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-base font-medium leading-6">
-                      <Link
-                        href={`/dashboard/courses/${encodeURIComponent(mc.course.slug)}`}
-                        className="transition-colors duration-150 hover:text-accent-strong"
-                      >
-                        {mc.course.title}
-                      </Link>
-                    </h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {[
-                        LEVEL_FA[mc.course.level],
-                        mc.granted_at ? `خرید در ${formatJalali(new Date(mc.granted_at))}` : null,
-                      ]
-                        .filter(Boolean)
-                        .join("، ")}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-lg font-semibold text-accent-strong">
-                      {fa(mc.progress_pct)}٪
-                    </span>
-                    <ButtonLink
-                      href={`/dashboard/courses/${encodeURIComponent(mc.course.slug)}`}
-                      size="sm"
-                    >
-                      {mc.progress_pct > 0 ? "ادامه یادگیری" : "شروع دوره"}
-                    </ButtonLink>
-                  </div>
-                </div>
-                <div
-                  className="mt-4 h-2 overflow-hidden rounded-sm bg-accent"
-                  role="progressbar"
-                  aria-valuenow={mc.progress_pct}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={`پیشرفت دوره ${mc.course.title}`}
-                >
-                  <div className="h-full bg-primary" style={{ width: `${mc.progress_pct}%` }} />
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
+      <section aria-labelledby="my-orders" className="space-y-4">
+        <h2 id="my-orders" className="text-xl leading-7 text-foreground">
+          سفارش‌های من
+        </h2>
+        <MyOrdersPanel orders={orders.data} total={orders.total} />
       </section>
     </div>
   );
@@ -198,5 +139,26 @@ async function myCourses(): Promise<MyCourse[]> {
     return body.data ?? [];
   } catch {
     return [];
+  }
+}
+
+interface OrdersPayload {
+  data: OrderRow[];
+  total: number;
+}
+
+async function myOrders(): Promise<OrdersPayload> {
+  const jar = await cookies();
+  const access = jar.get("gl_at")?.value ?? "";
+  try {
+    const res = await fetch(
+      `${process.env.API_INTERNAL ?? "http://localhost:8080"}/api/v1/me/orders?per_page=5`,
+      { headers: { Cookie: `gl_at=${access}` }, cache: "no-store" },
+    );
+    if (!res.ok) return { data: [], total: 0 };
+    const body = (await res.json()) as { data: OrderRow[]; meta: { total: number } };
+    return { data: body.data ?? [], total: body.meta?.total ?? 0 };
+  } catch {
+    return { data: [], total: 0 };
   }
 }

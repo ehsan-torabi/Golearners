@@ -284,6 +284,36 @@ export async function adminDeleteMedia(id: string) {
   return api(`/admin/media/${id}`, { method: "DELETE" });
 }
 
+// ---------- reviews ----------
+
+export interface AdminReview {
+  id: string;
+  course_id: string;
+  user_id: string;
+  rating: number;
+  body: string;
+  status: string; // pending | approved | rejected
+  approved_at: string | null;
+  submitted_at: string | null;
+  author_name: string;
+  course_title: string;
+}
+
+export function adminListReviews(params: { page?: number; per_page?: number; status?: string }) {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== "") search.set(k, String(v));
+  });
+  return fetchAdmin<AdminList<AdminReview>>(`/admin/reviews?${search}`);
+}
+
+export async function adminModerateReview(id: string, approve: boolean) {
+  return api(`/admin/reviews/${id}/moderate`, {
+    method: "POST",
+    body: JSON.stringify({ approve }),
+  });
+}
+
 
 export interface TaxonomyItem {
   id: string;

@@ -180,19 +180,26 @@ export function readOtpFromLog(mobile: string, timeoutMs = 15000): string {
 function latestOtp(mobile: string): string | null {
   if (!fs.existsSync(API_LOG)) return null;
   const lines = fs.readFileSync(API_LOG, "utf8").split("\n");
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const line = lines[i];
+  // the log can hold interleaved entries from restarted API processes, so scan
+  // everything and keep the freshest code rather than trusting line order
+  let best: { at: number; code: string } | null = null;
+  for (const line of lines) {
     if (!line.includes("mock sms sent") || !line.includes(mobile)) continue;
+    let at = 0;
+    let code: string | null = null;
     try {
-      const parsed = JSON.parse(line) as { to?: string; text?: string };
+      const parsed = JSON.parse(line) as { to?: string; text?: string; time?: string };
       if (parsed.to !== mobile) continue;
-      const m = (parsed.text ?? "").match(/(\d{6})/);
-      if (m) return m[1];
+      at = parsed.time ? new Date(parsed.time).getTime() : 0;
+      code = (parsed.text ?? "").match(/(\d{6})/)?.[1] ?? null;
     } catch {
-      const m = line.match(/(\d{6})/);
-      if (m) return m[1];
+      code = line.match(/(\d{6})/)?.[1] ?? null;
     }
+    if (code && (!best || at > best.at)) best = { at, code };
   }
+  // codes expire after two minutes; a leftover line from an earlier run must
+  // never be submitted, so only accept a fresh one
+  if (best && Date.now() - best.at <= 90_000) return best.code;
   return null;
 }
 

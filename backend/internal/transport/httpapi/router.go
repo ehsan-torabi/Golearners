@@ -126,6 +126,7 @@ func NewRouter(a *App) http.Handler {
 		// optional auth: the viewer flag (owned_by_viewer) must reflect the
 		// session cookie, but anonymous readers are still served
 		r.With(a.optionalAuth).Get("/courses/{slug}", a.handleCourseDetail)
+		r.Get("/courses/{slug}/reviews", a.handleCourseReviews)
 		r.Get("/categories", a.handleCategoryList)
 		r.Get("/instructor", a.handleInstructor)
 		r.Get("/blog/posts", a.handleBlogList)
@@ -186,6 +187,7 @@ func NewRouter(a *App) http.Handler {
 			r.Post("/admin/testimonials", a.handleAdminTestimonialUpsert)
 			r.Get("/admin/messages", a.handleAdminMessages)
 			r.Post("/admin/messages/{id}/status", a.handleAdminMessageStatus)
+			r.Get("/admin/reviews", a.handleAdminReviewList)
 			r.Post("/admin/reviews/{id}/moderate", a.handleAdminReviewModerate)
 			r.Get("/admin/audit-logs", a.handleAdminAuditLogs)
 			r.Get("/admin/analytics/summary", a.handleAnalyticsSummary)

@@ -123,6 +123,30 @@ type reviewRequest struct {
 	Body   string `json:"body"`
 }
 
+// GET /api/v1/courses/{slug}/reviews — approved reviews for the course page.
+func (a *App) handleCourseReviews(w http.ResponseWriter, r *http.Request) {
+	page, perPage := pageParams(r)
+	if perPage > 50 {
+		perPage = 50
+	}
+	list, total, err := a.Catalog.ReviewsFor(r.Context(), chiSlug(r), page, perPage)
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	avg, count, err := a.Catalog.RatingSummary(r.Context(), chiSlug(r))
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"data":         list,
+		"meta":         map[string]any{"page": page, "per_page": perPage, "total": total},
+		"rating_avg":   avg,
+		"rating_count": count,
+	})
+}
+
 // POST /api/v1/courses/{slug}/reviews — entitled learners only (service checks).
 func (a *App) handleReviewSubmit(w http.ResponseWriter, r *http.Request) {
 	actor, ok := actorFrom(r.Context())

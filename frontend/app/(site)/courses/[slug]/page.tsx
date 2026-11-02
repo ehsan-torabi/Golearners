@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { api, LEVEL_FA, LEVEL_COLORS, formatTomanFromRial } from "@/lib/api";
 import { SiteBreadcrumb } from "@/components/site-breadcrumb";
+import { ReviewForm } from "@/components/site/review-form";
 import { fa } from "@/lib/utils";
 
 /* per-viewer state (owned, lesson progress) needs the session cookie */
@@ -83,6 +84,30 @@ async function ownerCurriculum(slug: string): Promise<OwnerLesson[] | null> {
   }
 }
 
+export interface CourseReview {
+  id: string;
+  rating: number;
+  body: string;
+  author_name: string;
+  approved_at: string | null;
+}
+
+interface ReviewsPayload {
+  data: CourseReview[];
+  meta: { total: number };
+  rating_avg: number | null;
+  rating_count: number;
+}
+
+/** approved reviews only; a failing call renders the section without them */
+async function approvedReviews(slug: string): Promise<ReviewsPayload | null> {
+  try {
+    return await api<ReviewsPayload>(`/courses/${encodeURIComponent(slug)}/reviews?per_page=20`);
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const d = await detail(decodeURIComponent(slug));
@@ -124,6 +149,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   const loggedIn = Boolean(jar.get("gl_at")?.value);
   const ownerLessons = d.owned_by_viewer ? await ownerCurriculum(d.course.slug) : null;
   const owned = Boolean(d.owned_by_viewer);
+  const reviews = await approvedReviews(d.course.slug);
 
   return (
     <div className="space-y-8">
@@ -255,6 +281,13 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
               />
             </section>
           )}
+
+          <ReviewsSection
+            reviews={reviews}
+            owned={owned}
+            loggedIn={loggedIn}
+            slug={d.course.slug}
+          />
         </div>
 
         <aside className="h-fit lg:sticky lg:top-24">
@@ -325,5 +358,92 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
         </aside>
       </div>
     </div>
+  );
+}
+
+/** rating summary + approved reviews, with the submit form for buyers */
+function ReviewsSection({
+  reviews,
+  owned,
+  loggedIn,
+  slug,
+}: {
+  reviews: ReviewsPayload | null;
+  owned: boolean;
+  loggedIn: boolean;
+  slug: string;
+}) {
+  const list = reviews?.data ?? [];
+  const count = reviews?.rating_count ?? 0;
+  const avg = reviews?.rating_avg ?? 0;
+
+  return (
+    <section aria-labelledby="reviews" className="scroll-mt-24" id="reviews-section">
+      <h2 id="reviews" className="mb-4 font-semibold text-2xl">
+        نظرات دانشجوها
+      </h2>
+
+      <div className="mb-5 flex flex-wrap items-center gap-4 rounded-lg border border-border-variant p-4">
+        <span className="text-4xl font-semibold text-foreground">
+          {count > 0 ? fa(avg.toFixed(1)) : "—"}
+        </span>
+        <div>
+          <p className="text-lg leading-none text-warning" aria-label={`امتیاز ${count > 0 ? fa(avg.toFixed(1)) : "۰"} از ۵`}>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <span key={i} aria-hidden className={count > 0 && avg >= i - 0.5 ? "" : "opacity-30"}>
+                ★
+              </span>
+            ))}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            از {fa(count)} نظر ثبت‌شده
+          </p>
+        </div>
+      </div>
+
+      {list.length > 0 ? (
+        <ul className="space-y-3">
+          {list.map((rv) => (
+            <li key={rv.id}>
+              <Card className="p-5">
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-sm font-medium text-foreground">
+                    {rv.author_name || "دانشجو"}
+                  </p>
+                  <span className="text-sm text-warning" aria-label={`امتیاز ${fa(rv.rating)} از ۵`}>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <span key={i} aria-hidden className={rv.rating >= i ? "" : "opacity-30"}>
+                        ★
+                      </span>
+                    ))}
+                  </span>
+                </div>
+                {rv.body && (
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{rv.body}</p>
+                )}
+              </Card>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm leading-7 text-muted-foreground">
+          هنوز نظری تأیید نشده است؛ اولین نفری باش که تجربه‌ات را می‌نویسی.
+        </p>
+      )}
+
+      <div className="mt-6">
+        {owned ? (
+          <ReviewForm slug={slug} />
+        ) : loggedIn ? (
+          <p className="text-xs leading-6 text-muted-foreground">
+            برای ثبت نظر، اول دوره را بخر؛ نظرها فقط از خریداران دوره پذیرفته می‌شود.
+          </p>
+        ) : (
+          <p className="text-xs leading-6 text-muted-foreground">
+            برای ثبت نظر وارد حساب خود شو و دوره را بخر.
+          </p>
+        )}
+      </div>
+    </section>
   );
 }

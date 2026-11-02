@@ -116,6 +116,18 @@ func (s *Service) ReviewsFor(ctx context.Context, courseSlug string, page, perPa
 	return s.d.Reviews.ApprovedByCourse(ctx, c.ID, page, perPage)
 }
 
+// RatingSummary returns the approved-review average and count of a course.
+func (s *Service) RatingSummary(ctx context.Context, courseSlug string) (float64, int, error) {
+	c, err := s.d.Courses.BySlug(ctx, courseSlug)
+	if err != nil {
+		if errors.Is(err, ports.ErrNotFound) {
+			return 0, 0, apperr.ErrNotFound
+		}
+		return 0, 0, err
+	}
+	return s.d.Reviews.SummaryFor(ctx, c.ID)
+}
+
 // SubmitReview upserts the caller's review (entitlement required).
 func (s *Service) SubmitReview(ctx context.Context, userID uuid.UUID, courseSlug string, rating int, body string) error {
 	if rating < 1 || rating > 5 {

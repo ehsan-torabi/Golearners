@@ -88,6 +88,8 @@ type ReviewRepo interface {
 	SetStatus(ctx context.Context, id uuid.UUID, s course.ReviewStatus) error
 	// SummaryFor returns (avg, count) of approved reviews.
 	SummaryFor(ctx context.Context, courseID uuid.UUID) (float64, int, error)
+	// ListForAdmin is the moderation queue (status empty = every review).
+	ListForAdmin(ctx context.Context, status string, page, perPage int) ([]*course.Review, int, error)
 }
 
 // EntitlementRepo — access grants (commerce consumes this in phase 6).

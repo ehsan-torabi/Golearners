@@ -55,6 +55,7 @@ export default function AdminMediaPage() {
   const [query, setQuery] = React.useState("");
   const [search, setSearch] = React.useState("");
   const [loaded, setLoaded] = React.useState(false);
+  const [uploadKind, setUploadKind] = React.useState<"image" | "video" | "pdf">("image");
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState("");
   const [removing, setRemoving] = React.useState<MediaAsset | null>(null);
@@ -114,17 +115,29 @@ export default function AdminMediaPage() {
       {error && <Alert>{error}</Alert>}
 
       <Card className="p-4">
+        <div className="mb-3 max-w-56">
+          <label htmlFor="m-upload-kind" className="mb-1.5 block text-sm font-medium">
+            نوع فایل
+          </label>
+          <Select
+            id="m-upload-kind"
+            value={uploadKind}
+            onChange={(e) => setUploadKind(e.target.value as "image" | "video" | "pdf")}
+          >
+            <option value="image">تصویر</option>
+            <option value="video">ویدیو</option>
+            <option value="pdf">PDF</option>
+          </Select>
+        </div>
         <MediaUploader
-          kind="image"
+          key={uploadKind}
+          kind={uploadKind}
           label="بارگذاری فایل تازه"
           onUploaded={() => {
             setLoaded(false);
             void load();
           }}
         />
-        <p className="mt-2 text-xs text-muted-foreground">
-          برای بارگذاری ویدیو یا PDF از ویرایشگر دوره و فرم درس استفاده کنید.
-        </p>
       </Card>
 
       <Card className="p-0">
@@ -232,6 +245,7 @@ export default function AdminMediaPage() {
                 <TableHead className="text-start">فایل</TableHead>
                 <TableHead className="text-start">نوع</TableHead>
                 <TableHead className="text-start">حجم</TableHead>
+                <TableHead className="text-start">مدت</TableHead>
                 <TableHead className="text-start">وضعیت</TableHead>
                 <TableHead className="text-start">تاریخ</TableHead>
                 <TableHead className="text-start">کنش‌ها</TableHead>
@@ -255,6 +269,11 @@ export default function AdminMediaPage() {
                     </TableCell>
                     <TableCell className="text-start text-muted-foreground">
                       {faNumber(Math.round(m.size_bytes / 1024))} کیلوبایت
+                    </TableCell>
+                    <TableCell className="text-start text-muted-foreground">
+                      {m.kind === "video" && m.duration_seconds
+                        ? `${faNumber(Math.round(m.duration_seconds / 60))} دقیقه`
+                        : "-"}
                     </TableCell>
                     <TableCell className="text-start">
                       <Badge tone={statusMeta.tone}>{statusMeta.label}</Badge>

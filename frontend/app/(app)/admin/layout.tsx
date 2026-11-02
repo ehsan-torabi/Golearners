@@ -19,6 +19,7 @@ const groups = [
     items: [
       { href: "/admin/courses", label: "دوره‌ها" },
       { href: "/admin/categories", label: "دسته‌بندی‌ها" },
+      { href: "/admin/reviews", label: "نظرهای دانشجوها" },
       { href: "/admin/posts", label: "نوشته‌های وبلاگ" },
       { href: "/admin/media", label: "رسانه‌ها" },
     ],

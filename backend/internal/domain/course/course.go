@@ -145,6 +145,10 @@ type Review struct {
 	Body       string       `json:"body"`
 	Status     ReviewStatus `json:"status"`
 	ApprovedAt *time.Time   `json:"approved_at"`
+	// Joined for display; empty until the repo query carries it.
+	AuthorName  string     `json:"author_name"`
+	CourseTitle string     `json:"course_title"`
+	SubmittedAt *time.Time `json:"submitted_at"`
 }
 
 // MediaAsset is a stored file (video/image/pdf) with pipeline status.

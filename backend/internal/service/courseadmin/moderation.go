@@ -67,6 +67,16 @@ func (s *Service) UpdateCategory(ctx context.Context, actor Actor, id uuid.UUID,
 	})
 }
 
+// ListReviews is the moderation queue; status empty means every review.
+func (s *Service) ListReviews(ctx context.Context, status string, page, perPage int) ([]*course.Review, int, error) {
+	switch status {
+	case "", string(course.ReviewPending), string(course.ReviewApproved), string(course.ReviewRejected):
+	default:
+		return nil, 0, apperr.ErrValidation
+	}
+	return s.d.Reviews.ListForAdmin(ctx, status, page, perPage)
+}
+
 func (s *Service) DeleteCategory(ctx context.Context, actor Actor, id uuid.UUID) error {
 	return s.d.TX.WithinTx(ctx, func(ctx context.Context) error {
 		if err := s.d.Categories.Delete(ctx, id); err != nil {

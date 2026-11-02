@@ -18,10 +18,14 @@ type ReviewRepo struct{ pool *pgxpool.Pool }
 
 func NewReviewRepo(pool *pgxpool.Pool) *ReviewRepo { return &ReviewRepo{pool: pool} }
 
+const reviewColumns = `r.id, r.course_id, r.user_id, r.rating, r.body, r.status, r.approved_at,
+	r.created_at, coalesce(u.full_name, ''), coalesce(c.title, '')`
+
 func scanReview(row pgx.Row) (*course.Review, error) {
 	rv := &course.Review{}
 	var status string
-	err := row.Scan(&rv.ID, &rv.CourseID, &rv.UserID, &rv.Rating, &rv.Body, &status, &rv.ApprovedAt)
+	err := row.Scan(&rv.ID, &rv.CourseID, &rv.UserID, &rv.Rating, &rv.Body, &status, &rv.ApprovedAt,
+		&rv.SubmittedAt, &rv.AuthorName, &rv.CourseTitle)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ports.ErrNotFound
 	}
@@ -48,9 +52,11 @@ func (r *ReviewRepo) Upsert(ctx context.Context, rv *course.Review) error {
 
 func (r *ReviewRepo) ApprovedByCourse(ctx context.Context, courseID uuid.UUID, page, perPage int) ([]*course.Review, int, error) {
 	rows, err := querierOf(ctx, r.pool).Query(ctx,
-		`SELECT id, course_id, user_id, rating, body, status, approved_at
-		 FROM reviews WHERE course_id=$1 AND status='approved'
-		 ORDER BY created_at DESC LIMIT $2 OFFSET $3`, courseID, perPage, (page-1)*perPage)
+		`SELECT `+reviewColumns+` FROM reviews r
+		 LEFT JOIN users u ON u.id = r.user_id
+		 LEFT JOIN courses c ON c.id = r.course_id
+		 WHERE r.course_id=$1 AND r.status='approved'
+		 ORDER BY r.created_at DESC LIMIT $2 OFFSET $3`, courseID, perPage, (page-1)*perPage)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list reviews: %w", err)
 	}
@@ -69,6 +75,41 @@ func (r *ReviewRepo) ApprovedByCourse(ctx context.Context, courseID uuid.UUID, p
 	var total int
 	err = querierOf(ctx, r.pool).QueryRow(ctx,
 		`SELECT count(*) FROM reviews WHERE course_id=$1 AND status='approved'`, courseID).Scan(&total)
+	return out, total, err
+}
+
+// ListForAdmin is the moderation queue; status empty means every review.
+func (r *ReviewRepo) ListForAdmin(ctx context.Context, status string, page, perPage int) ([]*course.Review, int, error) {
+	where := "TRUE"
+	args := []any{}
+	if status != "" {
+		where = "r.status = $1"
+		args = append(args, status)
+	}
+	rows, err := querierOf(ctx, r.pool).Query(ctx,
+		`SELECT `+reviewColumns+` FROM reviews r
+		 LEFT JOIN users u ON u.id = r.user_id
+		 LEFT JOIN courses c ON c.id = r.course_id
+		 WHERE `+where+` ORDER BY r.created_at DESC LIMIT $`+fmt.Sprint(len(args)+1)+` OFFSET $`+fmt.Sprint(len(args)+2),
+		append(append([]any{}, args...), perPage, (page-1)*perPage)...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("list reviews for admin: %w", err)
+	}
+	defer rows.Close()
+	var out []*course.Review
+	for rows.Next() {
+		rv, err := scanReview(rows)
+		if err != nil {
+			return nil, 0, err
+		}
+		out = append(out, rv)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+	var total int
+	err = querierOf(ctx, r.pool).QueryRow(ctx,
+		`SELECT count(*) FROM reviews r WHERE `+where, args...).Scan(&total)
 	return out, total, err
 }
 
