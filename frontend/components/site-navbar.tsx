@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { MenuIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { MenuIcon, SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -19,9 +19,10 @@ import { cn } from "@/lib/utils";
 
 export type NavLink = { href: string; label: string };
 
-/* navbar-02 block: sticky header, desktop links, sheet menu on mobile.
-   The dashboard CTA follows the session: guests get «ورود», learners get
-   «داشبورد», admins land on the management console. */
+/* site header, «هزاران آموزش» style: brand + links on the reading start,
+   a wide center search that submits to /courses without JS, session actions
+   at the end. The dashboard CTA follows the session: guests get «ورود»,
+   learners get «آموزش‌های من», admins land on the management console. */
 export function SiteNavbar({ links }: { links: NavLink[] }) {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
@@ -31,7 +32,7 @@ export function SiteNavbar({ links }: { links: NavLink[] }) {
 
   const linkCls = (href: string) =>
     cn(
-      "rounded-md px-3 py-1.5 text-sm transition-colors duration-150",
+      "rounded-control px-3 py-1.5 text-sm transition-colors duration-(--motion) ease-motion",
       isActive(href)
         ? "bg-primary-tint font-medium text-accent-strong"
         : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -39,31 +40,28 @@ export function SiteNavbar({ links }: { links: NavLink[] }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-card">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 md:px-6">
-        <Link href="/" className="shrink-0 text-lg font-semibold text-foreground">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-4 md:gap-4 md:px-6">
+        <Link href="/" className="shrink-0 text-xl font-semibold tracking-tight text-foreground">
           گو<span className="text-accent-strong">Learn</span>
         </Link>
-        <nav className="ms-6 hidden items-center gap-1 text-sm md:flex" aria-label="ناوبری اصلی">
+        <nav className="hidden shrink-0 items-center gap-0.5 text-sm lg:flex" aria-label="ناوبری اصلی">
           {links.map((l) => (
             <Link key={l.href} href={l.href} className={linkCls(l.href)}>
               {l.label}
             </Link>
           ))}
         </nav>
-        <div className="ms-auto flex items-center gap-2">
+        <NavbarSearch />
+        <div className="ms-auto flex items-center gap-1.5">
           <ThemeToggle />
-          <AuthActions
-            status={status}
-            isAdmin={isAdmin}
-            loggedIn={Boolean(session)}
-          />
+          <AuthActions status={status} isAdmin={isAdmin} loggedIn={Boolean(session)} />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger
               render={
                 <Button
                   size="icon-sm"
                   variant="outline"
-                  className="md:hidden"
+                  className="lg:hidden"
                   aria-label="باز کردن منو"
                 />
               }
@@ -80,25 +78,56 @@ export function SiteNavbar({ links }: { links: NavLink[] }) {
                     key={l.href}
                     href={l.href}
                     onClick={() => setOpen(false)}
-                    className={cn(linkCls(l.href), "px-3 py-2 font-medium")}
+                    className={cn(linkCls(l.href), "px-3 py-2.5 font-medium")}
                   >
                     {l.label}
                   </Link>
                 ))}
               </nav>
               <div className="mt-6 flex flex-col gap-2 px-1">
-                <AuthActions
-                  status={status}
-                  isAdmin={isAdmin}
-                  loggedIn={Boolean(session)}
-                  stacked
-                />
+                <AuthActions status={status} isAdmin={isAdmin} loggedIn={Boolean(session)} stacked />
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
     </header>
+  );
+}
+
+/* center search: a real GET form so it works without JS, like the listing page */
+function NavbarSearch() {
+  const router = useRouter();
+  const [q, setQ] = React.useState("");
+  return (
+    <form
+      role="search"
+      action="/courses"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const term = q.trim();
+        router.push(term ? `/courses?q=${encodeURIComponent(term)}` : "/courses");
+      }}
+      className="hidden min-w-0 flex-1 justify-center px-2 md:flex"
+    >
+      <div className="relative w-full max-w-xl">
+        <Input
+          aria-label="جستجوی آموزش"
+          name="q"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="جستجوی آموزش ..."
+          className="h-10 rounded-field border-border bg-muted pe-11 text-sm"
+        />
+        <button
+          type="submit"
+          aria-label="جستجو"
+          className="absolute inset-y-0 end-0 flex w-11 items-center justify-center text-muted-foreground transition-colors hover:text-accent-strong"
+        >
+          <SearchIcon className="size-4.5" aria-hidden />
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -150,7 +179,7 @@ function AuthActions({
         </Button>
         <LogoutButton
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-lg border border-border text-sm text-muted-foreground transition-colors duration-150 hover:border-destructive/40 hover:bg-destructive-bg hover:text-destructive-text",
+            "inline-flex items-center gap-1.5 rounded-control border border-border text-sm text-muted-foreground transition-colors duration-(--motion) ease-motion hover:border-destructive/40 hover:bg-destructive-bg hover:text-destructive-text",
             stacked ? "h-9 justify-center px-3" : "size-8 justify-center",
           )}
           iconOnly={!stacked}
@@ -167,11 +196,11 @@ function AuthActions({
         render={<Link href="/dashboard" />}
         nativeButton={false}
       >
-        داشبورد
+        آموزش‌های من
       </Button>
       <LogoutButton
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-lg border border-border text-sm text-muted-foreground transition-colors duration-150 hover:border-destructive/40 hover:bg-destructive-bg hover:text-destructive-text",
+          "inline-flex items-center gap-1.5 rounded-control border border-border text-sm text-muted-foreground transition-colors duration-(--motion) ease-motion hover:border-destructive/40 hover:bg-destructive-bg hover:text-destructive-text",
           stacked ? "h-9 justify-center px-3" : "size-8 justify-center",
         )}
         iconOnly={!stacked}

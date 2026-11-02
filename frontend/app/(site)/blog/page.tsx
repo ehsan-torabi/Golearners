@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { api } from "@/lib/api";
+import { SitePagination } from "@/components/site/pagination";
 import { formatJalali } from "@/lib/jalali";
 import { fa } from "@/lib/utils";
 
@@ -18,14 +19,40 @@ interface Post {
   published_at: string | null; reading_minutes: number;
 }
 
-export default async function BlogPage() {
+const PER_PAGE = 20;
+
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function BlogPage({ searchParams }: Props) {
+  const { page: pageParam } = await searchParams;
+  const wanted = Math.max(1, Number(pageParam) || 1);
+
   let posts: Post[] = [];
+  let total = 0;
   try {
-    const res = await api<{ data: Post[] }>("/blog/posts?per_page=20");
+    const res = await api<{ data: Post[]; meta: { total: number } }>(
+      `/blog/posts?per_page=${PER_PAGE}&page=${wanted}`,
+    );
     posts = res.data ?? [];
+    total = res.meta?.total ?? 0;
   } catch {
     posts = [];
   }
+
+  // an out-of-range page renders empty; fall back to the last real one
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const page = Math.min(wanted, pages);
+  if (page !== wanted && posts.length === 0 && total > 0) {
+    try {
+      const res = await api<{ data: Post[] }>(`/blog/posts?per_page=${PER_PAGE}&page=${page}`);
+      posts = res.data ?? [];
+    } catch {
+      posts = [];
+    }
+  }
+
   return (
     <div className="space-y-8">
       <SiteBreadcrumb items={[{ label: "خانه", href: "/" }, { label: "وبلاگ" }]} />
@@ -42,27 +69,35 @@ export default async function BlogPage() {
           body="نوشته‌های تازه به‌زودی همین‌جا منتشر می‌شوند."
         />
       ) : (
-        /* editorial dated list, deliberately not a card grid (RHYTHM 3) */
-        <ul className="divide-y divide-line">
-          {posts.map((p) => (
-            <li key={p.slug}>
-              <Link href={`/blog/${encodeURIComponent(p.slug)}`} className="group flex flex-col gap-2 py-6 sm:flex-row sm:items-baseline sm:gap-8">
-                <time className="w-32 shrink-0 text-xs text-muted-foreground" dateTime={p.published_at ?? undefined}>
-                  {p.published_at ? formatJalali(new Date(p.published_at)) : ""}
-                </time>
-                <div>
-                  <h2 className="font-semibold text-xl leading-9 text-foreground transition-colors duration-(--motion) ease-motion group-hover:text-accent-strong">
-                    {p.title}
-                  </h2>
-                  <p className="mt-1 line-clamp-2 text-sm leading-7 text-muted-foreground">{p.excerpt}</p>
-                  {p.reading_minutes > 0 && (
-                    <p className="mt-2 text-xs text-muted-foreground">{fa(p.reading_minutes)} دقیقه مطالعه</p>
-                  )}
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <>
+          {pages > 1 && (
+            <p className="text-xs text-muted-foreground">
+              {fa(total)} مقاله · صفحهٔ {fa(page)} از {fa(pages)}
+            </p>
+          )}
+          {/* editorial dated list, deliberately not a card grid (RHYTHM 3) */}
+          <ul className="divide-y divide-line">
+            {posts.map((p) => (
+              <li key={p.slug}>
+                <Link href={`/blog/${encodeURIComponent(p.slug)}`} className="group flex flex-col gap-2 py-6 sm:flex-row sm:items-baseline sm:gap-8">
+                  <time className="w-32 shrink-0 text-xs text-muted-foreground" dateTime={p.published_at ?? undefined}>
+                    {p.published_at ? formatJalali(new Date(p.published_at)) : ""}
+                  </time>
+                  <div>
+                    <h2 className="font-semibold text-xl leading-9 text-foreground transition-colors duration-(--motion) ease-motion group-hover:text-accent-strong">
+                      {p.title}
+                    </h2>
+                    <p className="mt-1 line-clamp-2 text-sm leading-7 text-muted-foreground">{p.excerpt}</p>
+                    {p.reading_minutes > 0 && (
+                      <p className="mt-2 text-xs text-muted-foreground">{fa(p.reading_minutes)} دقیقه مطالعه</p>
+                    )}
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <SitePagination page={page} totalPages={pages} basePath="/blog" />
+        </>
       )}
     </div>
   );
