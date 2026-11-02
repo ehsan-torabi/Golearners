@@ -41,7 +41,7 @@ func (a *App) handleAdminPostCreate(w http.ResponseWriter, r *http.Request) {
 		a.writeError(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, postJSON(p))
+	writeJSON(w, http.StatusCreated, postJSON(p, nil))
 }
 
 // PUT /api/v1/admin/posts/{id}
@@ -61,7 +61,7 @@ func (a *App) handleAdminPostUpdate(w http.ResponseWriter, r *http.Request) {
 		a.writeError(w, r, err)
 		return
 	}
-	writeData(w, postJSON(p))
+	writeData(w, postJSON(p, nil))
 }
 
 func (a *App) handleAdminPostDelete(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +115,7 @@ func (a *App) handleAdminPostList(w http.ResponseWriter, r *http.Request) {
 	}
 	items := make([]map[string]any, 0, len(list))
 	for _, p := range list {
-		items = append(items, postJSON(p))
+		items = append(items, postJSON(p, nil))
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": items, "meta": map[string]any{"page": page, "per_page": perPage, "total": total}})
 }
@@ -137,7 +137,7 @@ func (a *App) handleAdminPostDetail(w http.ResponseWriter, r *http.Request) {
 		a.writeError(w, r, err)
 		return
 	}
-	out := postJSON(p)
+	out := postJSON(p, nil)
 	out["body_html"] = p.BodyHTML
 	out["status"] = p.Status
 	out["created_at"] = p.CreatedAt

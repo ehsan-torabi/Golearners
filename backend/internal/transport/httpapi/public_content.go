@@ -12,14 +12,33 @@ import (
 	"golearn/backend/internal/ports"
 )
 
-func postJSON(p *content.BlogPost) map[string]any {
-	return map[string]any{
+// postJSON renders a post; cat (optional) attaches the category title/slug so
+// the blog cards and the post header can name it without a second request.
+func postJSON(p *content.BlogPost, cat *content.BlogCategory) map[string]any {
+	out := map[string]any{
 		"id": p.ID, "slug": p.Slug, "title": p.Title, "excerpt": p.Excerpt,
 		"status": p.Status, "cover_media_id": p.CoverMediaID, "cover_url": mediaRef(p.CoverMediaID),
 		"category_id": p.CategoryID,
 		"reading_minutes": p.ReadingMinutes, "published_at": p.PublishedAt,
 		"meta_title": p.MetaTitle, "meta_description": p.MetaDescription,
 	}
+	if cat != nil {
+		out["category"] = map[string]any{"slug": cat.Slug, "title": cat.Title}
+	}
+	return out
+}
+
+// blogCategoryMap resolves category ids to their taxonomy rows once per request.
+func (a *App) blogCategoryMap(r *http.Request) map[uuid.UUID]*content.BlogCategory {
+	cats, err := a.Taxonomy.ListCategories(r.Context())
+	if err != nil {
+		return nil
+	}
+	m := make(map[uuid.UUID]*content.BlogCategory, len(cats))
+	for _, c := range cats {
+		m[c.ID] = c
+	}
+	return m
 }
 
 // GET /api/v1/blog/posts
@@ -32,13 +51,22 @@ func (a *App) handleBlogList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items := make([]map[string]any, 0, len(list))
+	catMap := a.blogCategoryMap(r)
 	for _, p := range list {
-		items = append(items, postJSON(p))
+		items = append(items, postJSON(p, catMap[ derefCategoryID(p.CategoryID) ]))
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"data": items,
 		"meta": map[string]any{"page": page, "per_page": perPage, "total": total},
 	})
+}
+
+// derefCategoryID turns an optional category id into a map key (nil → zero).
+func derefCategoryID(id *uuid.UUID) uuid.UUID {
+	if id == nil {
+		return uuid.Nil
+	}
+	return *id
 }
 
 // GET /api/v1/blog/posts/{slug}
@@ -54,11 +82,12 @@ func (a *App) handleBlogDetail(w http.ResponseWriter, r *http.Request) {
 	for _, t := range tags {
 		tagOut = append(tagOut, map[string]any{"slug": t.Slug, "title": t.Title})
 	}
+	catMap := a.blogCategoryMap(r)
 	relOut := make([]map[string]any, 0, len(related))
 	for _, rel := range related {
-		relOut = append(relOut, postJSON(rel))
+		relOut = append(relOut, postJSON(rel, catMap[derefCategoryID(rel.CategoryID)]))
 	}
-	out := postJSON(p)
+	out := postJSON(p, catMap[derefCategoryID(p.CategoryID)])
 	out["body_html"] = p.BodyHTML
 	out["tags"] = tagOut
 	out["related"] = relOut
