@@ -17,6 +17,7 @@ export const revalidate = 600;
 interface Post {
   slug: string; title: string; excerpt: string;
   published_at: string | null; reading_minutes: number;
+  cover_url?: string;
 }
 
 const PER_PAGE = 20;
@@ -79,18 +80,31 @@ export default async function BlogPage({ searchParams }: Props) {
           <ul className="divide-y divide-line">
             {posts.map((p) => (
               <li key={p.slug}>
-                <Link href={`/blog/${encodeURIComponent(p.slug)}`} className="group flex flex-col gap-2 py-6 sm:flex-row sm:items-baseline sm:gap-8">
-                  <time className="w-32 shrink-0 text-xs text-muted-foreground" dateTime={p.published_at ?? undefined}>
-                    {p.published_at ? formatJalali(new Date(p.published_at)) : ""}
-                  </time>
-                  <div>
+                <Link href={`/blog/${encodeURIComponent(p.slug)}`} className="group flex flex-col gap-2 py-6 sm:flex-row sm:items-center sm:gap-8">
+                  {p.cover_url && (
+                    <img
+                      src={p.cover_url}
+                      alt=""
+                      loading="lazy"
+                      className="h-28 w-full shrink-0 rounded-field border border-line object-cover sm:w-48"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <time className="text-xs text-muted-foreground sm:hidden" dateTime={p.published_at ?? undefined}>
+                      {p.published_at ? formatJalali(new Date(p.published_at)) : ""}
+                    </time>
                     <h2 className="font-semibold text-xl leading-9 text-foreground transition-colors duration-(--motion) ease-motion group-hover:text-accent-strong">
                       {p.title}
                     </h2>
                     <p className="mt-1 line-clamp-2 text-sm leading-7 text-muted-foreground">{p.excerpt}</p>
-                    {p.reading_minutes > 0 && (
-                      <p className="mt-2 text-xs text-muted-foreground">{fa(p.reading_minutes)} دقیقه مطالعه</p>
-                    )}
+                    <p className="mt-2 flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
+                      {p.published_at && (
+                        <time className="hidden sm:inline" dateTime={p.published_at}>
+                          {formatJalali(new Date(p.published_at))}
+                        </time>
+                      )}
+                      {p.reading_minutes > 0 && <span>{fa(p.reading_minutes)} دقیقه مطالعه</span>}
+                    </p>
                   </div>
                 </Link>
               </li>

@@ -78,6 +78,9 @@ export interface CourseSummary {
   is_featured: boolean;
   rating_avg: number | null;
   rating_count: number;
+  cover_media_id: string | null;
+  /** Public read path for the cover image; empty when no cover is set. */
+  cover_url: string;
 }
 
 export interface Order {

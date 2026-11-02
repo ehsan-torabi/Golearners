@@ -18,6 +18,7 @@ interface Detail {
     id: string; slug: string; title: string; summary: string;
     level: "beginner" | "intermediate" | "advanced";
     price_rial: number; compare_at_price_rial: number | null;
+    cover_url?: string;
   };
   description_html: string;
   prerequisites_html: string;
@@ -315,11 +316,19 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
         <aside className="h-fit lg:sticky lg:top-24">
           <Card className="overflow-hidden border-ink/20 p-0 shadow-raise">
-            {/* cover placeholder stays honest (R-23): tinted block, no fake imagery */}
-            <div className="relative flex aspect-video items-center justify-center bg-primary-tint">
-              <span aria-hidden className="font-display text-6xl font-semibold text-primary/40">
-                {d.course.title.slice(0, 2)}
-              </span>
+            {/* the uploaded cover when set; otherwise the honest tinted placeholder */}
+            <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-primary-tint">
+              {d.course.cover_url ? (
+                <img
+                  src={d.course.cover_url}
+                  alt={`کاور دورهٔ ${d.course.title}`}
+                  className="absolute inset-0 size-full object-cover"
+                />
+              ) : (
+                <span aria-hidden className="font-display text-6xl font-semibold text-primary/40">
+                  {d.course.title.slice(0, 2)}
+                </span>
+              )}
             </div>
             <div className="p-6">
               {owned ? (

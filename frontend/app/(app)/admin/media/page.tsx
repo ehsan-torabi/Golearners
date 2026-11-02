@@ -257,12 +257,24 @@ export default function AdminMediaPage() {
                 return (
                   <TableRow key={m.id}>
                     <TableCell className="text-start">
-                      <p className="font-medium text-foreground" dir="ltr">
-                        {m.storage_key.split("/").slice(-1)[0]}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground" dir="ltr">
-                        {m.storage_key.split("/").slice(0, -1).join("/")}
-                      </p>
+                      <div className="flex items-center gap-3">
+                        {m.kind === "image" && m.url && (
+                          <img
+                            src={m.url}
+                            alt=""
+                            loading="lazy"
+                            className="size-12 shrink-0 rounded-field border border-line object-cover"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-foreground" dir="auto">
+                            {m.filename || m.storage_key.split("/").slice(-1)[0]}
+                          </p>
+                          <p className="mt-0.5 truncate text-xs text-muted-foreground" dir="ltr">
+                            {m.storage_key.split("/").slice(0, -1).join("/")}
+                          </p>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="text-start text-muted-foreground">
                       {KIND_FA[m.kind] ?? m.kind}
@@ -330,7 +342,7 @@ export default function AdminMediaPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>حذف رسانه</AlertDialogTitle>
             <AlertDialogDescription>
-              فایل «{removing?.storage_key.split("/").slice(-1)[0]}» از کتابخانه حذف می‌شود. اگر در
+              فایل «{removing?.filename || removing?.storage_key.split("/").slice(-1)[0]}» از کتابخانه حذف می‌شود. اگر در
               دوره یا درسی استفاده شده باشد، دیگر پخش نمی‌شود.
             </AlertDialogDescription>
           </AlertDialogHeader>

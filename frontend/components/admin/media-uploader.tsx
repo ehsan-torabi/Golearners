@@ -58,7 +58,7 @@ export function MediaUploader({
     try {
       const ticket = await api<Ticket>("/admin/media/presign", {
         method: "POST",
-        body: JSON.stringify({ mime: file.type, size_bytes: file.size }),
+        body: JSON.stringify({ mime: file.type, size_bytes: file.size, filename: file.name }),
       });
       const put = await fetch(ticket.upload_url, {
         method: "PUT",

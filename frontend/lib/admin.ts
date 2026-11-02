@@ -326,11 +326,14 @@ export interface MediaAsset {
   id: string;
   kind: string;
   storage_key: string;
+  filename: string;
   mime: string;
   size_bytes: number;
   status: string;
   duration_seconds: number | null;
   created_at: string;
+  /** Public read path for image assets; other kinds have dedicated endpoints. */
+  url: string | null;
 }
 
 export function fetchCourseCategories() {

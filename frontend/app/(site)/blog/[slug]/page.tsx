@@ -10,6 +10,7 @@ export const revalidate = 600;
 interface Post {
   slug: string; title: string; excerpt: string; body_html: string;
   published_at: string | null; reading_minutes: number;
+  cover_url?: string;
 }
 
 async function post(slug: string): Promise<Post | null> {
@@ -63,6 +64,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           {p.reading_minutes > 0 && ` · ${fa(p.reading_minutes)} دقیقه مطالعه`}
         </p>
       </header>
+      {p.cover_url && (
+        <img
+          src={p.cover_url}
+          alt={`تصویر مقالهٔ ${p.title}`}
+          className="mt-8 aspect-video w-full rounded-surface border border-line object-cover"
+        />
+      )}
       <div
         className="prose-fa mt-8 text-[0.95rem] leading-9 [&_a]:text-accent-strong [&_a]:underline [&_blockquote]:border-e-2 [&_blockquote]:border-accent-display [&_blockquote]:ps-4 [&_blockquote]:text-muted-foreground [&_h2]:mt-8 [&_h2]:font-semibold [&_h2]:text-2xl [&_h3]:mt-6 [&_h3]:font-semibold [&_h3]:text-xl [&_li]:my-1 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:ps-6 [&_p]:my-4 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-field [&_pre]:bg-invert [&_pre]:p-4 [&_pre]:text-invert-foreground [&_code]:text-xs [&_ul]:my-4 [&_ul]:list-disc [&_ul]:ps-6"
         dangerouslySetInnerHTML={{ __html: p.body_html }}

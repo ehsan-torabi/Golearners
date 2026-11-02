@@ -3,9 +3,9 @@ import { StarIcon } from "lucide-react";
 import { LEVEL_FA, formatTomanFromRial, type CourseSummary } from "@/lib/api";
 import { fa, faPercent } from "@/lib/utils";
 
-/* No course images exist yet (R-23): the cover is an honest, designed
-   placeholder tinted with the brand primary and the course initials.
-   «هزاران آموزش» card anatomy: cover, level chip, title, rating, price row. */
+/* Card anatomy («هزاران آموزش» style): cover, level chip, title, rating,
+   price row. The cover is the uploaded media when the course has one;
+   otherwise an honest, designed placeholder tinted with the brand primary. */
 export function CourseCard({ course }: { course: CourseSummary }) {
   const hasDiscount = course.compare_at_price_rial != null && course.compare_at_price_rial > course.price_rial;
   const offPct = hasDiscount
@@ -18,13 +18,22 @@ export function CourseCard({ course }: { course: CourseSummary }) {
         className="flex h-full flex-col"
         aria-label={course.title}
       >
-        <div className="relative flex aspect-video items-center justify-center bg-primary-tint">
-          <span
-            aria-hidden
-            className="font-display text-5xl font-semibold text-primary/45 transition-transform duration-(--motion-slow) ease-motion group-hover:scale-105"
-          >
-            {course.title.slice(0, 2)}
-          </span>
+        <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-primary-tint">
+          {course.cover_url ? (
+            <img
+              src={course.cover_url}
+              alt=""
+              loading="lazy"
+              className="absolute inset-0 size-full object-cover transition-transform duration-(--motion-slow) ease-motion group-hover:scale-105"
+            />
+          ) : (
+            <span
+              aria-hidden
+              className="font-display text-5xl font-semibold text-primary/45 transition-transform duration-(--motion-slow) ease-motion group-hover:scale-105"
+            >
+              {course.title.slice(0, 2)}
+            </span>
+          )}
           {hasDiscount && (
             <span className="absolute top-3 start-3 rounded-tag bg-destructive px-2 py-1 text-xs font-medium text-white">
               {faPercent(offPct)} تخفیف
