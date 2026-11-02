@@ -1,1 +1,0 @@
-{"version":10,"type":"context-options","origin":"library","browserName":"","playwrightVersion":"1.64.1","options":{},"platform":"linux","wallTime":1793577304810,"monotonicTime":64443.253,"sdkLanguage":"javascript","title":"auth.spec.ts:81 › authentication › logout clears the session and returns to the login page"}

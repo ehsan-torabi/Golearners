@@ -50,8 +50,12 @@ test.describe("checkout and payment", () => {
     await expect(page.getByText("این دوره را خریده‌اید").first()).toBeVisible();
 
     await page.goto("/dashboard");
-    await expect(page.getByRole("link", { name: new RegExp(course.slug) })).toBeVisible();
-    await expect(page.getByRole("link", { name: new RegExp("ادامه یادگیری|شروع دوره") })).toBeVisible();
+    const card = page.locator(`a[href="/dashboard/courses/${course.slug}"]`);
+    await expect(card.first()).toBeVisible();
+    // the course card offers "شروع دوره" / "ادامه یادگیری"
+    await expect(
+      page.getByRole("link", { name: /ادامه یادگیری|شروع دوره/ }).first(),
+    ).toBeVisible();
 
     expectNoClientErrors(diag);
   });
@@ -124,7 +128,7 @@ test.describe("checkout and payment", () => {
     await adminCtx.storageState;
     const course = await createPublishedCourse(
       adminCtx,
-      `دورهٔ تخفیف تست ${Date.now()}`,
+      `دورهٔ کد تخفیف تست ${Date.now()}`,
       await sessionCookies(playwright, "admin"),
     );
     await adminCtx.dispose();
@@ -135,7 +139,7 @@ test.describe("checkout and payment", () => {
     await page.getByLabel("کد تخفیف").fill(COUPON_CODE);
     await page.getByRole("button", { name: "اعمال" }).click();
 
-    await expect(page.getByText("تخفیف")).toBeVisible();
+    await expect(page.getByText("تخفیف", { exact: true })).toBeVisible();
     expectNoClientErrors(diag);
   });
 
@@ -151,7 +155,7 @@ test.describe("checkout and payment", () => {
     await page.goto("/login");
     await page.getByLabel("شماره موبایل").fill(credentials().learner.mobile);
     await page.getByLabel("رمز عبور").fill(credentials().learner.password);
-    await page.getByRole("button", { name: "ورود", exact: true }).click();
+    await page.locator("form").getByRole("button", { name: "ورود", exact: true }).click();
     await page.waitForURL("**/dashboard", { timeout: 20000 });
 
     await expect(page.getByRole("heading", { name: "دوره‌های من" })).toBeVisible();

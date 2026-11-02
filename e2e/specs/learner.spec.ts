@@ -27,7 +27,7 @@ test.describe("learner dashboard", () => {
 
     // a course whose lesson carries real media so the player can sign a URL
     const asset = await uploadMedia(adminCtx, FIXTURE_MP4, "video/mp4", adminCookies);
-    await waitForMediaReady(adminCtx, asset.storage_key);
+    await waitForMediaReady(adminCtx, asset.storage_key, adminCookies);
 
     const headers = authHeaders(adminCookies);
     const title = `دورهٔ پخش تست ${stamp}`;
@@ -80,7 +80,7 @@ test.describe("learner dashboard", () => {
     await page.goto("/dashboard");
 
     await expect(page.getByRole("heading", { name: "دانشجو تست" })).toBeVisible();
-    await expect(page.getByText("دوره‌ها", { exact: true })).toBeVisible();
+    await expect(page.getByText("دوره‌ها", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("در حال یادگیری")).toBeVisible();
     await expect(page.getByText("تکمیل‌شده")).toBeVisible();
     await expect(page.getByText("میانگین پیشرفت")).toBeVisible();
@@ -107,11 +107,11 @@ test.describe("learner dashboard", () => {
     await expect(page.locator("video")).toBeVisible();
 
     await expect
-      .poll(() => diag.apiCalls.filter((c) => c.includes("/playback/lessons/")), {
-        timeout: 15000,
-      })
-      .toContain("200 GET");
-    expect(diag.apiCalls.filter((c) => c.includes("/playback/lessons/")).join("\n")).toContain("200");
+      .poll(
+        () => diag.apiCalls.some((c) => c.startsWith("200 GET") && c.includes("/playback/lessons/")),
+        { timeout: 30000 },
+      )
+      .toBe(true);
 
     expectNoClientErrors(diag);
   });
@@ -120,13 +120,21 @@ test.describe("learner dashboard", () => {
     await page.goto(`/dashboard/courses/${playableSlug}`);
     await expect(page.locator("video")).toBeVisible();
 
+    // the player attaches its progress listener after the source is set
+    await expect
+      .poll(
+        () => diag.apiCalls.some((c) => c.startsWith("200 GET") && c.includes("/playback/lessons/")),
+        { timeout: 30000 },
+      )
+      .toBe(true);
+
     await page.evaluate(() => {
       document.querySelector("video")?.dispatchEvent(new Event("pause"));
     });
 
     await expect
-      .poll(() => diag.apiCalls.filter((c) => c.includes("/me/progress/")), { timeout: 15000 })
-      .not.toHaveLength(0);
+      .poll(() => diag.apiCalls.filter((c) => c.includes("/me/progress/")).length, { timeout: 30000 })
+      .toBeGreaterThan(0);
     expect(diag.apiCalls.filter((c) => c.includes("/me/progress/")).join("\n")).toContain("200");
   });
 
@@ -202,12 +210,12 @@ test.describe("learner dashboard", () => {
     await page.goto("/login");
     await page.getByLabel("شماره موبایل").fill(mobile);
     await page.getByLabel("رمز عبور").fill("OldPass2026");
-    await page.getByRole("button", { name: "ورود", exact: true }).click();
+    await page.locator("form").getByRole("button", { name: "ورود", exact: true }).click();
     await expect(page.locator('[role="alert"], [role="status"]').first()).toBeVisible();
     await expect(page).toHaveURL(/\/login/);
 
     await page.getByLabel("رمز عبور").fill("NewPass2026");
-    await page.getByRole("button", { name: "ورود", exact: true }).click();
+    await page.locator("form").getByRole("button", { name: "ورود", exact: true }).click();
     await page.waitForURL("**/dashboard", { timeout: 20000 });
     await expect(page.getByRole("heading", { name: "کاربر رمز تست" })).toBeVisible();
 

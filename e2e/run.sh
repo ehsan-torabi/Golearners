@@ -39,9 +39,13 @@ nohup /tmp/golearn-api >"$API_LOG" 2>&1 &
 nohup /tmp/golearn-worker >"$WORKER_LOG" 2>&1 &
 nohup /tmp/golearn-mockgw >"$GATEWAY_LOG" 2>&1 &
 
-log "start frontend (clean .next)"
-rm -rf frontend/.next
-(cd frontend && nohup bun run dev >"$WEB_LOG" 2>&1 &)
+log "start frontend"
+if curl -fsS -o /dev/null http://localhost:3000/ 2>/dev/null; then
+  echo "  already running on :3000 — reusing it"
+else
+  rm -rf frontend/.next
+  (cd frontend && nohup bun run dev >"$WEB_LOG" 2>&1 &)
+fi
 
 wait_for() { # url, label, tries
   for _ in $(seq 1 "${3:-60}"); do

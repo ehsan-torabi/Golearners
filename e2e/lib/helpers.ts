@@ -69,11 +69,9 @@ export async function sessionCookies(
   const api = await playwright.request.newContext({ baseURL: API_URL });
   try {
     const creds = role === "admin" ? credentials().admin : credentials().learner;
-    const res = await api.post("/api/v1/auth/login", {
-      data: { mobile: creds.mobile, password: creds.password },
-    });
-    if (!res.ok()) {
-      throw new Error(`login as ${role} failed: ${res.status()} ${await res.text()}`);
+    const res = await loginWithRetry(api, creds);
+    if (!res.ok) {
+      throw new Error(`login as ${role} failed: ${res.status} ${res.body}`);
     }
     const state = await api.storageState();
     const access = state.cookies.find((c) => c.name === "gl_at");
@@ -82,6 +80,27 @@ export async function sessionCookies(
   } finally {
     await api.dispose();
   }
+}
+
+/** Retries the login while the API is (re)starting. */
+async function loginWithRetry(
+  api: APIRequestContext,
+  creds: { mobile: string; password: string },
+): Promise<{ ok: boolean; status: number; body: string }> {
+  let last = { ok: false, status: 0, body: "no attempt" };
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      const res = await api.post("/api/v1/auth/login", {
+        data: { mobile: creds.mobile, password: creds.password },
+      });
+      last = { ok: res.ok(), status: res.status(), body: res.ok() ? "" : await res.text() };
+      if (res.ok()) return last;
+    } catch (err) {
+      last = { ok: false, status: 0, body: String(err) };
+    }
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  return last;
 }
 
 /** Reads the expiry out of a JWT without verifying it. */
@@ -185,7 +204,7 @@ function sleep(ms: number): void {
 export function uniqueMobile(): string {
   for (let i = 0; i < 50; i++) {
     const digits = String(Math.floor(10000000 + Math.random() * 89999999));
-    const mobile = `0913${digits}`;
+    const mobile = `091${digits}`;
     if (!USED_MOBILES.has(mobile)) {
       USED_MOBILES.add(mobile);
       return mobile;
@@ -223,11 +242,11 @@ export async function uploadMedia(
   mime: string,
   cookies: Cookie[],
 ): Promise<{ id: string; storage_key: string }> {
-  const csrf = authHeaders(cookies)["X-CSRF-Token"];
+  const headers = authHeaders(cookies);
   const bytes = fs.readFileSync(filePath);
 
   const presign = await ctx.post(`${API_URL}/api/v1/admin/media/presign`, {
-    headers: { "X-CSRF-Token": csrf },
+    headers,
     data: { mime, size_bytes: bytes.length },
   });
   if (!presign.ok()) {
@@ -244,7 +263,7 @@ export async function uploadMedia(
   }
 
   const register = await ctx.post(`${API_URL}/api/v1/admin/media`, {
-    headers: { "X-CSRF-Token": csrf },
+    headers,
     data: {
       storage_key: ticket.storage_key,
       filename: path.basename(filePath),
@@ -263,12 +282,14 @@ export async function uploadMedia(
 export async function waitForMediaReady(
   ctx: APIRequestContext,
   storageKey: string,
+  cookies: Cookie[],
   timeoutMs = 45000,
 ): Promise<string> {
   const deadline = Date.now() + timeoutMs;
   let last = "unknown";
+  const headers = authHeaders(cookies);
   while (Date.now() < deadline) {
-    const res = await ctx.get(`${API_URL}/api/v1/admin/media?per_page=100`);
+    const res = await ctx.get(`${API_URL}/api/v1/admin/media?per_page=100`, { headers });
     if (res.ok()) {
       const body = (await res.json()) as { data: { storage_key: string; status: string }[] };
       const asset = body.data.find((m) => m.storage_key === storageKey);
@@ -288,7 +309,8 @@ export async function loginThroughUi(page: Page, mobile: string, password: strin
   await page.goto("/login");
   await page.getByLabel("شماره موبایل").fill(mobile);
   await page.getByLabel("رمز عبور").fill(password);
-  await page.getByRole("button", { name: "ورود", exact: true }).click();
+  // the navbar carries a "ورود" button too — target the form submit
+  await page.locator("form").getByRole("button", { name: "ورود", exact: true }).click();
   await page.waitForURL("**/dashboard", { timeout: 20000 });
 }
 

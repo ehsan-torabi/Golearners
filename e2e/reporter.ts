@@ -99,16 +99,51 @@ export default class BugReporter implements Reporter {
     const outDir = path.join(process.cwd(), "report");
     fs.mkdirSync(outDir, { recursive: true });
 
+    // Playwright creates one reporter per worker/project — merge the parts
+    const jsonFile = path.join(outDir, "bugs.json");
+    const previous = fs.existsSync(jsonFile)
+      ? (JSON.parse(fs.readFileSync(jsonFile, "utf8")) as {
+          bugs?: Bug[];
+          observations?: Observation[];
+          total?: number;
+          passed?: number;
+          failed?: number;
+          skipped?: number;
+          flaky?: number;
+        })
+      : {};
+
+    // Playwright may run several worker processes for one run — keep one entry
+    // per test (the highest severity wins).
+    const byTest = new Map<string, Bug>();
+    for (const bug of [...(previous.bugs ?? []), ...this.bugs]) {
+      const known = byTest.get(bug.test);
+      if (!known || severityRank(bug.severity) < severityRank(known.severity)) {
+        byTest.set(bug.test, bug);
+      }
+    }
+    const bugs = [...byTest.values()].map((b, i) => ({
+      ...b,
+      id: `BUG-${String(i + 1).padStart(3, "0")}`,
+    }));
+    const observations = [...(previous.observations ?? []), ...this.observations];
+
     const summary = {
       generatedAt: new Date().toISOString(),
       durationMs: Date.now() - this.started,
       status: result.status,
-      ...this.counts,
-      bugs: this.bugs,
-      observations: this.observations,
+      total: Math.max(previous.total ?? 0, this.counts.total),
+      passed: Math.max(previous.passed ?? 0, this.counts.passed),
+      failed: bugs.length,
+      skipped: Math.max(previous.skipped ?? 0, this.counts.skipped),
+      flaky: Math.max(previous.flaky ?? 0, this.counts.flaky),
+      rootCauses: rootCauses(bugs),
+      backendErrors: backendErrors(),
+      bugs,
+      observations,
     };
 
-    fs.writeFileSync(path.join(outDir, "bugs.json"), JSON.stringify(summary, null, 2));
+    fs.writeFileSync(jsonFile, JSON.stringify(summary, null, 2));
     fs.writeFileSync(path.join(outDir, "bugs.md"), markdown(summary));
     console.log(`\n[e2e] bug report: ${path.join(outDir, "bugs.md")}`);
   }
@@ -131,6 +166,10 @@ function diagnosticsFrom(result: TestResult): Diagnostics {
   } catch {
     return empty;
   }
+}
+
+function severityRank(severity: Bug["severity"]): number {
+  return severity === "critical" ? 0 : severity === "major" ? 1 : 2;
 }
 
 function relative(file: string): string {
@@ -182,7 +221,8 @@ function suspectsOf(error: string, area: string): string[] {
   const map: Record<string, string> = {
     "public site": "frontend/app/(site)/**",
     authentication: "frontend/app/(site)/(auth)/** + backend/internal/transport/httpapi/auth.go",
-    "checkout & payment": "frontend/app/(site)/checkout/** + backend/internal/service/checkout/**",
+    "checkout & payment":
+      "frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go",
     "learner dashboard": "frontend/app/(app)/dashboard/**",
     "admin console": "frontend/app/(app)/admin/** + frontend/components/admin/**",
     "responsive / RTL": "frontend/components/layout + globals.css",
@@ -197,14 +237,56 @@ function attachmentPath(result: TestResult, name: string): string | undefined {
   return att?.path ? relative(att.path) : undefined;
 }
 
+/** Groups failures that share the same error text — one fix, many symptoms. */
+function rootCauses(bugs: Bug[]): { signature: string; count: number; bugs: string[] }[] {
+  const map = new Map<string, { signature: string; count: number; bugs: string[] }>();
+  for (const bug of bugs) {
+    const key = (
+      bug.pageErrors[0] ??
+      bug.consoleErrors[0] ??
+      bug.serverErrors[0] ??
+      bug.error.split("\n")[0]
+    )
+      .slice(0, 120)
+      .trim();
+    const entry = map.get(key) ?? { signature: key, count: 0, bugs: [] };
+    entry.count += 1;
+    entry.bugs.push(bug.id);
+    map.set(key, entry);
+  }
+  return [...map.values()].sort((a, b) => b.count - a.count);
+}
+
+/** Server-side errors of the run — usually the real root cause of a failure. */
+function backendErrors(): string[] {
+  const log = process.env.E2E_API_LOG ?? "/tmp/golearn-api.log";
+  if (!fs.existsSync(log)) return [];
+  const out: string[] = [];
+  for (const line of fs.readFileSync(log, "utf8").split("\n")) {
+    if (!line.includes('"level":"ERROR"')) continue;
+    try {
+      const parsed = JSON.parse(line) as { time?: string; msg?: string; err?: string; path?: string };
+      out.push(
+        `${parsed.time ?? ""} ${parsed.msg ?? "error"}: ${parsed.err ?? ""} (${parsed.path ?? ""})`.trim(),
+      );
+    } catch {
+      out.push(line.slice(0, 300));
+    }
+  }
+  return out;
+}
+
 function markdown(s: {
   generatedAt: string;
   durationMs: number;
+  status: string;
   total: number;
   passed: number;
   failed: number;
   skipped: number;
   flaky: number;
+  rootCauses: { signature: string; count: number; bugs: string[] }[];
+  backendErrors: string[];
   bugs: Bug[];
   observations: Observation[];
 }): string {
@@ -216,8 +298,28 @@ function markdown(s: {
       `${s.passed} passed · ${s.failed} failed · ${s.skipped} skipped · ${s.flaky} flaky (${s.total} total)`,
   );
   lines.push("");
-  lines.push("Every entry below is reproducible with `cd e2e && bunx playwright test <test file>`.");
+  lines.push("Reproduce a single entry with `cd e2e && bunx playwright test <spec file>`.");
   lines.push("");
+
+  if (s.rootCauses.length) {
+    lines.push("## Root causes (grouped)");
+    lines.push("");
+    lines.push("| # | Failures | Signature |");
+    lines.push("|---|----------|-----------|");
+    s.rootCauses.forEach((r, i) => {
+      lines.push(`| ${i + 1} | ${r.count} (${r.bugs.join(", ")}) | ${escape(r.signature)} |`);
+    });
+    lines.push("");
+  }
+
+  if (s.backendErrors.length) {
+    lines.push("## Backend errors during the run");
+    lines.push("");
+    lines.push("```");
+    lines.push(s.backendErrors.slice(0, 40).join("\n"));
+    lines.push("```");
+    lines.push("");
+  }
 
   if (s.bugs.length === 0) {
     lines.push("## No failures");
@@ -245,7 +347,7 @@ function markdown(s: {
       }
       lines.push(`- **Expected:** ${b.expected}`);
       lines.push(`- **Actual:** ${b.actual}`);
-      lines.push(`- **Suspect area:** ${b.suspect.map((s) => `\`${s}\``).join(", ")}`);
+      lines.push(`- **Suspect area:** ${b.suspect.map((x) => `\`${x}\``).join(", ")}`);
       lines.push("");
       lines.push("```");
       lines.push(b.error.split("\n").slice(0, 40).join("\n"));

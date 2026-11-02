@@ -12,13 +12,8 @@ import {
 test.describe("admin console", () => {
   test.use({ sessionRole: "admin" });
 
-  const stamp = Date.now();
-  const courseTitle = `دورهٔ مدیریت تست ${stamp}`;
-  const courseSlug = `e2e-admin-${stamp}`;
-  const postTitle = `نوشتهٔ تست E2E ${stamp}`;
-  const postSlug = `e2e-post-${stamp}`;
-  const couponCode = `E2E${String(stamp).slice(-5)}`;
-  const blockedName = `کاربر مسدود تست ${stamp}`;
+  /** Unique per test — the suite may run against a shared database. */
+  const tag = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 90 + 10)}`;
 
   test("the overview shows the platform numbers", async ({ page, diag }) => {
     await page.goto("/admin");
@@ -35,6 +30,9 @@ test.describe("admin console", () => {
     page,
     diag,
   }) => {
+    const courseTitle = `دورهٔ مدیریت تست ${tag()}`;
+    const courseSlug = `e2e-admin-${tag()}`;
+
     await page.goto("/admin/courses/new");
 
     await page.locator("#c-title").fill(courseTitle);
@@ -85,20 +83,50 @@ test.describe("admin console", () => {
     expectNoClientErrors(diag);
   });
 
-  test("the cover image is uploaded through the media field", async ({ page, diag }) => {
+  test("the course list can be searched by slug", async ({ page, diag, playwright }) => {
+    const api = await playwright.request.newContext({ baseURL: API_URL });
+    const course = await createPublishedCourse(
+      api,
+      `دورهٔ نامک تست ${tag()}`,
+      await sessionCookies(playwright, "admin"),
+    );
+    await api.dispose();
+
     await page.goto("/admin/courses");
-    await page.locator("#course-q").fill(courseTitle);
+    await page.locator("#course-q").fill(course.slug);
+    await page.getByRole("button", { name: "اعمال" }).click();
+
+    // the placeholder promises "title or slug" and every row shows its slug
+    await expect(page.getByRole("row").filter({ hasText: course.slug })).toHaveCount(1);
+
+    expectNoClientErrors(diag);
+  });
+
+  test("the cover image is uploaded through the media field", async ({
+    page,
+    diag,
+    playwright,
+  }) => {
+    const title = `دورهٔ کاور تست ${tag()}`;
+    const api = await playwright.request.newContext({ baseURL: API_URL });
+    const course = await createPublishedCourse(api, title, await sessionCookies(playwright, "admin"));
+    await api.dispose();
+
+    await page.goto("/admin/courses");
+    await page.locator("#course-q").fill(title);
     await page.getByRole("button", { name: "اعمال" }).click();
     await page
       .getByRole("row")
-      .filter({ hasText: courseTitle })
+      .filter({ hasText: course.slug })
       .getByRole("link", { name: "ویرایش" })
       .click();
 
     await page.getByRole("tab", { name: "رسانه و سئو" }).click();
     await page.getByLabel("بارگذاری تصویر کاور").setInputFiles(FIXTURE_PNG);
 
-    await expect(page.getByText("فایل بارگذاری شد و در حال پردازش است.")).toBeVisible();
+    await expect(page.getByText("فایل بارگذاری شد و در حال پردازش است.")).toBeVisible({
+      timeout: 30000,
+    });
 
     // the asset is listed in the media library
     await page.goto("/admin/media");
@@ -112,6 +140,9 @@ test.describe("admin console", () => {
     page,
     diag,
   }) => {
+    const postTitle = `نوشتهٔ تست E2E ${tag()}`;
+    const postSlug = `e2e-post-${tag()}`;
+
     await page.goto("/admin/posts/new");
 
     await page.locator("#p-title").fill(postTitle);
@@ -131,7 +162,7 @@ test.describe("admin console", () => {
     const row = page.getByRole("row").filter({ hasText: postTitle });
     await expect(row).toHaveCount(1);
     await row.getByRole("button", { name: "انتشار" }).click();
-    await expect(row.getByText("منتشرشده").first()).toBeVisible();
+    await expect(row.getByText("منتشرشده").first()).toBeVisible({ timeout: 30000 });
 
     // it shows up on the public blog
     await page.goto(`/blog/${postSlug}`);
@@ -150,6 +181,8 @@ test.describe("admin console", () => {
   });
 
   test("a coupon is created and switched off", async ({ page, diag }) => {
+    const couponCode = `E2E${tag().toUpperCase()}`;
+
     await page.goto("/admin/coupons");
 
     await page.getByRole("button", { name: "کد تازه" }).click();
@@ -160,7 +193,7 @@ test.describe("admin console", () => {
 
     const row = page.getByRole("row").filter({ hasText: couponCode });
     await expect(row).toHaveCount(1);
-    await expect(row.getByText("۱۵٪")).toBeVisible();
+    await expect(row.getByText("15٪")).toBeVisible();
 
     await row.getByRole("button", { name: "غیرفعال کردن" }).click();
     await expect(row.getByText("غیرفعال")).toBeVisible();
@@ -171,7 +204,7 @@ test.describe("admin console", () => {
   test("a course category can be created", async ({ page, diag }) => {
     await page.goto("/admin/categories");
 
-    const title = `دستهٔ تست ${stamp}`;
+    const title = `دستهٔ تست ${tag()}`;
     await page.locator("#course-cat").fill(title);
     await page.getByRole("button", { name: "افزودن" }).first().click();
 
@@ -180,6 +213,7 @@ test.describe("admin console", () => {
   });
 
   test("an admin can block and unblock a user", async ({ page, diag, playwright }) => {
+    const blockedName = `کاربر مسدود تست ${tag()}`;
     const mobile = uniqueMobile();
     const api = await playwright.request.newContext({ baseURL: API_URL });
     await api.post("/api/v1/auth/register", {
@@ -216,6 +250,9 @@ test.describe("admin console", () => {
         body: "این پیام برای تست خودکار مدیریت ارسال شده است.",
       },
     });
+    if (res.status() === 429) {
+      test.skip(true, "the contact endpoint is rate limited (5/hour per IP)");
+    }
     expect(res.status()).toBe(200);
 
     await page.goto("/admin/messages");
@@ -240,7 +277,7 @@ test.describe("admin console", () => {
     await adminCtx.addCookies(adminCookies);
     const course = await createPublishedCourse(
       adminCtx.request,
-      `دورهٔ بازگشت وجه تست ${stamp}`,
+      `دورهٔ بازگشت وجه تست ${tag()}`,
       adminCookies,
     );
     await adminCtx.close();

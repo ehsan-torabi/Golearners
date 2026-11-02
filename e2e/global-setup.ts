@@ -14,6 +14,7 @@ const CREDENTIAL_FILE = path.join(STATE_DIR, "credentials.json");
  */
 export default async function globalSetup(): Promise<void> {
   fs.mkdirSync(STATE_DIR, { recursive: true });
+  await waitForApi();
 
   const creds = { ...credentials() };
 
@@ -59,6 +60,21 @@ export default async function globalSetup(): Promise<void> {
   fs.writeFileSync(CREDENTIAL_FILE, JSON.stringify(creds, null, 2));
 }
 
+/** The API may still be booting (or restarting) — wait for it before the run. */
+async function waitForApi(timeoutMs = 120000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch(`${API_URL}/healthz`, { signal: AbortSignal.timeout(3000) });
+      if (res.ok) return;
+    } catch {
+      // not up yet
+    }
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  throw new Error(`the API at ${API_URL} did not become healthy within ${timeoutMs}ms`);
+}
+
 /** Logs in; returns false when the account exists but the mobile is unverified. */
 async function login(ctx: APIRequestContext, mobile: string, password: string): Promise<boolean> {
   const res = await ctx.post("/api/v1/auth/login", { data: { mobile, password } });
@@ -70,11 +86,20 @@ async function login(ctx: APIRequestContext, mobile: string, password: string): 
 
 async function ensureCoupon(ctx: APIRequestContext): Promise<void> {
   const csrf = (await ctx.storageState()).cookies.find((c) => c.name === "gl_csrf")?.value ?? "";
+  const headers = { "X-CSRF-Token": csrf };
+
+  // the API answers 500 (not 409) for a duplicate code, so check first
+  const list = await ctx.get("/api/v1/admin/coupons?per_page=100", { headers });
+  if (list.ok()) {
+    const body = (await list.json()) as { data?: { code: string }[] };
+    if ((body.data ?? []).some((c) => c.code === COUPON_CODE)) return;
+  }
+
   const res = await ctx.post("/api/v1/admin/coupons", {
-    headers: { "X-CSRF-Token": csrf },
+    headers,
     data: { code: COUPON_CODE, type: "percent", value: 10, per_user_limit: 5, status: "active" },
   });
-  if (!res.ok() && !(await res.text()).includes("EXISTS")) {
+  if (!res.ok()) {
     // A missing coupon only breaks the discount assertion — the run continues.
     console.warn(`[e2e] coupon ${COUPON_CODE} not ready: ${res.status()} ${await res.text()}`);
   }
