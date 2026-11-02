@@ -6,6 +6,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -77,6 +78,18 @@ func (c *Client) PresignGet(ctx context.Context, key string, ttl time.Duration) 
 		return "", "", fmt.Errorf("presign get: %w", err)
 	}
 	return out.URL, "", nil
+}
+
+// Get streams the object body for server-side delivery.
+func (c *Client) Get(ctx context.Context, key string) (io.ReadCloser, int64, error) {
+	out, err := c.api.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, 0, fmt.Errorf("get %q: %w", key, err)
+	}
+	return out.Body, aws.ToInt64(out.ContentLength), nil
 }
 
 // Stat returns object metadata via HeadObject.

@@ -15,7 +15,8 @@ import (
 func postJSON(p *content.BlogPost) map[string]any {
 	return map[string]any{
 		"id": p.ID, "slug": p.Slug, "title": p.Title, "excerpt": p.Excerpt,
-		"status": p.Status, "cover_media_id": p.CoverMediaID, "category_id": p.CategoryID,
+		"status": p.Status, "cover_media_id": p.CoverMediaID, "cover_url": mediaRef(p.CoverMediaID),
+		"category_id": p.CategoryID,
 		"reading_minutes": p.ReadingMinutes, "published_at": p.PublishedAt,
 		"meta_title": p.MetaTitle, "meta_description": p.MetaDescription,
 	}

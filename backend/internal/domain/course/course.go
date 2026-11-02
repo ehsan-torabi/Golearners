@@ -156,6 +156,7 @@ type MediaAsset struct {
 	ID           uuid.UUID
 	Kind         MediaKind
 	StorageKey   string
+	Filename     string // original uploader-provided name, display only
 	Mime         string
 	SizeBytes    int64
 	Checksum     *string

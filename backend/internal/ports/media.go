@@ -4,6 +4,7 @@ package ports
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,6 +16,8 @@ import (
 type Storage interface {
 	PresignPut(ctx context.Context, key, contentType string, ttl time.Duration) (url string, err error)
 	PresignGet(ctx context.Context, key string, ttl time.Duration) (url string, mime string, err error)
+	// Get streams the object body for server-side delivery (public media).
+	Get(ctx context.Context, key string) (body io.ReadCloser, size int64, err error)
 	Stat(ctx context.Context, key string) (ObjectInfo, error)
 	Delete(ctx context.Context, key string) error
 }

@@ -136,6 +136,8 @@ func NewRouter(a *App) http.Handler {
 		r.Get("/pages/{slug}", a.handlePage)
 		r.Get("/faqs", a.handleFAQs)
 		r.Get("/testimonials", a.handleTestimonials)
+		// public cover images (immutable per id, cache-friendly)
+		r.With(a.rateLimit("media", 240, time.Minute)).Get("/media/{id}", a.handleMediaGet)
 		r.With(a.rateLimit("contact", 5, time.Hour)).Post("/contact", a.handleContact)
 
 		// admin (RBAC at the boundary; mutations audited in services)

@@ -18,14 +18,14 @@ type MediaRepo struct{ pool *pgxpool.Pool }
 
 func NewMediaRepo(pool *pgxpool.Pool) *MediaRepo { return &MediaRepo{pool: pool} }
 
-const mediaColumns = `id, kind, storage_key, mime, size_bytes, checksum_sha256, status,
+const mediaColumns = `id, kind, storage_key, filename, mime, size_bytes, checksum_sha256, status,
 	duration_seconds, vod_provider, vod_remote_id, error_message, uploaded_by,
 	created_at, updated_at`
 
 func scanMedia(row pgx.Row) (*course.MediaAsset, error) {
 	m := &course.MediaAsset{}
 	var kind, status string
-	err := row.Scan(&m.ID, &kind, &m.StorageKey, &m.Mime, &m.SizeBytes, &m.Checksum,
+	err := row.Scan(&m.ID, &kind, &m.StorageKey, &m.Filename, &m.Mime, &m.SizeBytes, &m.Checksum,
 		&status, &m.DurationSecs, &m.VODProvider, &m.VODRemoteID, &m.ErrorMessage,
 		&m.UploadedBy, &m.CreatedAt, &m.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -41,9 +41,9 @@ func scanMedia(row pgx.Row) (*course.MediaAsset, error) {
 
 func (r *MediaRepo) Create(ctx context.Context, m *course.MediaAsset) error {
 	_, err := querierOf(ctx, r.pool).Exec(ctx,
-		`INSERT INTO media_assets (id, kind, storage_key, mime, size_bytes, checksum_sha256, status, duration_seconds, uploaded_by)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-		m.ID, string(m.Kind), m.StorageKey, m.Mime, m.SizeBytes, m.Checksum, string(m.Status), m.DurationSecs, m.UploadedBy)
+		`INSERT INTO media_assets (id, kind, storage_key, filename, mime, size_bytes, checksum_sha256, status, duration_seconds, uploaded_by)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+		m.ID, string(m.Kind), m.StorageKey, m.Filename, m.Mime, m.SizeBytes, m.Checksum, string(m.Status), m.DurationSecs, m.UploadedBy)
 	if err != nil {
 		return fmt.Errorf("insert media: %w", err)
 	}
@@ -67,7 +67,9 @@ func (r *MediaRepo) List(ctx context.Context, f ports.MediaFilter) ([]*course.Me
 		args = append(args, f.Kind)
 	}
 	if f.Q != "" {
-		where = where + " AND storage_key ILIKE $" + fmt.Sprint(len(args)+1)
+		// the original filename is the human handle; the key keeps it too
+		where = where + " AND (filename ILIKE $" + fmt.Sprint(len(args)+1) +
+			" OR storage_key ILIKE $" + fmt.Sprint(len(args)+1) + ")"
 		args = append(args, "%"+f.Q+"%")
 	}
 	order := "created_at DESC"

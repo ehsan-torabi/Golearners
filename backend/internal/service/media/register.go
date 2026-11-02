@@ -24,21 +24,21 @@ type RegisterInput struct {
 	Checksum   string
 }
 
-// Register records the uploaded object and hands it to the ingest worker.
+// Register records the uploaded object and hands videos to the ingest worker.
+// Images and PDFs need no transcoding, so they are ready immediately.
 func (s *Service) Register(ctx context.Context, actor Actor, in RegisterInput) (*course.MediaAsset, error) {
 	kind, ok := kindOf(in.Mime)
 	if !ok {
-		return nil, apperr.ErrValidation.Wrap(fmt.Errorf("mime %q not allowed", mimeForError(in.Mime)))
+		return nil, apperr.ErrValidation.Wrap(fmt.Errorf("mime %q not allowed", in.Mime))
 	}
 	dir := map[course.MediaKind]string{
 		course.MediaVideo: "video", course.MediaImage: "image", course.MediaPDF: "pdf",
 	}[kind]
 	prefix := "media/" + dir + "/"
-	// the storage key is generated from the kind (canonical mime), so the
-	// extension check must use the same canonical mime, not the uploaded one
-	// (a PNG upload lands on master.jpg by design).
+	// the key was issued by PresignUpload from this same mime, so the
+	// extension check runs against the uploaded mime (a PNG lands on .png)
 	if !strings.HasPrefix(in.StorageKey, prefix) ||
-		path.Ext(in.StorageKey) != "."+extOf(mimeFromKind(kind)) {
+		path.Ext(in.StorageKey) != "."+extOf(in.Mime) {
 		return nil, apperr.ErrValidation.Wrap(fmt.Errorf("storage key does not match issued pattern"))
 	}
 	// size re-check against the stored object (never trust the browser)
@@ -60,10 +60,14 @@ func (s *Service) Register(ctx context.Context, actor Actor, in RegisterInput) (
 	if in.Checksum != "" {
 		checksum = &in.Checksum
 	}
+	status := course.MediaReady
+	if kind == course.MediaVideo {
+		status = course.MediaUploaded // waits for the ingest worker
+	}
 	m := &course.MediaAsset{
 		ID: uuid.Must(uuid.NewV7()), Kind: kind, StorageKey: in.StorageKey,
-		Mime: in.Mime, SizeBytes: info.SizeBytes, Checksum: checksum,
-		Status: course.MediaUploaded, UploadedBy: &actor.ID,
+		Filename: displayName(in.Filename), Mime: in.Mime, SizeBytes: info.SizeBytes,
+		Checksum: checksum, Status: status, UploadedBy: &actor.ID,
 	}
 	err = s.d.TX.WithinTx(ctx, func(ctx context.Context) error {
 		if err := s.d.Media.Create(ctx, m); err != nil {
@@ -79,14 +83,15 @@ func (s *Service) Register(ctx context.Context, actor Actor, in RegisterInput) (
 	if err != nil {
 		return nil, err
 	}
+	if kind != course.MediaVideo {
+		return m, nil
+	}
 	if err := s.d.Queue.EnqueueIngest(ctx, m.ID); err != nil {
 		// asset stays 'uploaded'; the reconcile can retry (phase 6 worker)
 		return m, fmt.Errorf("enqueue ingest: %w", err)
 	}
 	return m, nil
 }
-
-func mimeForError(mime string) string { return mime }
 
 func strPtr(s string) *string { return &s }
 

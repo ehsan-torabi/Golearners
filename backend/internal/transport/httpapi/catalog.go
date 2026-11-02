@@ -31,9 +31,18 @@ func courseJSON(c *course.Course) map[string]any {
 		"level": c.Level, "status": c.Status,
 		"price_rial": c.PriceRial, "compare_at_price_rial": c.CompareAtPriceRial,
 		"is_featured": c.IsFeatured, "published_at": c.PublishedAt,
-		"cover_media_id": c.CoverMediaID, "meta_title": c.MetaTitle,
+		"cover_media_id": c.CoverMediaID, "cover_url": mediaRef(c.CoverMediaID),
+		"meta_title":     c.MetaTitle,
 		"meta_description": c.MetaDescription, "created_at": c.CreatedAt,
 	}
+}
+
+// mediaRef maps a cover media id onto its public read path (nil-safe).
+func mediaRef(id *uuid.UUID) string {
+	if id == nil {
+		return ""
+	}
+	return "/api/v1/media/" + id.String()
 }
 
 // GET /api/v1/courses

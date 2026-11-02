@@ -23,6 +23,7 @@ func mediaActor(r *http.Request) media.Actor {
 type presignRequest struct {
 	Mime      string `json:"mime"`
 	SizeBytes int64  `json:"size_bytes"`
+	Filename  string `json:"filename"`
 }
 
 // POST /api/v1/admin/media/presign
@@ -32,7 +33,7 @@ func (a *App) handleAdminMediaPresign(w http.ResponseWriter, r *http.Request) {
 		a.writeError(w, r, err)
 		return
 	}
-	ticket, err := a.MediaService.PresignUpload(r.Context(), mediaActor(r), in.Mime, in.SizeBytes)
+	ticket, err := a.MediaService.PresignUpload(r.Context(), mediaActor(r), in.Mime, in.SizeBytes, in.Filename)
 	if err != nil {
 		a.writeError(w, r, err)
 		return
@@ -102,11 +103,22 @@ func (a *App) handleAdminMediaDelete(w http.ResponseWriter, r *http.Request) {
 
 func mediaJSON(m *course.MediaAsset) map[string]any {
 	return map[string]any{
-		"id": m.ID, "kind": m.Kind, "storage_key": m.StorageKey, "mime": m.Mime,
-		"size_bytes": m.SizeBytes, "status": m.Status, "duration_seconds": m.DurationSecs,
-		"vod_provider": m.VODProvider, "vod_remote_id": m.VODRemoteID,
+		"id": m.ID, "kind": m.Kind, "storage_key": m.StorageKey, "filename": m.Filename,
+		"mime": m.Mime, "size_bytes": m.SizeBytes, "status": m.Status,
+		"duration_seconds": m.DurationSecs,
+		"vod_provider":     m.VODProvider, "vod_remote_id": m.VODRemoteID,
 		"error_message": m.ErrorMessage, "created_at": m.CreatedAt,
+		"url": mediaURL(m),
 	}
+}
+
+// mediaURL is the public read path for image assets; other kinds keep their
+// dedicated endpoints (playback for video, attachments for pdf).
+func mediaURL(m *course.MediaAsset) any {
+	if m.Kind != course.MediaImage {
+		return nil
+	}
+	return "/api/v1/media/" + m.ID.String()
 }
 
 var _ = time.Second

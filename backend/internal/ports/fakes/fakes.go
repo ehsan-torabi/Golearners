@@ -3,9 +3,11 @@
 package fakes
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 	"time"
@@ -426,6 +428,17 @@ func (f *Storage) PresignGet(_ context.Context, key string, _ time.Duration) (st
 		return "", "", ports.ErrNotFound
 	}
 	return "http://get/" + key, "", nil
+}
+
+// Get returns the fake body sized like the stored object.
+func (f *Storage) Get(_ context.Context, key string) (io.ReadCloser, int64, error) {
+	f.mu.Lock()
+	size, ok := f.objects[key]
+	f.mu.Unlock()
+	if !ok {
+		return nil, 0, ports.ErrNotFound
+	}
+	return io.NopCloser(bytes.NewReader(make([]byte, size))), size, nil
 }
 
 func (f *Storage) Stat(_ context.Context, key string) (ports.ObjectInfo, error) {

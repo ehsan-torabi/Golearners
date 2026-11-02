@@ -9,6 +9,7 @@ import (
 	"path"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/google/uuid"
 
@@ -59,7 +60,7 @@ type Actor struct {
 
 // PresignUpload validates the upload request and returns a single-object
 // presigned PUT plus the storage key the browser must upload to.
-func (s *Service) PresignUpload(ctx context.Context, actor Actor, mime string, sizeBytes int64) (*UploadTicket, error) {
+func (s *Service) PresignUpload(ctx context.Context, actor Actor, mime string, sizeBytes int64, filename string) (*UploadTicket, error) {
 	kind, ok := kindOf(mime)
 	if !ok {
 		return nil, apperr.ErrValidation.Wrap(fmt.Errorf("mime %q not allowed", mime))
@@ -74,7 +75,7 @@ func (s *Service) PresignUpload(ctx context.Context, actor Actor, mime string, s
 	if sizeBytes <= 0 || sizeBytes > max {
 		return nil, apperr.ErrValidation.Wrap(fmt.Errorf("size %d outside limit %d", sizeBytes, max))
 	}
-	key := storageKey(kind)
+	key := storageKey(kind, mime, filename)
 	url, err := s.d.Storage.PresignPut(ctx, key, mime, PresignTTL)
 	if err != nil {
 		return nil, err
@@ -104,8 +105,10 @@ func extOf(mime string) string {
 	return mimeAllowlist[mime].Ext
 }
 
-// storageKey generates the server-side UUID path (no user input in keys).
-func storageKey(kind course.MediaKind) string {
+// storageKey generates the server-side unique path. The object keeps the
+// uploader's original (sanitized) name so the library stays readable; the UUID
+// directory guarantees uniqueness — no user-controlled path structure.
+func storageKey(kind course.MediaKind, mime, filename string) string {
 	dir := "misc"
 	switch kind {
 	case course.MediaVideo:
@@ -116,24 +119,72 @@ func storageKey(kind course.MediaKind) string {
 		dir = "pdf"
 	}
 	now := time.Now().UTC()
-	name := "master." + extOf(mimeFromKind(kind))
-	return path.Join("media", dir, now.Format("2006"), now.Format("01"), uuid.Must(uuid.NewV7()).String(), name)
+	name := sanitizeName(filename) + "." + extOf(mime)
+	return path.Join("media", dir, now.Format("2006"), now.Format("01"),
+		uuid.Must(uuid.NewV7()).String(), name)
 }
 
-// canonicalMime is the single mime per kind used for generated storage keys.
-// It must be deterministic: the key extension and the register check have to
-// agree, and a map lookup would pick a random allowlist entry per call.
-var canonicalMime = map[course.MediaKind]string{
-	course.MediaVideo: "video/mp4",
-	course.MediaImage: "image/jpeg",
-	course.MediaPDF:   "application/pdf",
-}
+// nameMaxRunes caps the name portion so keys stay manageable.
+const nameMaxRunes = 80
 
-func mimeFromKind(kind course.MediaKind) string {
-	if mime, ok := canonicalMime[kind]; ok {
-		return mime
+// displayName keeps the original filename for display: directory components
+// and control runes stripped, capped. Rendered text escapes it in the UI.
+func displayName(filename string) string {
+	base := filename
+	if i := strings.LastIndexAny(base, `/\`); i >= 0 {
+		base = base[i+1:]
 	}
-	return "application/octet-stream"
+	base = strings.Map(func(r rune) rune {
+		if r < 0x20 || r == 0x7f {
+			return -1
+		}
+		return r
+	}, strings.TrimSpace(base))
+	const displayMax = 200
+	runes := []rune(base)
+	if len(runes) > displayMax {
+		base = string(runes[:displayMax])
+	}
+	return base
+}
+
+// sanitizeName keeps the readable part of the original filename: unicode
+// letters and digits (Persian included), everything else folded to '-'.
+// Empty or fully-unsafe names fall back to "file".
+func sanitizeName(filename string) string {
+	base := filename
+	if i := strings.LastIndexAny(base, `/\`); i >= 0 {
+		base = base[i+1:]
+	}
+	if i := strings.LastIndexByte(base, '.'); i > 0 {
+		base = base[:i] // the extension comes from the mime allowlist, not the name
+	}
+	base = strings.TrimSpace(base)
+	if base == "" {
+		return "file"
+	}
+	var b strings.Builder
+	lastDash := false
+	for _, r := range base {
+		switch {
+		case unicode.IsLetter(r) || unicode.IsDigit(r):
+			b.WriteRune(r)
+			lastDash = false
+		default:
+			if !lastDash && b.Len() > 0 {
+				b.WriteByte('-')
+				lastDash = true
+			}
+		}
+		if b.Len() >= nameMaxRunes {
+			break
+		}
+	}
+	out := strings.Trim(b.String(), "-")
+	if out == "" {
+		return "file"
+	}
+	return out
 }
 
 var _ = strings.TrimSpace
