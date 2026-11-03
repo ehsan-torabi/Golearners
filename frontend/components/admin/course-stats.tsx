@@ -69,7 +69,13 @@ export function CourseStats({ courseId }: { courseId: string }) {
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err instanceof ApiError ? err.message : "خطا در دریافت آمار دوره");
+        setError(
+          err instanceof ApiError && err.status === 404
+            ? "این دوره پیدا نشد؛ شاید حذف شده باشد."
+            : err instanceof ApiError
+              ? err.message
+              : "خطا در دریافت آمار دوره",
+        );
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
