@@ -24,6 +24,7 @@ export function VideoPlayer({
   const router = useRouter();
   const [state, setState] = React.useState<"loading" | "ready" | "error">("loading");
   const [url, setUrl] = React.useState("");
+  const [mediaError, setMediaError] = React.useState("");
   const lastSent = React.useRef(0);
   const lastTime = React.useRef(startAt);
 
@@ -85,6 +86,19 @@ export function VideoPlayer({
     );
   }
 
+  /* the file itself is missing or undecodable: say so instead of showing a
+     broken player (the browser error would surface as a raw console event) */
+  if (mediaError) {
+    return (
+      <div
+        role="alert"
+        className="rounded-surface border border-destructive/30 bg-destructive/10 p-6 text-sm leading-7 text-destructive"
+      >
+        {mediaError} اگر مدرس این درس را تازه کرده باشد، کمی بعد دوباره تلاش کن.
+      </div>
+    );
+  }
+
   if (state !== "ready") {
     return (
       <div className="overflow-hidden rounded-surface border border-line bg-black">
@@ -110,6 +124,7 @@ export function VideoPlayer({
         lastSent.current = Number.MAX_SAFE_INTEGER;
         void save(true).then(() => router.refresh());
       }}
+      onError={(reason) => setMediaError(reason)}
     />
   );
 }

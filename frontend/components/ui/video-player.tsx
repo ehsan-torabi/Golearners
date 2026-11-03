@@ -32,6 +32,8 @@ export interface VideoPlayerProps {
   rates?: number[];
   onTimeUpdate?: (seconds: number, duration: number) => void;
   onEnded?: () => void;
+  /** fires when the browser cannot decode the source (missing or broken file) */
+  onError?: (message: string) => void;
   className?: string;
 }
 
@@ -63,6 +65,7 @@ export function VideoPlayer({
   rates = [0.75, 1, 1.25, 1.5, 2],
   onTimeUpdate,
   onEnded,
+  onError,
   className,
 }: VideoPlayerProps) {
   const wrap = React.useRef<HTMLDivElement>(null);
@@ -193,6 +196,16 @@ export function VideoPlayer({
             if (b.length) setBuffered(b.end(b.length - 1));
           }}
           onEnded={() => { setPlaying(false); onEnded?.(); }}
+          onError={(e) => {
+            const code = e.currentTarget.error?.code;
+            const reason =
+              code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
+                ? "این ویدیو روی مرورگر شما پخش نمی‌شود."
+                : code === MediaError.MEDIA_ERR_NETWORK
+                  ? "دانلود ویدیو کامل نشد؛ اتصال را بررسی کنید."
+                  : "پخش این ویدیو ممکن نشد.";
+            onError?.(reason);
+          }}
           className="size-full object-contain"
         >
           {captions.map((c) => (
