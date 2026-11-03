@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Ban, ChevronDown, ChevronUp, ShieldCheck, UserCheck } from "lucide-react";
+import { Ban, ChevronDown, ChevronUp, Pencil, ShieldCheck, UserCheck } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Input, Select } from "@/components/ui/input";
+import { Field, Input, Select } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -80,6 +80,7 @@ export default function AdminUsersPage() {
   const [selected, setSelected] = React.useState<string[]>([]);
   const [expanded, setExpanded] = React.useState<string | null>(null);
   const [roleDraft, setRoleDraft] = React.useState<Record<string, string>>({});
+  const [draft, setDraft] = React.useState<Record<string, { full_name: string; email: string }>>({});
   const [isOwner, setIsOwner] = React.useState(false);
   const [busy, setBusy] = React.useState("");
   const [error, setError] = React.useState("");
@@ -124,6 +125,36 @@ export default function AdminUsersPage() {
       await list.reload();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "تغییر وضعیت گروهی ناموفق بود");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  /** Opens the expanded row and seeds the editable profile fields. */
+  function startEdit(user: UserRow) {
+    setDraft((d) => ({
+      ...d,
+      [user.id]: { full_name: user.full_name, email: user.email ?? "" },
+    }));
+    setExpanded(user.id);
+  }
+
+  async function saveProfile(user: UserRow) {
+    const values = draft[user.id];
+    if (!values) return;
+    setError("");
+    setBusy(user.id);
+    try {
+      await api(`/admin/users/${user.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          full_name: values.full_name,
+          email: values.email,
+        }),
+      });
+      await list.reload();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "ذخیرهٔ اطلاعات کاربر ناموفق بود");
     } finally {
       setBusy("");
     }
@@ -290,13 +321,24 @@ export default function AdminUsersPage() {
                             size="icon-sm"
                             aria-label={open ? "بستن جزئیات" : "نمایش جزئیات"}
                             aria-expanded={open}
-                            onClick={() => setExpanded(open ? null : u.id)}
+                            onClick={() => (open ? setExpanded(null) : startEdit(u))}
                           >
                             {open ? <ChevronUp /> : <ChevronDown />}
                           </Button>
                           <RowMenu
                             label={`کنش‌های ${u.full_name || u.mobile}`}
                             items={[
+                              {
+                                label: "ویرایش اطلاعات",
+                                icon: <Pencil />,
+                                onSelect: () => startEdit(u),
+                              },
+                              {
+                                label: "تغییر نقش‌ها",
+                                icon: <ShieldCheck />,
+                                onSelect: () => startEdit(u),
+                                disabled: !isOwner,
+                              },
                               {
                                 label: u.status === "active" ? "مسدودسازی" : "رفع مسدودی",
                                 icon: u.status === "active" ? <Ban /> : <UserCheck />,
@@ -310,7 +352,57 @@ export default function AdminUsersPage() {
                     </TableRow>
                     {open && (
                       <ListDetailRow colSpan={8}>
-                        <DetailGrid>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="mb-2 text-sm font-semibold text-foreground">اطلاعات پروفایل</p>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <Field label="نام و نام خانوادگی" htmlFor={`user-name-${u.id}`}>
+                                <Input
+                                  id={`user-name-${u.id}`}
+                                  value={draft[u.id]?.full_name ?? u.full_name}
+                                  onChange={(e) =>
+                                    setDraft((d) => ({
+                                      ...d,
+                                      [u.id]: {
+                                        full_name: e.target.value,
+                                        email: d[u.id]?.email ?? u.email ?? "",
+                                      },
+                                    }))
+                                  }
+                                />
+                              </Field>
+                              <Field label="ایمیل" htmlFor={`user-email-${u.id}`}>
+                                <Input
+                                  id={`user-email-${u.id}`}
+                                  type="email"
+                                  dir="ltr"
+                                  value={draft[u.id]?.email ?? u.email ?? ""}
+                                  onChange={(e) =>
+                                    setDraft((d) => ({
+                                      ...d,
+                                      [u.id]: {
+                                        full_name: d[u.id]?.full_name ?? u.full_name,
+                                        email: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                />
+                              </Field>
+                            </div>
+                            <div className="mt-3 flex flex-wrap items-center gap-3">
+                              <Button
+                                size="sm"
+                                loading={busy === u.id}
+                                onClick={() => void saveProfile(u)}
+                              >
+                                ذخیرهٔ تغییرات
+                              </Button>
+                              <span className="text-xs text-muted-foreground">
+                                شمارهٔ موبایل قابل ویرایش نیست.
+                              </span>
+                            </div>
+                          </div>
+                          <DetailGrid>
                           <DetailItem label="شمارهٔ موبایل" dir="ltr">
                             {formatIranMobile(u.mobile)}
                           </DetailItem>
@@ -327,7 +419,8 @@ export default function AdminUsersPage() {
                               {u.id.slice(0, 8)}…
                             </span>
                           </DetailItem>
-                        </DetailGrid>
+                          </DetailGrid>
+                        </div>
                         <DetailSection title="نقش‌ها">
                           <div className="flex flex-wrap gap-1">
                             {u.roles.length === 0 ? (

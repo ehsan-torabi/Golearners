@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -160,6 +161,32 @@ func (r *UserAdminRepo) List(ctx context.Context, f ports.UserAdminFilter, page,
 	var total int
 	err = r.pool.QueryRow(ctx, `SELECT count(*) FROM users WHERE `+where, args...).Scan(&total)
 	return out, total, err
+}
+
+// UpdateProfile rewrites the admin-editable profile fields; a nil field is
+// left alone. The mobile stays read-only: it is the identity anchor (OTP
+// login, unique index).
+func (r *UserAdminRepo) UpdateProfile(ctx context.Context, userID uuid.UUID, fullName, email *string) error {
+	sets := []string{}
+	args := []any{userID}
+	if fullName != nil {
+		args = append(args, *fullName)
+		sets = append(sets, fmt.Sprintf("full_name=$%d", len(args)))
+	}
+	if email != nil {
+		args = append(args, *email)
+		sets = append(sets, fmt.Sprintf("email=NULLIF($%d,'')", len(args)))
+	}
+	if len(sets) == 0 {
+		return nil
+	}
+	sets = append(sets, "updated_at=now()")
+	_, err := r.pool.Exec(ctx,
+		`UPDATE users SET `+strings.Join(sets, ", ")+` WHERE id=$1`, args...)
+	if err != nil {
+		return fmt.Errorf("update user profile: %w", err)
+	}
+	return nil
 }
 
 func (r *UserAdminRepo) SetStatus(ctx context.Context, userID uuid.UUID, status identity.Status) error {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -106,6 +107,8 @@ func (a *App) handleAdminUsers(w http.ResponseWriter, r *http.Request) {
 
 type userPatchRequest struct {
 	Status     *string        `json:"status"`
+	FullName   *string        `json:"full_name"`
+	Email      *string        `json:"email"`
 	AddRole    *identity.Role `json:"add_role"`
 	RemoveRole *identity.Role `json:"remove_role"`
 }
@@ -137,6 +140,28 @@ func (a *App) handleAdminUserPatch(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		e := auditEntryNow(actor, "user.status", "user", id.String())
+		_ = a.Audit.Insert(r.Context(), &e)
+		changed = true
+	}
+	if in.FullName != nil || in.Email != nil {
+		var name, email *string
+		if in.FullName != nil {
+			trimmed := strings.TrimSpace(*in.FullName)
+			name = &trimmed
+		}
+		if in.Email != nil {
+			trimmed := strings.TrimSpace(*in.Email)
+			if trimmed != "" && !strings.Contains(trimmed, "@") {
+				a.writeError(w, r, apperr.ErrValidation)
+				return
+			}
+			email = &trimmed
+		}
+		if err := a.UserAdmin.UpdateProfile(r.Context(), id, name, email); err != nil {
+			a.writeError(w, r, err)
+			return
+		}
+		e := auditEntryNow(actor, "user.profile", "user", id.String())
 		_ = a.Audit.Insert(r.Context(), &e)
 		changed = true
 	}

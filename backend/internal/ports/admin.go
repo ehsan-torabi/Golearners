@@ -52,6 +52,7 @@ type UserAdminFilter struct {
 type UserAdminRepo interface {
 	List(ctx context.Context, f UserAdminFilter, page, perPage int) ([]*identity.User, int, error)
 	SetStatus(ctx context.Context, userID uuid.UUID, status identity.Status) error
+	UpdateProfile(ctx context.Context, userID uuid.UUID, fullName, email *string) error
 	AddRole(ctx context.Context, userID uuid.UUID, role identity.Role) error
 	RemoveRole(ctx context.Context, userID uuid.UUID, role identity.Role) error
 }
