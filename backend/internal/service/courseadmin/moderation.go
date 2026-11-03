@@ -27,10 +27,10 @@ func (s *Service) ModerateReview(ctx context.Context, actor Actor, reviewID uuid
 // PendingReviews lists unmoderated reviews (admin queue). Implemented via
 // ports.ReviewRepo.ApprovedByCourse? No — dedicated listing below.
 type CategoryInput struct {
-	Title       string
-	Icon        string
-	IconMediaID *uuid.UUID
-	Position    int
+	Title       string     `json:"title"`
+	Icon        string     `json:"icon"`
+	IconMediaID *uuid.UUID `json:"icon_media_id"`
+	Position    int        `json:"position"`
 }
 
 func (s *Service) CreateCategory(ctx context.Context, actor Actor, in CategoryInput) (*course.Category, error) {
