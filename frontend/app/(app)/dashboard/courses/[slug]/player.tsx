@@ -11,6 +11,10 @@ import { Skeleton } from "@/components/ui/section-head";
  * (every 10s of progress, once on unmount, and completed on end).
  * The local VOD adapter issues MP4 URLs; HLS (Arvan) will need player-level
  * support when that provider lands.
+ *
+ * Watch time is measured here as wall clock while the media actually plays,
+ * and reported to the server every 15 seconds. The server clamps the
+ * reported delta, so a scrubbed or paused player cannot inflate it.
  */
 export function VideoPlayer({
   lessonId,
@@ -27,6 +31,9 @@ export function VideoPlayer({
   const [mediaError, setMediaError] = React.useState("");
   const lastSent = React.useRef(0);
   const lastTime = React.useRef(startAt);
+  const playing = React.useRef(false);
+  const lastTick = React.useRef(0);
+  const watched = React.useRef(0);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -67,13 +74,26 @@ export function VideoPlayer({
     [lessonId],
   );
 
+  /** Sends the watch time gathered so far and resets the counter. */
+  const flushWatch = React.useCallback(() => {
+    const chunk = Math.round(watched.current);
+    watched.current = 0;
+    if (chunk <= 0) return;
+    void import("@/lib/api")
+      .then(({ reportWatch }) => reportWatch(lessonId, chunk))
+      .catch(() => {
+        // watch time is best-effort: a dropped beat is not worth an error
+      });
+  }, [lessonId]);
+
   // final flush when the lesson is switched or the page is left
   React.useEffect(() => {
     if (state !== "ready") return;
     return () => {
       void save(false, lastTime.current);
+      flushWatch();
     };
-  }, [lessonId, state, save]);
+  }, [lessonId, state, save, flushWatch]);
 
   if (state === "error") {
     return (
@@ -119,6 +139,22 @@ export function VideoPlayer({
           lastSent.current = seconds;
           void save(false, seconds);
         }
+        // watch time counts the wall clock while the media runs and the tab
+        // is visible; the per-tick cap keeps a throttled background tab
+        // from crediting minutes it was never watched
+        const now = Date.now();
+        const visible = document.visibilityState === "visible";
+        const delta =
+          playing.current && visible ? Math.min((now - lastTick.current) / 1000, 1.5) : 0;
+        lastTick.current = now;
+        watched.current += delta;
+        if (watched.current >= 15) {
+          flushWatch();
+        }
+      }}
+      onPlayingChange={(isPlaying) => {
+        playing.current = isPlaying;
+        lastTick.current = Date.now();
       }}
       onEnded={() => {
         lastSent.current = Number.MAX_SAFE_INTEGER;

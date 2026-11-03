@@ -64,8 +64,19 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   return handle<T>(res);
 }
 
-// ---------- shared API shapes (snake_case from the backend) ----------
+/**
+ * Reports a chunk of real watch time. The server credits the smaller of
+ * this number and the wall-clock gap since the last heartbeat, so a
+ * paused or scrubbed player cannot inflate it.
+ */
+export async function reportWatch(lessonId: string, seconds: number) {
+  return api(`/me/watch/${lessonId}`, {
+    method: "PUT",
+    body: JSON.stringify({ seconds }),
+  });
+}
 
+// ---------- shared API shapes (snake_case from the backend) ----------
 export interface CourseSummary {
   id: string;
   slug: string;

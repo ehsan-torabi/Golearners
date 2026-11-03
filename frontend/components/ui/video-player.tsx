@@ -35,6 +35,8 @@ export interface VideoPlayerProps {
   startAt?: number;
   onTimeUpdate?: (seconds: number, duration: number) => void;
   onEnded?: () => void;
+  /** fires when the media starts or stops playing (watch-time accounting) */
+  onPlayingChange?: (playing: boolean) => void;
   /** fires when the browser cannot decode the source (missing or broken file) */
   onError?: (message: string) => void;
   className?: string;
@@ -66,6 +68,7 @@ export function VideoPlayer({
   startAt = 0,
   onTimeUpdate,
   onEnded,
+  onPlayingChange,
   onError,
   className,
 }: VideoPlayerProps) {
@@ -129,6 +132,8 @@ export function VideoPlayer({
     onLoadedMetadata: handleLoaded,
     onTimeUpdate: handleTime,
     onEnded: () => onEnded?.(),
+    onPlay: () => onPlayingChange?.(true),
+    onPause: () => onPlayingChange?.(false),
     onError: handleError,
   };
 
