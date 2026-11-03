@@ -167,6 +167,7 @@ func run() error {
 	learningSvc := learningsvc.NewService(learningsvc.Deps{
 		Entitlements: entitlements,
 		Progress:     repository.NewLearningRepo(pool),
+		Watch:        repository.NewWatchRepo(pool),
 		Courses:      courses, Sections: sections, Lessons: lessons,
 	})
 
@@ -199,6 +200,7 @@ func run() error {
 		MediaService: mediaSvc, Playback: playbackSvc, StoragePort: st,
 		Learning: learningSvc, Checkout: checkoutSvc,
 		Orders: orders, Analytics: analyticsRepo, SettingsRepo: settingsRepo, UserAdmin: userAdminRepo,
+		CourseStats: repository.NewCourseStatsRepo(pool),
 		Attachments: repository.NewAttachmentRepo(pool), Entitlements: entitlements,
 		Instructors: instructors, Media: repository.NewMediaRepo(pool), Audit: audit,
 		CoursesRepo: courses, Sections: sections, Lessons: lessons, Categories: categories,

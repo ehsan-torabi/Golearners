@@ -92,3 +92,31 @@ func (a *App) handleSetProgress(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"saved": true})
 }
+
+type watchRequest struct {
+	Seconds int `json:"seconds"`
+}
+
+// PUT /api/v1/me/watch/{lesson_id}
+func (a *App) handleWatchBeat(w http.ResponseWriter, r *http.Request) {
+	actor, ok := actorFrom(r.Context())
+	if !ok {
+		a.writeError(w, r, apperr.ErrUnauthenticated)
+		return
+	}
+	lessonID, err := uuid.Parse(chi.URLParam(r, "lesson_id"))
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	var in watchRequest
+	if err := decodeJSON(w, r, &in); err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	if err := a.Learning.RecordWatch(r.Context(), actor.ID, lessonID, in.Seconds); err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"saved": true})
+}

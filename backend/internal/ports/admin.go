@@ -132,7 +132,7 @@ type CourseStatsDetail struct {
 	Metrics CourseStatsMetrics  `json:"metrics"`
 	Series  CourseStatsSeries   `json:"series"`
 	Lessons []CourseLessonStat  `json:"lessons"`
-	Sources map[string]int     `json:"sources"`
+	Sources map[string]int      `json:"sources"`
 	Reviews []CourseStatsReview `json:"reviews"`
 }
 

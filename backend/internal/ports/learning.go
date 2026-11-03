@@ -27,6 +27,14 @@ type LearningRepo interface {
 	ForUserInCourse(ctx context.Context, userID, courseID uuid.UUID) ([]*LessonProgress, error)
 }
 
+// WatchRepo — watch-time persistence.
+type WatchRepo interface {
+	// Record credits one heartbeat. The repository clamps the reported delta
+	// to the wall-clock gap since the previous beat, so a paused or scrubbed
+	// player cannot inflate the total.
+	Record(ctx context.Context, userID, lessonID uuid.UUID, reportedSeconds int) error
+}
+
 // EntitlementQuery extends entitlement reads for the learner panel.
 type EntitlementReader interface {
 	// ListForUser returns the user's active entitlements.

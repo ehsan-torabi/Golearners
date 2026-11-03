@@ -18,6 +18,7 @@ import (
 type Deps struct {
 	Entitlements ports.EntitlementRepo
 	Progress     ports.LearningRepo
+	Watch        ports.WatchRepo
 	Courses      ports.CourseRepo
 	Sections     ports.SectionRepo
 	Lessons      ports.LessonRepo
@@ -157,27 +158,37 @@ type ProgressInput struct {
 	Completed       *bool
 }
 
-// SetProgress stores playback position/completion after an access check.
-func (s *Service) SetProgress(ctx context.Context, userID, lessonID uuid.UUID, in ProgressInput) error {
+// watchableLesson resolves a lesson and checks that the learner may watch it:
+// preview lessons are open, every other lesson needs an active entitlement.
+func (s *Service) watchableLesson(ctx context.Context, userID, lessonID uuid.UUID) (*course.Lesson, error) {
 	l, err := s.d.Lessons.ByID(ctx, lessonID)
 	if err != nil {
 		if errors.Is(err, ports.ErrNotFound) {
-			return apperr.ErrNotFound
+			return nil, apperr.ErrNotFound
 		}
-		return err
+		return nil, err
 	}
-	if !l.IsPreview {
-		sec, err := s.d.Sections.ByID(ctx, l.SectionID)
-		if err != nil {
-			return err
-		}
-		owned, err := s.d.Entitlements.HasActive(ctx, userID, sec.CourseID)
-		if err != nil {
-			return err
-		}
-		if !owned {
-			return apperr.ErrForbidden
-		}
+	if l.IsPreview {
+		return l, nil
+	}
+	sec, err := s.d.Sections.ByID(ctx, l.SectionID)
+	if err != nil {
+		return nil, err
+	}
+	owned, err := s.d.Entitlements.HasActive(ctx, userID, sec.CourseID)
+	if err != nil {
+		return nil, err
+	}
+	if !owned {
+		return nil, apperr.ErrForbidden
+	}
+	return l, nil
+}
+
+// SetProgress stores playback position/completion after an access check.
+func (s *Service) SetProgress(ctx context.Context, userID, lessonID uuid.UUID, in ProgressInput) error {
+	if _, err := s.watchableLesson(ctx, userID, lessonID); err != nil {
+		return err
 	}
 	p := &ports.LessonProgress{
 		UserID: userID, LessonID: lessonID, PositionSeconds: in.PositionSeconds,
@@ -187,6 +198,15 @@ func (s *Service) SetProgress(ctx context.Context, userID, lessonID uuid.UUID, i
 		p.CompletedAt = &now
 	}
 	return s.d.Progress.Upsert(ctx, p)
+}
+
+// RecordWatch credits a watch-time heartbeat for a lesson the learner may
+// watch.
+func (s *Service) RecordWatch(ctx context.Context, userID, lessonID uuid.UUID, seconds int) error {
+	if _, err := s.watchableLesson(ctx, userID, lessonID); err != nil {
+		return err
+	}
+	return s.d.Watch.Record(ctx, userID, lessonID, seconds)
 }
 
 // ProgressOf returns one lesson's saved progress for the player resume.

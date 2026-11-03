@@ -50,8 +50,8 @@ func (r *AnalyticsRepo) Summary(ctx context.Context, days int) (*ports.Analytics
 func (r *AnalyticsRepo) TopCourses(ctx context.Context, limit int) ([]ports.CourseStat, error) {
 	rows, err := r.pool.Query(ctx,
 		`SELECT c.id, c.slug, c.title, count(e.id),
-			coalesce((SELECT sum(o.total_rial) FROM orders o
-				JOIN order_items oi ON oi.order_id = o.id AND o.status = 'paid'
+			coalesce((SELECT sum(oi.unit_price_rial) FROM order_items oi
+				JOIN orders o ON o.id = oi.order_id AND o.status = 'paid'
 				WHERE oi.course_id = c.id), 0)
 		 FROM courses c
 		 LEFT JOIN entitlements e ON e.course_id = c.id AND e.revoked_at IS NULL

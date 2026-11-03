@@ -55,6 +55,7 @@ type App struct {
 	Categories   ports.CategoryRepo
 	Orders       ports.OrderRepo
 	Analytics    ports.AnalyticsRepo
+	CourseStats  ports.CourseStatsRepo
 	SettingsRepo ports.SettingsRepo
 	UserAdmin    ports.UserAdminRepo
 	Coupons      ports.CouponRepo
@@ -108,6 +109,9 @@ func NewRouter(a *App) http.Handler {
 			r.Get("/me/courses", a.handleMyCourses)
 			r.Get("/me/courses/{slug}/curriculum", a.handleMyCurriculum)
 			r.Put("/me/progress/{lesson_id}", a.handleSetProgress)
+			// one heartbeat every 15 watched seconds, so the cap is far above
+			// a full hour of watching per hour
+			r.With(a.rateLimit("watch", 600, time.Hour)).Put("/me/watch/{lesson_id}", a.handleWatchBeat)
 		})
 
 		// playback: optional auth, anonymous previews legal, per-IP issuance limit
@@ -198,6 +202,8 @@ func NewRouter(a *App) http.Handler {
 			r.Get("/admin/audit-logs", a.handleAdminAuditLogs)
 			r.Get("/admin/analytics/summary", a.handleAnalyticsSummary)
 			r.Get("/admin/analytics/courses", a.handleAnalyticsCourses)
+			r.Get("/admin/course-stats", a.handleAdminCourseStatsList)
+			r.Get("/admin/course-stats/{id}", a.handleAdminCourseStatsDetail)
 			r.Get("/admin/settings", a.handleAdminSettings)
 			r.Patch("/admin/settings", a.handleAdminSettingsPatch)
 			r.Get("/admin/users", a.handleAdminUsers)
