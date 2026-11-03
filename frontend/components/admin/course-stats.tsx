@@ -206,7 +206,7 @@ function KpiBand({ detail }: { detail: CourseStatsDetail }) {
   );
 }
 
-/** «۲۵ شهریور» — the axis label; the tooltip keeps the full Jalali date. */
+/** «۲۵ شهریور» is the axis label; the tooltip keeps the full Jalali date. */
 function shortJalali(full: string): string {
   const parts = full.split(" ").filter(Boolean);
   return parts.length >= 2 ? `${parts[0]} ${parts[1]}` : full;

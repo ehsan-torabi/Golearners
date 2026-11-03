@@ -480,13 +480,13 @@ export function CoursesList() {
                             {c.price_rial > 0 ? formatTomanFromRial(c.price_rial) : "رایگان"}
                           </DetailItem>
                           <DetailItem label="قیمت پیش از تخفیف">
-                            {c.compare_at_price_rial ? formatTomanFromRial(c.compare_at_price_rial) : "—"}
+                            {c.compare_at_price_rial ? formatTomanFromRial(c.compare_at_price_rial) : "ندارد"}
                           </DetailItem>
                           <DetailItem label="ویدیوی معرفی">{c.has_promo ? "دارد" : "ندارد"}</DetailItem>
                           <DetailItem label="نمایش ویژه">{c.is_featured ? "بله" : "خیر"}</DetailItem>
                           <DetailItem label="تاریخ ساخت">{formatJalali(new Date(c.created_at))}</DetailItem>
                           <DetailItem label="زمان انتشار">
-                            {c.published_at ? formatJalali(new Date(c.published_at)) : "—"}
+                            {c.published_at ? formatJalali(new Date(c.published_at)) : "منتشر نشده"}
                           </DetailItem>
                         </DetailGrid>
                         <DetailSection title="پیش‌نمایش">

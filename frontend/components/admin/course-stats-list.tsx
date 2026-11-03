@@ -257,8 +257,8 @@ export function CourseStatsList() {
                               numbers follow the title instead */}
                           <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground sm:hidden">
                             <span>{fa(c.enrollments)} دانشجو</span>
-                            <span>{c.revenue_rial > 0 ? formatTomanFromRial(c.revenue_rial) : "—"}</span>
-                            <span>{c.watch_seconds > 0 ? faDuration(c.watch_seconds) : "—"}</span>
+                            <span>{formatTomanFromRial(c.revenue_rial)}</span>
+                            <span>{faDuration(c.watch_seconds)}</span>
                             <span>{c.review_count > 0 ? `${fa(c.avg_rating)} از ۵` : "بدون نظر"}</span>
                             <span>تکمیل {faPercent(c.completion_pct)}</span>
                           </div>
@@ -267,10 +267,10 @@ export function CourseStatsList() {
                     </TableCell>
                     <TableCell className="hidden text-start tabular-nums sm:table-cell">{fa(c.enrollments)}</TableCell>
                     <TableCell className="hidden text-start tabular-nums sm:table-cell">
-                      {c.revenue_rial > 0 ? formatTomanFromRial(c.revenue_rial) : "—"}
+                      {formatTomanFromRial(c.revenue_rial)}
                     </TableCell>
                     <TableCell className="hidden text-start tabular-nums text-muted-foreground sm:table-cell">
-                      {c.watch_seconds > 0 ? faDuration(c.watch_seconds) : "—"}
+                      {faDuration(c.watch_seconds)}
                     </TableCell>
                     <TableCell className="hidden text-start tabular-nums sm:table-cell">
                       {c.review_count > 0 ? (
