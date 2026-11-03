@@ -163,6 +163,14 @@ export function CourseEditor({ courseId }: { courseId: string | null }) {
           >
             ← بازگشت به فهرست دوره‌ها
           </Link>
+          {courseId && (
+            <Link
+              href={`/admin/courses/${courseId}/stats`}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              آمار دوره
+            </Link>
+          )}
         </div>
         {saved && <Badge tone="success">ذخیره شد</Badge>}
       </header>

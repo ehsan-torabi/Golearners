@@ -25,3 +25,13 @@ export function faNumber(value: number): string {
 export function faPercent(value: number, digits = 0): string {
   return `${fa(value.toFixed(digits))}٪`;
 }
+
+/** Watch time in Persian words: ۳ ساعت و ۱۲ دقیقه / ۴۵ ثانیه. */
+export function faDuration(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (h > 0) return `${fa(h)} ساعت و ${fa(m)} دقیقه`;
+  if (m > 0) return `${fa(m)} دقیقه`;
+  return `${fa(s)} ثانیه`;
+}

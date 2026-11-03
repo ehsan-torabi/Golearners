@@ -425,3 +425,97 @@ export interface AdminOrderDetail {
 export function adminGetOrder(id: string) {
   return fetchAdmin<AdminOrderDetail>(`/admin/orders/${id}`);
 }
+
+// ---------- course statistics ----------
+
+/** One course row of the admin statistics table. */
+export interface CourseStatsRow {
+  course_id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  level: string;
+  status: string;
+  price_rial: number;
+  cover_media_id: string | null;
+  cover_url: string;
+  published_at: string | null;
+  enrollments: number;
+  paid_enrollments: number;
+  granted_enrollments: number;
+  orders: number;
+  buyers: number;
+  revenue_rial: number;
+  refund_rial: number;
+  net_revenue_rial: number;
+  avg_rating: number;
+  review_count: number;
+  pending_reviews: number;
+  lessons: number;
+  sections: number;
+  duration_seconds: number;
+  started_learners: number;
+  active_learners: number;
+  completed_lessons: number;
+  completion_pct: number;
+  watch_seconds: number;
+  watch_learners: number;
+  last_activity_at: string | null;
+}
+
+/** One lesson's engagement inside a course. */
+export interface CourseLessonStat {
+  lesson_id: string;
+  title: string;
+  section_title: string;
+  section_position: number;
+  position: number;
+  status: string;
+  duration_seconds: number;
+  started: number;
+  completed: number;
+  completion_pct: number;
+  watch_seconds: number;
+  avg_position_pct: number;
+}
+
+/** One learner review on a course. */
+export interface CourseStatsReview {
+  id: string;
+  user_name: string;
+  rating: number;
+  body: string;
+  status: string;
+  created_at: string;
+}
+
+/** The full statistics payload of one course. */
+export interface CourseStatsDetail {
+  course: {
+    course_id: string;
+    slug: string;
+    title: string;
+    summary: string;
+    level: string;
+    status: string;
+    price_rial: number;
+    cover_media_id: string | null;
+    cover_url: string;
+    published_at: string | null;
+  };
+  metrics: Omit<CourseStatsRow, "course_id" | "slug" | "title" | "summary" | "level" | "status" | "price_rial" | "cover_media_id" | "cover_url" | "published_at">;
+  series: {
+    days: string[];
+    enrollments: number[];
+    revenue_rial: number[];
+    watch_seconds: number[];
+    active_learners: number[];
+  };
+  lessons: CourseLessonStat[];
+  sources: Record<string, number>;
+  reviews: CourseStatsReview[];
+}
+
+export function adminCourseStatsDetail(id: string, days = 60) {
+  return fetchAdmin<{ data: CourseStatsDetail }>(`/admin/course-stats/${id}?days=${days}`);
+}
