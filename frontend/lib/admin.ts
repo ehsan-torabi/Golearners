@@ -519,3 +519,31 @@ export interface CourseStatsDetail {
 export function adminCourseStatsDetail(id: string, days = 60) {
   return fetchAdmin<{ data: CourseStatsDetail }>(`/admin/course-stats/${id}?days=${days}`);
 }
+
+/** One learner's standing in one course. */
+export interface CourseLearnerStat {
+  user_id: string;
+  full_name: string;
+  mobile: string;
+  source: string;
+  granted_at: string;
+  spent_rial: number;
+  lessons_total: number;
+  lessons_started: number;
+  lessons_done: number;
+  progress_pct: number;
+  watch_seconds: number;
+  last_activity_at: string | null;
+  rating: number | null;
+}
+
+export function adminCourseStatsLearners(
+  id: string,
+  params: { q?: string; source?: string; state?: string; sort?: string; page?: number; per_page?: number },
+) {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== "") search.set(k, String(v));
+  });
+  return fetchAdmin<AdminList<CourseLearnerStat>>(`/admin/course-stats/${id}/learners?${search}`);
+}

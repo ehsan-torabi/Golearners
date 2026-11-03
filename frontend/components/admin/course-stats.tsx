@@ -6,10 +6,11 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "rec
 import { Pencil } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input, Select } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -18,7 +19,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ApiError, adminCourseStatsDetail, type CourseStatsDetail } from "@/lib/admin";
+import {
+  ListLoading,
+  ListPagination,
+  ListToolbar,
+  useAdminList,
+  type ListChip,
+} from "@/components/admin/list-view";
+import {
+  ApiError,
+  adminCourseStatsDetail,
+  type CourseLearnerStat,
+  type CourseStatsDetail,
+} from "@/lib/admin";
 import { formatTomanFromRial, LEVEL_FA } from "@/lib/api";
 import { formatJalali } from "@/lib/jalali";
 import { fa, faDuration, faNumber, faPercent } from "@/lib/utils";
@@ -135,6 +148,7 @@ export function CourseStats({ courseId }: { courseId: string }) {
       <KpiBand detail={detail} />
       <TrendCharts detail={detail} />
       <Engagement detail={detail} />
+      <Learners courseId={courseId} />
     </div>
   );
 }
@@ -379,6 +393,11 @@ function Engagement({ detail }: { detail: CourseStatsDetail }) {
 
       <div className="space-y-4">
         <Card className="p-5">
+          <h2 className="text-sm font-semibold text-foreground">پرتماشاترین درس‌ها</h2>
+          <TopLessons lessons={detail.lessons} />
+        </Card>
+
+        <Card className="p-5">
           <h2 className="text-sm font-semibold text-foreground">منبع ثبت‌نام</h2>
           {sourceTotal === 0 ? (
             <p className="mt-2 text-xs text-muted-foreground">هنوز دانشجویی ثبت‌نام نکرده است.</p>
@@ -431,3 +450,214 @@ function Engagement({ detail }: { detail: CourseStatsDetail }) {
 
 
 
+
+/** The three lessons learners actually watched, or the honest empty note. */
+function TopLessons({ lessons }: { lessons: CourseStatsDetail["lessons"] }) {
+  const top = [...lessons]
+    .sort((a, b) => b.watch_seconds - a.watch_seconds)
+    .filter((l) => l.watch_seconds > 0)
+    .slice(0, 3);
+  if (top.length === 0) {
+    return <p className="mt-2 text-xs text-muted-foreground">هنوز تماشایی ثبت نشده است.</p>;
+  }
+  return (
+    <ol className="mt-1">
+      {top.map((l, i) => (
+        <li
+          key={l.lesson_id}
+          className="mt-3 flex items-center gap-3 border-t border-border-variant pt-3 first:border-t-0 first:pt-0"
+        >
+          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{fa(i + 1)}</span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm text-foreground">{l.title}</p>
+            <p className="truncate text-xs text-muted-foreground">{l.section_title}</p>
+          </div>
+          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+            {faDuration(l.watch_seconds)}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+const LEARNER_STATE_FA: Record<string, { label: string; tone: "success" | "warning" | "neutral" }> = {
+  completed: { label: "تمام‌شده", tone: "success" },
+  started: { label: "در جریان", tone: "warning" },
+  not_started: { label: "شروع نشده", tone: "neutral" },
+};
+
+const LEARNER_SORT_OPTIONS = [
+  { value: "watch_desc", label: "پرتماشاترین" },
+  { value: "progress_desc", label: "بیشترین پیشرفت" },
+  { value: "spent_desc", label: "بیشترین پرداخت" },
+  { value: "enrolled_asc", label: "قدیمی‌ترین ثبت‌نام" },
+  { value: "name", label: "نام" },
+];
+
+function learnerState(s: CourseLearnerStat): keyof typeof LEARNER_STATE_FA {
+  if (s.lessons_total > 0 && s.lessons_done >= s.lessons_total) return "completed";
+  if (s.lessons_started > 0) return "started";
+  return "not_started";
+}
+
+/** The learners of one course: who bought it, who finished it, who watches. */
+function Learners({ courseId }: { courseId: string }) {
+  const [query, setQuery] = React.useState("");
+  const [search, setSearch] = React.useState("");
+  const [source, setSource] = React.useState("");
+  const [state, setState] = React.useState("");
+  const [sort, setSort] = React.useState("watch_desc");
+
+  const filters = React.useMemo(
+    () => ({ q: search, source, state, sort }),
+    [search, source, state, sort],
+  );
+  const list = useAdminList<CourseLearnerStat>({
+    path: `/admin/course-stats/${courseId}/learners`,
+    filters,
+  });
+
+  const chips: ListChip[] = [];
+  if (source) {
+    chips.push({ key: "source", label: `منبع: ${SOURCE_FA[source] ?? source}`, onRemove: () => setSource("") });
+  }
+  if (state) {
+    chips.push({
+      key: "state",
+      label: `وضعیت: ${LEARNER_STATE_FA[state]?.label ?? state}`,
+      onRemove: () => setState(""),
+    });
+  }
+
+  return (
+    <section aria-label="دانشجوهای دوره">
+    <Card className="p-0">
+      <div className="border-b border-border-variant px-5 py-4">
+        <h2 className="text-sm font-semibold text-foreground">دانشجوهای دوره</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          چه کسی خریده، چه کسی تمام کرده و چه کسی بیشترین تماشا را دارد
+        </p>
+      </div>
+
+      <ListToolbar
+        search={{
+          value: query,
+          onChange: setQuery,
+          onSubmit: () => setSearch(query.trim()),
+          placeholder: "نام یا شماره دانشجو",
+        }}
+        chips={chips}
+        sort={{ value: sort, options: LEARNER_SORT_OPTIONS, onChange: setSort }}
+        filters={
+          <div className="space-y-3">
+            <div>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">منبع دسترسی</p>
+              <Select aria-label="فیلتر منبع دسترسی" value={source} onChange={(e) => setSource(e.target.value)} className="w-full">
+                <option value="">همه</option>
+                <option value="purchase">خرید</option>
+                <option value="grant">هدیه</option>
+              </Select>
+            </div>
+            <div>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">وضعیت</p>
+              <Select aria-label="فیلتر وضعیت دانشجو" value={state} onChange={(e) => setState(e.target.value)} className="w-full">
+                <option value="">همه</option>
+                {Object.entries(LEARNER_STATE_FA).map(([value, meta]) => (
+                  <option key={value} value={value}>
+                    {meta.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full"
+              onClick={() => {
+                setSource("");
+                setState("");
+              }}
+            >
+              پاک کردن فیلترها
+            </Button>
+          </div>
+        }
+      />
+
+      {list.loading ? (
+        <ListLoading label="در حال بارگذاری دانشجوها" />
+      ) : list.items.length === 0 ? (
+        <EmptyState
+          title="دانشجویی با این فیلترها نیست"
+          body="فیلترها را تغییر دهید تا دانشجوهای دیگر این دوره را ببینید."
+        />
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">دانشجو</TableHead>
+              <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">منبع</TableHead>
+              <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">پرداخت</TableHead>
+              <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">پیشرفت</TableHead>
+              <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">تماشا</TableHead>
+              <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">امتیاز</TableHead>
+              <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">آخرین فعالیت</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {list.items.map((s) => {
+              const st = LEARNER_STATE_FA[learnerState(s)];
+              return (
+                <TableRow key={s.user_id}>
+                  <TableCell className="text-start whitespace-normal">
+                    <p className="truncate font-medium text-foreground">{s.full_name || "دانشجو"}</p>
+                    <p className="truncate text-xs text-muted-foreground" dir="ltr">
+                      {s.mobile}
+                    </p>
+                    <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground sm:hidden">
+                      <span>{SOURCE_FA[s.source] ?? s.source}</span>
+                      <span>{formatTomanFromRial(s.spent_rial)}</span>
+                      <span>پیشرفت {faPercent(s.progress_pct)}</span>
+                      <span>{faDuration(s.watch_seconds)}</span>
+                      <Badge tone={st.tone}>{st.label}</Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden text-start sm:table-cell">
+                    <Badge tone={s.source === "purchase" ? "success" : "neutral"}>
+                      {SOURCE_FA[s.source] ?? s.source}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="hidden text-start tabular-nums sm:table-cell">
+                    {formatTomanFromRial(s.spent_rial)}
+                  </TableCell>
+                  <TableCell className="hidden text-start whitespace-nowrap sm:table-cell">
+                    <Badge tone={st.tone}>{st.label}</Badge>
+                    <span className="ms-2 tabular-nums">
+                      {faPercent(s.progress_pct)}
+                      <span className="text-xs text-muted-foreground">
+                        {" "}({fa(s.lessons_done)} از {fa(s.lessons_total)})
+                      </span>
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden text-start tabular-nums text-muted-foreground sm:table-cell">
+                    {faDuration(s.watch_seconds)}
+                  </TableCell>
+                  <TableCell className="hidden text-start tabular-nums sm:table-cell">
+                    {s.rating != null ? fa(s.rating) : "بدون نظر"}
+                  </TableCell>
+                  <TableCell className="hidden text-start whitespace-nowrap text-muted-foreground sm:table-cell">
+                    {s.last_activity_at ? formatJalali(new Date(s.last_activity_at)) : "فعالیتی ثبت نشده"}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      )}
+
+      <ListPagination page={list.page} pages={list.pages} total={list.total} onPage={list.setPage} />
+    </Card>
+    </section>
+  );
+}

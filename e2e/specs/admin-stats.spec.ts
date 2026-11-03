@@ -42,7 +42,7 @@ test.describe("course statistics", () => {
 
     // the figures of the course, not placeholders
     await expect(page.getByText("درآمد کل")).toBeVisible();
-    await expect(page.getByText("دانشجو", { exact: true })).toBeVisible();
+    await expect(page.getByText("دانشجو", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("نرخ تکمیل")).toBeVisible();
     await expect(page.getByText("پیشرفت در درس‌ها")).toBeVisible();
 
@@ -50,6 +50,34 @@ test.describe("course statistics", () => {
     await expect(page.getByText("ثبت‌نام در ۶۰ روز اخیر")).toBeVisible();
     await expect(page.getByText("درآمد در ۶۰ روز اخیر")).toBeVisible();
     await expect(page.getByText("زمان تماشا در ۶۰ روز اخیر")).toBeVisible();
+
+    expectNoClientErrors(diag);
+  });
+
+  test("the course page lists its learners and filters them", async ({ page, diag }) => {
+    await page.goto("/admin/courses");
+    await page.getByRole("tab", { name: "آمار" }).click();
+    await page.getByRole("link", { name: "آموزش Go از صفر" }).click();
+    await expect(page).toHaveURL(/\/stats$/);
+
+    const learners = page.getByRole("region", { name: "دانشجوهای دوره" });
+    await expect(learners.getByText("احسان ترابی فارسانی").first()).toBeVisible();
+
+    // searchable by mobile
+    const search = learners.getByPlaceholder("نام یا شماره دانشجو");
+    await search.fill("09135095941");
+    await search.press("Enter");
+    await expect(learners.getByText("احسان ترابی فارسani".replace("ani", "انی")).first()).toBeVisible();
+    await expect(learners.getByText("استاد")).toHaveCount(0);
+
+    // and by standing
+    await search.fill("");
+    await search.press("Enter");
+    await learners.getByRole("button", { name: "فیلتر" }).click();
+    // the popover renders in a portal, so the select is not inside the region
+    await page.getByLabel("فیلتر وضعیت دانشجو").selectOption("not_started");
+    await page.keyboard.press("Escape");
+    await expect(learners.getByText("شروع نشده").first()).toBeVisible();
 
     expectNoClientErrors(diag);
   });
