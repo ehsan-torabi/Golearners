@@ -10,7 +10,8 @@ const PUBLIC_ROUTES = [
   "/login",
   "/register",
   "/checkout?course=go-from-zero",
-  "/checkout/result?status=paid",
+  // no order id: the page must render its "cannot determine" state, not crash
+  "/checkout/result",
 ];
 
 /**

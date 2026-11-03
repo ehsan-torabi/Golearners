@@ -3,7 +3,13 @@
 # Open http://api.localhost/healthz
 
 api.localhost {
-	reverse_proxy host.docker.internal:8080
+	# replace (never append) the forwarded address, and overwrite any
+	# client-supplied X-Real-IP: the API resolves the caller's IP from the
+	# last trusted hop, so a spoofed header must not survive the proxy
+	reverse_proxy host.docker.internal:8080 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Real-IP {remote_host}
+	}
 }
 
 site.localhost {

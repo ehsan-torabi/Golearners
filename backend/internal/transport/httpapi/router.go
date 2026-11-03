@@ -74,7 +74,9 @@ type App struct {
 func NewRouter(a *App) http.Handler {
 	r := chi.NewRouter()
 	r.Use(chimw.RequestID)
-	r.Use(chimw.RealIP)
+	// chi's RealIP rewrites RemoteAddr from the FIRST X-Forwarded-For entry,
+	// which the client controls; clientIP() resolves the trusted last hop
+	// instead, so that middleware stays off.
 	r.Use(chimw.Recoverer)
 	r.Use(securityHeaders)
 	r.Use(requestLogger(a.Log))
@@ -204,6 +206,7 @@ func NewRouter(a *App) http.Handler {
 			r.Get("/admin/analytics/courses", a.handleAnalyticsCourses)
 			r.Get("/admin/course-stats", a.handleAdminCourseStatsList)
 			r.Get("/admin/course-stats/{id}", a.handleAdminCourseStatsDetail)
+			r.Get("/admin/course-stats/{id}/learners", a.handleAdminCourseStatsLearners)
 			r.Get("/admin/settings", a.handleAdminSettings)
 			r.Patch("/admin/settings", a.handleAdminSettingsPatch)
 			r.Get("/admin/users", a.handleAdminUsers)
@@ -248,7 +251,7 @@ func requestLogger(log *slog.Logger) func(http.Handler) http.Handler {
 				"status", ww.Status(),
 				"duration_ms", time.Since(start).Milliseconds(),
 				"request_id", chimw.GetReqID(r.Context()),
-				"ip", r.RemoteAddr,
+				"ip", clientIP(r),
 			)
 		})
 	}
