@@ -29,13 +29,47 @@ const PAYMENT_FA: Record<string, string> = {
 };
 
 const EVENT_FA: Record<string, string> = {
-  created: "ثبت شد",
-  initiated: "درخواست پرداخت",
-  verified: "پرداخت تأیید شد",
-  failed: "پرداخت ناموفق",
-  canceled: "لغو شد",
-  refunded: "بازگشت وجه",
+  request_sent: "درخواست پرداخت به درگاه ارسال شد",
+  request_ok: "درگاه درخواست را پذیرفت",
+  redirect: "کاربر به درگاه هدایت شد",
+  callback_received: "بازگشت از درگاه دریافت شد",
+  verify_ok: "پرداخت تأیید شد",
+  verify_failed: "تأیید پرداخت ناموفق بود",
+  reconciled: "تطبیق خودکار انجام شد",
+  reverse_requested: "درخواست برگشت وجه ثبت شد",
+  refund_recorded: "بازگشت وجه ثبت شد",
 };
+
+/** the API names the event list `events`; payload is base64-encoded JSON.
+    Older builds shipped Go-default keys, so read both shapes. */
+type PaymentEventRow = {
+  id?: string;
+  ID?: string;
+  type?: string;
+  Type?: string;
+  payload?: string;
+  Payload?: string;
+  created_at?: string;
+  CreatedAt?: string;
+};
+
+/** the event payload is base64 JSON; a readable line beats raw bytes */
+function payloadLine(b64?: string): string {
+  if (!b64) return "";
+  try {
+    const json = decodeURIComponent(
+      Array.from(atob(b64))
+        .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
+        .join(""),
+    );
+    const obj = JSON.parse(json) as Record<string, unknown>;
+    return Object.entries(obj)
+      .map(([k, v]) => `${k}: ${String(v)}`)
+      .join(" · ");
+  } catch {
+    return "";
+  }
+}
 
 /** admin order detail: items, every payment attempt, the event timeline and
     the refund action. Replaces the old dialog with a shareable page. */
@@ -80,7 +114,7 @@ export default function AdminOrderPage() {
   }
 
   const status = order ? (STATUS_FA[order.status] ?? { label: order.status, cls: "bg-accent text-muted-foreground" }) : null;
-  const events = order?.events ?? [];
+  const events = (order?.events ?? []) as PaymentEventRow[];
 
   return (
     <div className="space-y-5">
@@ -247,16 +281,23 @@ export default function AdminOrderPage() {
               <p className="px-6 py-5 text-xs text-muted-foreground">رویدادی ثبت نشده است.</p>
             ) : (
               <ol className="px-6 py-4 text-sm">
-                {events.map((ev) => (
-                  <li key={ev.id} className="relative border-s border-line pb-4 ps-5 last:pb-0">
-                    <span aria-hidden className="absolute -start-1 top-1 size-2 rounded-full bg-primary" />
-                    <p className="font-medium text-foreground">{EVENT_FA[ev.kind] ?? ev.kind}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {formatJalali(new Date(ev.created_at))}
-                      {ev.detail && ` · ${ev.detail}`}
-                    </p>
-                  </li>
-                ))}
+                {events.map((ev, i) => {
+                  const type = ev.type ?? ev.Type ?? "";
+                  const at = ev.created_at ?? ev.CreatedAt;
+                  const payload = ev.payload ?? ev.Payload;
+                  return (
+                    <li key={ev.id ?? ev.ID ?? i} className="relative border-s border-line pb-4 ps-5 last:pb-0">
+                      <span aria-hidden className="absolute -start-1 top-1 size-2 rounded-full bg-primary" />
+                      <p className="font-medium text-foreground">{EVENT_FA[type] ?? type}</p>
+                      {at && <p className="mt-0.5 text-xs text-muted-foreground">{formatJalali(new Date(at))}</p>}
+                      {payloadLine(payload) && (
+                        <p className="mt-0.5 text-xs text-muted-foreground" dir="ltr">
+                          {payloadLine(payload)}
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
               </ol>
             )}
           </Card>

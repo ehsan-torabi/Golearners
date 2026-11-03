@@ -61,11 +61,11 @@ type Payment struct {
 
 // PaymentEvent is the append-only gateway interaction ledger.
 type PaymentEvent struct {
-	ID        uuid.UUID
-	PaymentID uuid.UUID
-	Type      string
-	Payload   []byte
-	CreatedAt time.Time
+	ID        uuid.UUID `json:"id"`
+	PaymentID uuid.UUID `json:"payment_id"`
+	Type      string    `json:"type"`
+	Payload   []byte    `json:"payload"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // Event type names.
