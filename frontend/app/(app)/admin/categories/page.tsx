@@ -41,6 +41,7 @@ import { CATEGORY_ICONS, CATEGORY_ICON_KEYS, CategoryMark } from "@/components/s
 import { MediaField } from "@/components/admin/media-field";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fa } from "@/lib/utils";
+import { ListHeader } from "@/components/admin/list-view";
 
 type Row = {
   id: string;
@@ -222,10 +223,10 @@ export default function AdminCategoriesPage() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-start">عنوان</TableHead>
-            <TableHead className="text-start">نامک</TableHead>
-            <TableHead className="text-start">ترتیب</TableHead>
-            <TableHead className="text-start">کنش‌ها</TableHead>
+            <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">عنوان</TableHead>
+            <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">نامک</TableHead>
+            <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">ترتیب</TableHead>
+            <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">کنش‌ها</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -343,12 +344,12 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="space-y-4">
-      <header>
-        <h1 className="reveal text-xl leading-7 text-foreground">دسته‌بندی‌ها</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          دسته‌های دوره‌ها و دسته‌های وبلاگ. نامک به‌صورت خودکار از عنوان ساخته می‌شود.
-        </p>
-      </header>
+      <ListHeader
+        title="دسته‌بندی‌ها"
+        count={courseCategories.length + blogCategories.length}
+        unit="دسته‌بندی"
+        subtitle="دسته‌های دوره‌ها و دسته‌های وبلاگ. نامک به‌صورت خودکار از عنوان ساخته می‌شود."
+      />
 
       {error && <Alert>{error}</Alert>}
 

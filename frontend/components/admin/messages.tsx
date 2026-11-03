@@ -1,25 +1,40 @@
 "use client";
 
 import * as React from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Check, ChevronDown, ChevronUp, Mail, MailOpen } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Alert } from "@/components/ui/alert";
+import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DetailCard,
+  DetailGrid,
+  DetailItem,
+  DetailSection,
+  ListDetailRow,
+  ListHeader,
+  ListLoading,
+  ListPagination,
+  ListToolbar,
+  RowMenu,
+  useAdminList,
+  useFacetCounts,
+  type ListChip,
+} from "@/components/admin/list-view";
 import { ApiError, api } from "@/lib/api";
-import { fetchAdmin } from "@/lib/admin";
 import { formatJalali } from "@/lib/jalali";
 import { fa } from "@/lib/utils";
 
-/* message-list block, wired to the real contact messages endpoint. */
 interface MessageRow {
   ID: string;
   Name: string;
@@ -29,14 +44,6 @@ interface MessageRow {
   CreatedAt: string;
 }
 
-const FILTERS = [
-  { value: "", label: "همه" },
-  { value: "new", label: "خوانده‌نشده" },
-  { value: "read", label: "خوانده‌شده" },
-  { value: "replied", label: "پاسخ‌داده‌شده" },
-  { value: "closed", label: "بسته" },
-];
-
 const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "neutral" }> = {
   new: { label: "خوانده‌نشده", tone: "warning" },
   read: { label: "خوانده‌شده", tone: "neutral" },
@@ -44,166 +51,197 @@ const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "
   closed: { label: "بسته", tone: "neutral" },
 };
 
+const STATUS_VALUES = ["new", "read", "replied", "closed"];
+
 export function AdminMessages() {
-  const [messages, setMessages] = React.useState<MessageRow[]>([]);
-  const [total, setTotal] = React.useState(0);
-  const [page, setPage] = React.useState(1);
-  const [filter, setFilter] = React.useState("");
-  const [loaded, setLoaded] = React.useState(false);
-  const [error, setError] = React.useState("");
+  const [status, setStatus] = React.useState("");
+  const [allStatuses, setAllStatuses] = React.useState(true);
+  const [expanded, setExpanded] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState("");
+  const [error, setError] = React.useState("");
 
-  const load = React.useCallback(async () => {
-    try {
-      const params = new URLSearchParams({ page: String(page), per_page: "20" });
-      if (filter) params.set("status", filter);
-      const res = await fetchAdmin<{ data: MessageRow[]; meta: { total: number } }>(
-        `/admin/messages?${params}`,
-      );
-      setMessages(res.data ?? []);
-      setTotal(res.meta?.total ?? 0);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "خطا در دریافت پیام‌ها");
-    } finally {
-      setLoaded(true);
-    }
-  }, [page, filter]);
+  const list = useAdminList<MessageRow>({
+    path: "/admin/messages",
+    filters: { status: allStatuses ? "" : status },
+  });
+  const statusCounts = useFacetCounts({
+    path: "/admin/messages",
+    param: "status",
+    values: STATUS_VALUES,
+  });
 
-  React.useEffect(() => {
-    void load();
-  }, [load]);
-
-  async function setStatus(id: string, status: string) {
+  async function setMessageStatus(id: string, next: string) {
     setError("");
     setBusy(id);
     try {
-      await api(`/admin/messages/${id}/status`, { method: "POST", body: JSON.stringify({ status }) });
-      await load();
+      await api(`/admin/messages/${id}/status`, { method: "POST", body: JSON.stringify({ status: next }) });
+      await list.reload();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "خطا در تغییر وضعیت");
+      setError(err instanceof ApiError ? err.message : "تغییر وضعیت پیام ناموفق بود");
     } finally {
       setBusy("");
     }
   }
 
-  if (!loaded) {
-    return (
-      <Card className="space-y-3 p-6" aria-label="در حال بارگذاری پیام‌ها">
-        <div className="h-5 w-1/3 animate-pulse rounded bg-accent" />
-        <div className="h-5 w-1/2 animate-pulse rounded bg-accent" />
-      </Card>
-    );
+  const chips: ListChip[] = [];
+  if (!allStatuses) {
+    chips.push({
+      key: "status",
+      label: `وضعیت: ${STATUS_FA[status]?.label ?? status}`,
+      count: statusCounts[status] ?? null,
+      onRemove: () => setStatus(""),
+    });
   }
-
-  const pages = Math.max(1, Math.ceil(total / 20));
 
   return (
     <div className="space-y-4">
+      <ListHeader title="پیام‌های تماس" count={list.loading ? null : list.total} unit="پیام" />
+
       {error && <Alert>{error}</Alert>}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Tabs
-          value={filter}
-          onValueChange={(v) => {
-            setFilter(v);
-            setPage(1);
-          }}
-        >
-          <TabsList variant="line" className="h-9 gap-4 p-0">
-            {FILTERS.map((f) => (
-              <TabsTrigger key={f.value} value={f.value}>
-                {f.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-        <span className="ms-auto text-sm text-muted-foreground">{fa(total)} پیام</span>
-      </div>
-
-      {messages.length === 0 ? (
-        <EmptyState
-          title="پیامی با این فیلترها نیست"
-          body="فیلتر وضعیت را تغییر دهید یا منتظر پیام تازه باشید."
+      <Card className="p-0">
+        <ListToolbar
+          chips={chips}
+          toggle={{ checked: allStatuses, onChange: setAllStatuses, label: "نمایش همهٔ وضعیت‌ها" }}
+          filters={
+            <div className="space-y-3">
+              <div>
+                <p className="mb-1 text-xs font-medium text-muted-foreground">وضعیت</p>
+                <Select
+                  aria-label="فیلتر وضعیت"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full"
+                  disabled={allStatuses}
+                >
+                  {STATUS_VALUES.map((value) => (
+                    <option key={value} value={value}>
+                      {STATUS_FA[value].label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  setStatus("new");
+                  setAllStatuses(false);
+                }}
+              >
+                فقط پیام‌های تازه
+              </Button>
+            </div>
+          }
         />
-      ) : (
-        <div className="space-y-4">
-      {messages.map((m) => {
-        const status = STATUS_FA[m.Status] ?? { label: m.Status, tone: "neutral" as const };
-        return (
-          <Card key={m.ID}>
-            <CardHeader className="flex-row items-center gap-3">
-              <Avatar className="size-9">
-                <AvatarFallback>{m.Name?.slice(0, 1) ?? "؟"}</AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                <CardTitle className="truncate">{m.Name || "بدون نام"}</CardTitle>
-                <p className="text-xs text-muted-foreground" dir="ltr">
-                  {m.Contact}
-                </p>
-              </div>
-              <Badge tone={status.tone}>{status.label}</Badge>
-            </CardHeader>
-            <CardContent>
-              <Separator className="mb-3" />
-              <p className="text-sm leading-7 text-foreground">{m.Body}</p>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                <span className="text-xs text-muted-foreground">
-                  {formatJalali(new Date(m.CreatedAt))}
-                </span>
-                <div className="flex gap-2">
-                  {m.Status !== "closed" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      loading={busy === m.ID}
-                      onClick={() => setStatus(m.ID, "closed")}
-                    >
-                      بستن
-                    </Button>
-                  )}
-                  {m.Status !== "replied" && (
-                    <Button
-                      size="sm"
-                      loading={busy === m.ID}
-                      onClick={() => setStatus(m.ID, "replied")}
-                    >
-                      پاسخ داده شد
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-        </div>
-      )}
 
-      {total > 0 && (
-        <div className="flex items-center justify-between gap-3 text-sm">
-          <span className="text-muted-foreground">
-            صفحهٔ {fa(page)} از {fa(pages)}
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              قبلی
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page >= pages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              بعدی
-            </Button>
-          </div>
-        </div>
-      )}
+        {list.loading ? (
+          <ListLoading label="در حال بارگذاری پیام‌ها" />
+        ) : list.items.length === 0 ? (
+          <EmptyState title="پیامی نیست" body="پیام‌های فرستاده‌شده از فرم تماس اینجا می‌نشینند." />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">فرستنده</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">راه ارتباطی</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">پیام</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">تاریخ</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">وضعیت</TableHead>
+                <TableHead className="w-20" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {list.items.map((m) => {
+                const meta = STATUS_FA[m.Status] ?? { label: m.Status, tone: "neutral" as const };
+                const open = expanded === m.ID;
+                return (
+                  <React.Fragment key={m.ID}>
+                    <TableRow>
+                      <TableCell className="text-start whitespace-normal">
+                        <div className="flex items-center gap-3">
+                          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary-tint text-xs font-semibold text-accent-strong">
+                            {(m.Name || "؟").trim().slice(0, 1)}
+                          </span>
+                          <span className="truncate font-medium text-foreground">{m.Name || "ناشناس"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-start text-muted-foreground" dir="ltr">
+                        {m.Contact || "—"}
+                      </TableCell>
+                      <TableCell className="text-start whitespace-normal">
+                        <span className="block max-w-80 truncate text-muted-foreground">{m.Body}</span>
+                      </TableCell>
+                      <TableCell className="text-start text-muted-foreground">
+                        {formatJalali(new Date(m.CreatedAt))}
+                      </TableCell>
+                      <TableCell className="text-start">
+                        <Badge tone={meta.tone}>{meta.label}</Badge>
+                      </TableCell>
+                      <TableCell className="text-start">
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={open ? "بستن جزئیات" : "نمایش جزئیات"}
+                            aria-expanded={open}
+                            onClick={() => setExpanded(open ? null : m.ID)}
+                          >
+                            {open ? <ChevronUp /> : <ChevronDown />}
+                          </Button>
+                          <RowMenu
+                            label={`کنش‌های پیام ${m.Name}`}
+                            items={[
+                              {
+                                label: "خوانده‌شده",
+                                icon: <MailOpen />,
+                                disabled: m.Status === "read" || busy === m.ID,
+                                onSelect: () => void setMessageStatus(m.ID, "read"),
+                              },
+                              {
+                                label: "پاسخ‌داده‌شده",
+                                icon: <Mail />,
+                                disabled: m.Status === "replied" || busy === m.ID,
+                                onSelect: () => void setMessageStatus(m.ID, "replied"),
+                              },
+                              {
+                                label: "بستن پیام",
+                                icon: <Check />,
+                                disabled: m.Status === "closed" || busy === m.ID,
+                                onSelect: () => void setMessageStatus(m.ID, "closed"),
+                              },
+                            ]}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {open && (
+                      <ListDetailRow colSpan={6}>
+                        <DetailGrid>
+                          <DetailItem label="نام">{m.Name || "—"}</DetailItem>
+                          <DetailItem label="راه ارتباطی" dir="ltr">
+                            {m.Contact || "—"}
+                          </DetailItem>
+                          <DetailItem label="تاریخ">{formatJalali(new Date(m.CreatedAt))}</DetailItem>
+                          <DetailItem label="وضعیت">{meta.label}</DetailItem>
+                        </DetailGrid>
+                        <DetailSection title="متن پیام">
+                          <DetailCard title={m.Name || "پیام"} subtitle={m.Contact}>
+                            <p className="mt-2 text-sm leading-7 text-foreground">{m.Body}</p>
+                          </DetailCard>
+                        </DetailSection>
+                      </ListDetailRow>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+
+        <ListPagination page={list.page} pages={list.pages} total={list.total} onPage={list.setPage} />
+      </Card>
     </div>
   );
 }

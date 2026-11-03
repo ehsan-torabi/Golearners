@@ -61,18 +61,20 @@ export function ListHeader({
   count,
   unit,
   action,
+  subtitle,
 }: {
   title: string;
   count: number | null;
   unit: string;
   action?: React.ReactNode;
+  subtitle?: React.ReactNode;
 }) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 className="reveal text-xl leading-7 text-foreground">{title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {count === null ? `در حال شمارش ${unit}…` : `${fa(count)} ${unit} ثبت شده است.`}
+          {subtitle ?? (count === null ? `در حال شمارش ${unit}…` : `${fa(count)} ${unit} ثبت شده است.`)}
         </p>
       </div>
       {action}
