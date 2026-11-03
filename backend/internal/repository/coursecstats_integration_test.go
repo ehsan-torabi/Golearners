@@ -113,4 +113,28 @@ func TestCourseStatsCountsWhatActuallyHappened(t *testing.T) {
 	// an unknown course is a not-found, not an empty page
 	_, err = stats.Detail(ctx, uuid.Must(uuid.NewV7()), 60)
 	require.ErrorIs(t, err, ports.ErrNotFound)
+
+	learners, ltotal, err := stats.Learners(ctx, c.ID, ports.LearnerStatFilter{}, 1, 20)
+	require.NoError(t, err)
+	require.Equal(t, 1, ltotal)
+	require.Len(t, learners, 1)
+	require.Equal(t, buyerID, learners[0].UserID)
+	require.Equal(t, "purchase", learners[0].Source)
+	require.Equal(t, int64(250000), learners[0].SpentRial)
+	require.Equal(t, 1, learners[0].LessonsTotal)
+	require.Equal(t, 1, learners[0].LessonsDone)
+	require.Equal(t, 100.0, learners[0].ProgressPct)
+	require.Equal(t, int64(60), learners[0].WatchSeconds)
+	require.NotNil(t, learners[0].Rating)
+	require.Equal(t, 4, *learners[0].Rating)
+	require.NotNil(t, learners[0].LastActivityAt)
+
+	for _, tc := range []struct {
+		filter ports.LearnerStatFilter
+		want   int
+	}{{ports.LearnerStatFilter{State: "completed"}, 1}, {ports.LearnerStatFilter{State: "not_started"}, 0}, {ports.LearnerStatFilter{Source: "grant"}, 0}, {ports.LearnerStatFilter{Q: "nobody-here"}, 0}} {
+		_, got, err := stats.Learners(ctx, c.ID, tc.filter, 1, 20)
+		require.NoError(t, err)
+		require.Equal(t, tc.want, got, "filter %+v", tc.filter)
+	}
 }

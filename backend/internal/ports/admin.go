@@ -143,6 +143,33 @@ type CourseStatsRepo interface {
 	List(ctx context.Context, f CourseStatsFilter, page, perPage int) ([]CourseStatsRow, int, error)
 	// Detail returns the metrics, trends and per-lesson engagement of one course.
 	Detail(ctx context.Context, courseID uuid.UUID, days int) (*CourseStatsDetail, error)
+	// Learners returns one page of the course's learners with their standing.
+	Learners(ctx context.Context, courseID uuid.UUID, f LearnerStatFilter, page, perPage int) ([]LearnerStat, int, error)
+}
+
+// LearnerStatFilter narrows the per-learner list of one course.
+type LearnerStatFilter struct {
+	Q      string
+	Source string // purchase | grant
+	State  string // completed | started | not_started
+	Sort   string
+}
+
+// LearnerStat is one learner's standing in one course.
+type LearnerStat struct {
+	UserID         uuid.UUID  `json:"user_id"`
+	FullName       string     `json:"full_name"`
+	Mobile         string     `json:"mobile"`
+	Source         string     `json:"source"`
+	GrantedAt      time.Time  `json:"granted_at"`
+	SpentRial      int64      `json:"spent_rial"`
+	LessonsTotal   int        `json:"lessons_total"`
+	LessonsStarted int        `json:"lessons_started"`
+	LessonsDone    int        `json:"lessons_done"`
+	ProgressPct    float64    `json:"progress_pct"`
+	WatchSeconds   int64      `json:"watch_seconds"`
+	LastActivityAt *time.Time `json:"last_activity_at"`
+	Rating         *int       `json:"rating"`
 }
 
 // SettingsRepo — keyed site configuration (settings table).

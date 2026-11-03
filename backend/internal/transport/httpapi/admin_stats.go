@@ -60,3 +60,29 @@ func (a *App) handleAdminCourseStatsDetail(w http.ResponseWriter, r *http.Reques
 	detail.Course.CoverURL = mediaRef(detail.Course.CoverMediaID)
 	writeData(w, detail)
 }
+
+// GET /api/v1/admin/course-stats/{id}/learners
+func (a *App) handleAdminCourseStatsLearners(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	page, perPage := pageParams(r)
+	list, total, err := a.CourseStats.Learners(r.Context(), id, ports.LearnerStatFilter{
+		Q:      r.URL.Query().Get("q"),
+		Source: r.URL.Query().Get("source"),
+		State:  r.URL.Query().Get("state"),
+		Sort:   r.URL.Query().Get("sort"),
+	}, page, perPage)
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	items := make([]ports.LearnerStat, 0, len(list))
+	items = append(items, list...)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"data": items,
+		"meta": map[string]any{"page": page, "per_page": perPage, "total": total},
+	})
+}

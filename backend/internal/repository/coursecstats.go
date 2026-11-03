@@ -353,3 +353,112 @@ func (r *CourseStatsRepo) fillReviews(ctx context.Context, out *ports.CourseStat
 	}
 	return rows.Err()
 }
+
+// learnerStatsBody is one learner's standing in one course. The course id is
+// bound as $1; the query that wraps it appends its own arguments after that.
+const learnerStatsBody = `
+WITH standing AS (
+	SELECT u.id AS user_id, u.full_name, u.mobile, e.source, e.granted_at,
+		(SELECT coalesce(sum(oi.unit_price_rial),0)::bigint FROM order_items oi
+			JOIN orders o ON o.id=oi.order_id AND o.status='paid'
+			WHERE oi.course_id=$1 AND o.user_id=u.id) AS spent_rial,
+		(SELECT count(*)::int FROM lessons l JOIN course_sections s ON s.id=l.section_id
+			WHERE s.course_id=$1 AND l.status IN ('ready','published')) AS lessons_total,
+		(SELECT count(DISTINCT p.lesson_id)::int FROM lesson_progress p
+			JOIN lessons l ON l.id=p.lesson_id JOIN course_sections s ON s.id=l.section_id
+			WHERE s.course_id=$1 AND p.user_id=u.id) AS lessons_started,
+		(SELECT count(*)::int FROM lesson_progress p
+			JOIN lessons l ON l.id=p.lesson_id JOIN course_sections s ON s.id=l.section_id
+			WHERE s.course_id=$1 AND p.user_id=u.id AND p.completed_at IS NOT NULL) AS lessons_done,
+		(SELECT coalesce(sum(w.seconds),0)::bigint FROM lesson_watch_daily w
+			JOIN lessons l ON l.id=w.lesson_id JOIN course_sections s ON s.id=l.section_id
+			WHERE s.course_id=$1 AND w.user_id=u.id) AS watch_seconds,
+		(SELECT max(p.updated_at) FROM lesson_progress p
+			JOIN lessons l ON l.id=p.lesson_id JOIN course_sections s ON s.id=l.section_id
+			WHERE s.course_id=$1 AND p.user_id=u.id) AS last_activity_at,
+		(SELECT r.rating FROM reviews r WHERE r.course_id=$1 AND r.user_id=u.id
+			ORDER BY r.created_at DESC LIMIT 1) AS rating
+	FROM entitlements e JOIN users u ON u.id=e.user_id
+	WHERE e.course_id=$1 AND e.revoked_at IS NULL
+)`
+
+// learnerStatsWhere filters the standing rows; args already carries the
+// course id, so the placeholders continue from there.
+func learnerStatsWhere(f ports.LearnerStatFilter, args []any) (string, []any) {
+	where := []string{"TRUE"}
+	next := func() string { return fmt.Sprint(len(args) + 1) }
+	if f.Q != "" {
+		where = append(where, "(full_name ILIKE '%'||$"+next()+"||'%' OR mobile LIKE '%'||$"+next()+"||'%')")
+		args = append(args, f.Q)
+	}
+	if f.Source != "" {
+		where = append(where, "source = $"+next())
+		args = append(args, f.Source)
+	}
+	switch f.State {
+	case "completed":
+		where = append(where, "lessons_total > 0 AND lessons_done >= lessons_total")
+	case "started":
+		where = append(where, "lessons_started > 0 AND lessons_done < lessons_total")
+	case "not_started":
+		where = append(where, "lessons_started = 0")
+	}
+	return strings.Join(where, " AND "), args
+}
+
+// learnerStatsOrder is the sort whitelist; the top of the list answers the
+// question an operator asks first: who is actually watching.
+func learnerStatsOrder(sort string) string {
+	switch sort {
+	case "progress_desc":
+		return "lessons_done DESC, watch_seconds DESC"
+	case "spent_desc":
+		return "spent_rial DESC, granted_at DESC"
+	case "enrolled_asc":
+		return "granted_at ASC"
+	case "name":
+		return "full_name ASC"
+	default:
+		return "watch_seconds DESC, granted_at DESC"
+	}
+}
+
+// Learners returns one page of the course's learners with their standing.
+func (r *CourseStatsRepo) Learners(ctx context.Context, courseID uuid.UUID, f ports.LearnerStatFilter, page, perPage int) ([]ports.LearnerStat, int, error) {
+	args := []any{courseID}
+	where, args := learnerStatsWhere(f, args)
+	q := learnerStatsBody + ` SELECT * FROM standing WHERE ` + where +
+		` ORDER BY ` + learnerStatsOrder(f.Sort) +
+		` LIMIT $` + fmt.Sprint(len(args)+1) + ` OFFSET $` + fmt.Sprint(len(args)+2)
+	args = append(args, perPage, (page-1)*perPage)
+	rows, err := querierOf(ctx, r.pool).Query(ctx, q, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("list course learners: %w", err)
+	}
+	defer rows.Close()
+	var out []ports.LearnerStat
+	for rows.Next() {
+		var s ports.LearnerStat
+		var source string
+		if err := rows.Scan(&s.UserID, &s.FullName, &s.Mobile, &source, &s.GrantedAt,
+			&s.SpentRial, &s.LessonsTotal, &s.LessonsStarted, &s.LessonsDone,
+			&s.WatchSeconds, &s.LastActivityAt, &s.Rating); err != nil {
+			return nil, 0, fmt.Errorf("scan course learner: %w", err)
+		}
+		s.Source = source
+		if s.LessonsTotal > 0 {
+			s.ProgressPct = float64(s.LessonsDone) / float64(s.LessonsTotal) * 100
+		}
+		out = append(out, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+	var total int
+	err = querierOf(ctx, r.pool).QueryRow(ctx,
+		learnerStatsBody+` SELECT count(*) FROM standing WHERE `+where, args[:len(args)-2]...).Scan(&total)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count course learners: %w", err)
+	}
+	return out, total, nil
+}
