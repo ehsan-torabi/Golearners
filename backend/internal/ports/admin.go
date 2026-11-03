@@ -41,9 +41,16 @@ type SettingsRepo interface {
 	Upsert(ctx context.Context, key string, value json.RawMessage) error
 }
 
+// UserAdminFilter narrows the admin user list.
+type UserAdminFilter struct {
+	Q      string
+	Status string
+	Sort   string
+}
+
 // UserAdminRepo — listing + moderation for the admin panel.
 type UserAdminRepo interface {
-	List(ctx context.Context, q string, page, perPage int) ([]*identity.User, int, error)
+	List(ctx context.Context, f UserAdminFilter, page, perPage int) ([]*identity.User, int, error)
 	SetStatus(ctx context.Context, userID uuid.UUID, status identity.Status) error
 	AddRole(ctx context.Context, userID uuid.UUID, role identity.Role) error
 	RemoveRole(ctx context.Context, userID uuid.UUID, role identity.Role) error

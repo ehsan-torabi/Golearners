@@ -110,17 +110,33 @@ type UserAdminRepo struct{ pool *pgxpool.Pool }
 
 func NewUserAdminRepo(pool *pgxpool.Pool) *UserAdminRepo { return &UserAdminRepo{pool: pool} }
 
-func (r *UserAdminRepo) List(ctx context.Context, q string, page, perPage int) ([]*identity.User, int, error) {
+func (r *UserAdminRepo) List(ctx context.Context, f ports.UserAdminFilter, page, perPage int) ([]*identity.User, int, error) {
 	where := "status <> 'deleted'"
 	args := []any{}
-	if q != "" {
-		where += " AND (full_name ILIKE '%'||$1||'%' OR mobile LIKE '%'||$1||'%')"
-		args = append(args, q)
+	if f.Q != "" {
+		args = append(args, f.Q)
+		where += fmt.Sprintf(" AND (full_name ILIKE '%%'||$%d||'%%' OR mobile LIKE '%%'||$%d||'%%')",
+			len(args), len(args))
+	}
+	if f.Status != "" {
+		args = append(args, f.Status)
+		where += fmt.Sprintf(" AND status = $%d", len(args))
+	}
+	order := "created_at DESC"
+	switch f.Sort {
+	case "oldest":
+		order = "created_at ASC"
+	case "name":
+		order = "full_name ASC"
+	case "mobile":
+		order = "mobile ASC"
+	case "login":
+		order = "last_login_at DESC NULLS LAST"
 	}
 	rows, err := r.pool.Query(ctx,
 		`SELECT id, mobile, email, full_name, password_hash, status,
 			mobile_verified_at, last_login_at, created_at, updated_at
-		 FROM users WHERE `+where+` ORDER BY created_at DESC LIMIT $`+
+		 FROM users WHERE `+where+` ORDER BY `+order+` LIMIT $`+
 			fmt.Sprint(len(args)+1)+` OFFSET $`+fmt.Sprint(len(args)+2),
 		append(args, perPage, (page-1)*perPage)...)
 	if err != nil {

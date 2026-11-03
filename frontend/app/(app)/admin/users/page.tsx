@@ -1,21 +1,65 @@
 "use client";
 
 import * as React from "react";
+import { Ban, ChevronDown, ChevronUp, ShieldCheck, UserCheck } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input, Select } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DetailGrid,
+  DetailItem,
+  DetailSection,
+  ListCheckbox,
+  ListDetailRow,
+  ListHeader,
+  ListLoading,
+  ListPagination,
+  ListSelectionBar,
+  ListToolbar,
+  RowMenu,
+  useAdminList,
+  useFacetCounts,
+  type ListChip,
+} from "@/components/admin/list-view";
 import { ApiError, api } from "@/lib/api";
-import { adminSetUserStatus, fetchAdmin } from "@/lib/admin";
+import { adminSetUserStatus } from "@/lib/admin";
+import { formatJalali } from "@/lib/jalali";
 import { fa, formatIranMobile } from "@/lib/persian";
 
-const STATUS_FA: Record<string, string> = { active: "فعال", blocked: "مسدود" };
-const ROLE_FA: Record<string, string> = { learner: "دانشجو", admin: "مدیر", instructor: "مدرس" };
+const STATUS_FA: Record<string, { label: string; tone: "success" | "destructive" }> = {
+  active: { label: "فعال", tone: "success" },
+  blocked: { label: "مسدود", tone: "destructive" },
+};
+
+const STATUS_VALUES = ["active", "blocked"];
+
+const ROLE_FA: Record<string, string> = {
+  learner: "دانشجو",
+  admin: "مدیر",
+  instructor: "مدرس",
+  owner: "مالک",
+};
+
 const GRANTABLE = ["learner", "admin", "instructor"];
-const PER_PAGE = 20;
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "تازه‌ترین" },
+  { value: "oldest", label: "قدیمی‌ترین" },
+  { value: "name", label: "نام" },
+  { value: "mobile", label: "شمارهٔ موبایل" },
+  { value: "login", label: "آخرین ورود" },
+];
 
 interface UserRow {
   id: string;
@@ -29,37 +73,26 @@ interface UserRow {
 }
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = React.useState<UserRow[]>([]);
-  const [total, setTotal] = React.useState(0);
-  const [page, setPage] = React.useState(1);
-  const [loaded, setLoaded] = React.useState(false);
-  const [q, setQ] = React.useState("");
+  const [query, setQuery] = React.useState("");
   const [search, setSearch] = React.useState("");
-  const [error, setError] = React.useState("");
-  const [busy, setBusy] = React.useState("");
-  const [isOwner, setIsOwner] = React.useState(false);
+  const [status, setStatus] = React.useState("");
+  const [sort, setSort] = React.useState("newest");
+  const [selected, setSelected] = React.useState<string[]>([]);
+  const [expanded, setExpanded] = React.useState<string | null>(null);
   const [roleDraft, setRoleDraft] = React.useState<Record<string, string>>({});
+  const [isOwner, setIsOwner] = React.useState(false);
+  const [busy, setBusy] = React.useState("");
+  const [error, setError] = React.useState("");
 
-  const load = React.useCallback(async () => {
-    setError("");
-    try {
-      const params = new URLSearchParams({ page: String(page), per_page: String(PER_PAGE) });
-      if (search) params.set("q", search);
-      const res = await fetchAdmin<{ data: UserRow[]; meta: { total: number } }>(
-        `/admin/users?${params}`,
-      );
-      setUsers(res.data ?? []);
-      setTotal(res.meta?.total ?? 0);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "خطا در دریافت کاربران");
-    } finally {
-      setLoaded(true);
-    }
-  }, [page, search]);
+  const filters = React.useMemo(() => ({ q: search, status, sort }), [search, status, sort]);
 
-  React.useEffect(() => {
-    void load();
-  }, [load]);
+  const list = useAdminList<UserRow>({ path: "/admin/users", filters });
+  const statusCounts = useFacetCounts({
+    path: "/admin/users",
+    param: "status",
+    filters: { q: search },
+    values: STATUS_VALUES,
+  });
 
   React.useEffect(() => {
     api<{ roles?: string[] }>("/me")
@@ -67,12 +100,12 @@ export default function AdminUsersPage() {
       .catch(() => setIsOwner(false));
   }, []);
 
-  async function toggleBlock(u: UserRow) {
+  async function setUserStatus(user: UserRow, next: "active" | "blocked") {
     setError("");
-    setBusy(u.id);
+    setBusy(user.id);
     try {
-      await adminSetUserStatus(u.id, u.status === "active" ? "blocked" : "active");
-      await load();
+      await adminSetUserStatus(user.id, next);
+      await list.reload();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "تغییر وضعیت ناموفق بود");
     } finally {
@@ -80,17 +113,33 @@ export default function AdminUsersPage() {
     }
   }
 
-  async function changeRole(u: UserRow, mode: "add" | "remove", role: string) {
+  async function bulkStatus(next: "active" | "blocked") {
+    setError("");
+    setBusy("bulk");
+    try {
+      for (const id of selected) {
+        await adminSetUserStatus(id, next);
+      }
+      setSelected([]);
+      await list.reload();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "تغییر وضعیت گروهی ناموفق بود");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function changeRole(user: UserRow, mode: "add" | "remove", role: string) {
     if (!role) return;
     setError("");
-    setBusy(u.id);
+    setBusy(user.id);
     try {
-      await api(`/admin/users/${u.id}`, {
+      await api(`/admin/users/${user.id}`, {
         method: "PATCH",
         body: JSON.stringify(mode === "add" ? { add_role: role } : { remove_role: role }),
       });
-      setRoleDraft((d) => ({ ...d, [u.id]: "" }));
-      await load();
+      setRoleDraft((d) => ({ ...d, [user.id]: "" }));
+      await list.reload();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "تغییر نقش ناموفق بود");
     } finally {
@@ -98,175 +147,253 @@ export default function AdminUsersPage() {
     }
   }
 
-  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const toggleSelected = (id: string) =>
+    setSelected((current) =>
+      current.includes(id) ? current.filter((x) => x !== id) : [...current, id],
+    );
+
+  const allSelected = list.items.length > 0 && list.items.every((u) => selected.includes(u.id));
+
+  const chips: ListChip[] = [];
+  if (status) {
+    chips.push({
+      key: "status",
+      label: `وضعیت: ${STATUS_FA[status]?.label ?? status}`,
+      count: statusCounts[status] ?? null,
+      onRemove: () => setStatus(""),
+    });
+  }
 
   return (
     <div className="space-y-4">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="reveal text-xl leading-7 text-foreground">کاربران</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {loaded ? `${fa(total)} کاربر ثبت شده است.` : "در حال شمارش کاربران…"}
-          </p>
-        </div>
-        <form
-          className="flex items-end gap-2"
-          role="search"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setSearch(q.trim());
-            setPage(1);
-          }}
-        >
-          <div>
-            <label htmlFor="user-q" className="mb-1.5 block text-xs font-medium text-muted-foreground">
-              جست‌وجو
-            </label>
-            <Input
-              id="user-q"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="نام یا شمارهٔ موبایل"
-              className="w-56"
-            />
-          </div>
-          <Button variant="outline" type="submit">
-            جست‌وجو
-          </Button>
-        </form>
-      </header>
+      <ListHeader title="کاربران" count={list.loading ? null : list.total} unit="کاربر" />
 
       {error && <Alert>{error}</Alert>}
 
       <Card className="p-0">
-        {!loaded ? (
-          <div className="space-y-3 p-6" aria-label="در حال بارگذاری کاربران">
-            <div className="h-5 w-1/3 animate-pulse rounded bg-muted" />
-            <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
-          </div>
-        ) : users.length === 0 ? (
-          <EmptyState title="کاربری با این عبارت پیدا نشد" body="عبارت جست‌وجو را ساده‌تر کنید." />
+        {selected.length > 0 ? (
+          <ListSelectionBar count={selected.length} onClear={() => setSelected([])}>
+            <Button size="sm" variant="outline" loading={busy === "bulk"} onClick={() => void bulkStatus("active")}>
+              فعال‌سازی
+            </Button>
+            <Button size="sm" variant="outline" loading={busy === "bulk"} onClick={() => void bulkStatus("blocked")}>
+              مسدودسازی
+            </Button>
+          </ListSelectionBar>
+        ) : (
+          <ListToolbar
+            searchValue={query}
+            onSearchValue={setQuery}
+            onSearchSubmit={() => setSearch(query.trim())}
+            searchPlaceholder="نام یا شمارهٔ موبایل"
+            chips={chips}
+            sort={{ value: sort, options: SORT_OPTIONS, onChange: setSort }}
+            filters={
+              <div className="space-y-3">
+                <div>
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">وضعیت</p>
+                  <Select aria-label="فیلتر وضعیت" value={status} onChange={(e) => setStatus(e.target.value)} className="w-full">
+                    <option value="">همهٔ کاربران</option>
+                    {STATUS_VALUES.map((value) => (
+                      <option key={value} value={value}>
+                        {STATUS_FA[value].label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <Button size="sm" variant="ghost" className="w-full" onClick={() => setStatus("")}>
+                  پاک کردن فیلترها
+                </Button>
+              </div>
+            }
+          />
+        )}
+
+        {list.loading ? (
+          <ListLoading label="در حال بارگذاری کاربران" />
+        ) : list.items.length === 0 ? (
+          <EmptyState title="کاربری با این فیلترها نیست" body="عبارت جست‌وجو یا فیلتر وضعیت را تغییر دهید." />
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-start">کاربر</TableHead>
-                <TableHead className="text-start">شماره</TableHead>
-                <TableHead className="text-start">نقش‌ها</TableHead>
-                <TableHead className="text-start">وضعیت</TableHead>
-                <TableHead className="text-start">کنش‌ها</TableHead>
+                <TableHead className="w-10">
+                  <ListCheckbox
+                    checked={allSelected}
+                    indeterminate={selected.length > 0 && !allSelected}
+                    onChange={(checked) => setSelected(checked ? list.items.map((u) => u.id) : [])}
+                    label="انتخاب همهٔ کاربران"
+                  />
+                </TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">کاربر</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">موبایل</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">ایمیل</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">نقش‌ها</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">عضویت</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">وضعیت</TableHead>
+                <TableHead className="w-20" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="text-start">
-                    <span className="font-medium text-foreground">{u.full_name || "بدون نام"}</span>
-                    {u.email && (
-                      <p className="mt-0.5 text-xs text-muted-foreground" dir="ltr">
-                        {u.email}
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-start text-muted-foreground" dir="ltr">
-                    {formatIranMobile(u.mobile)}
-                  </TableCell>
-                  <TableCell className="text-start">
-                    <span className="flex flex-wrap gap-1">
-                      {u.roles.map((role) => (
-                        <Badge key={role} tone="accent">
-                          {ROLE_FA[role] ?? role}
-                        </Badge>
-                      ))}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-start">
-                    <Badge tone={u.status === "active" ? "success" : "destructive"}>
-                      {STATUS_FA[u.status] ?? u.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-start">
-                    <div className="flex flex-wrap items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant={u.status === "active" ? "destructive" : "default"}
-                        loading={busy === u.id}
-                        onClick={() => void toggleBlock(u)}
-                      >
-                        {u.status === "active" ? "مسدودسازی" : "رفع مسدودی"}
-                      </Button>
-                      {isOwner && (
-                        <div className="flex flex-wrap items-center gap-1">
-                          <Select
-                            aria-label={`افزودن نقش به ${u.full_name || u.mobile}`}
-                            value={roleDraft[u.id] ?? ""}
-                            className="w-28"
-                            onChange={(e) => setRoleDraft((d) => ({ ...d, [u.id]: e.target.value }))}
-                          >
-                            <option value="">نقش…</option>
-                            {GRANTABLE.map((r) => (
-                              <option key={r} value={r}>
-                                {ROLE_FA[r]}
-                              </option>
-                            ))}
-                          </Select>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={!roleDraft[u.id]}
-                            onClick={() => void changeRole(u, "add", roleDraft[u.id] ?? "")}
-                          >
-                            افزودن
-                          </Button>
-                          {u.roles
-                            .filter((r) => r !== "owner")
-                            .map((r) => (
-                              <Button
-                                key={r}
-                                size="sm"
-                                variant="ghost"
-                                className="text-destructive-text"
-                                loading={busy === u.id}
-                                onClick={() => void changeRole(u, "remove", r)}
-                              >
-                                حذف {ROLE_FA[r] ?? r}
-                              </Button>
-                            ))}
+              {list.items.map((u) => {
+                const meta = STATUS_FA[u.status] ?? { label: u.status, tone: "neutral" as const };
+                const open = expanded === u.id;
+                return (
+                  <React.Fragment key={u.id}>
+                    <TableRow data-state={selected.includes(u.id) ? "selected" : undefined}>
+                      <TableCell className="w-10">
+                        <ListCheckbox
+                          checked={selected.includes(u.id)}
+                          onChange={() => toggleSelected(u.id)}
+                          label={`انتخاب ${u.full_name || u.mobile}`}
+                        />
+                      </TableCell>
+                      <TableCell className="text-start whitespace-normal">
+                        <div className="flex items-center gap-3">
+                          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary-tint text-xs font-semibold text-accent-strong">
+                            {(u.full_name || u.mobile).trim().slice(0, 1)}
+                          </span>
+                          <span className="truncate font-medium text-foreground">
+                            {u.full_name || "کاربر بدون نام"}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      </TableCell>
+                      <TableCell className="text-start text-muted-foreground" dir="ltr">
+                        {formatIranMobile(u.mobile)}
+                      </TableCell>
+                      <TableCell className="text-start text-muted-foreground" dir="ltr">
+                        {u.email || "—"}
+                      </TableCell>
+                      <TableCell className="text-start">
+                        <div className="flex flex-wrap gap-1">
+                          {u.roles.length === 0 ? (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          ) : (
+                            u.roles.map((role) => (
+                              <Badge key={role} tone="accent">
+                                {ROLE_FA[role] ?? role}
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-start text-muted-foreground">
+                        {formatJalali(new Date(u.created_at))}
+                      </TableCell>
+                      <TableCell className="text-start">
+                        <Badge tone={meta.tone}>{meta.label}</Badge>
+                      </TableCell>
+                      <TableCell className="text-start">
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={open ? "بستن جزئیات" : "نمایش جزئیات"}
+                            aria-expanded={open}
+                            onClick={() => setExpanded(open ? null : u.id)}
+                          >
+                            {open ? <ChevronUp /> : <ChevronDown />}
+                          </Button>
+                          <RowMenu
+                            label={`کنش‌های ${u.full_name || u.mobile}`}
+                            items={[
+                              {
+                                label: u.status === "active" ? "مسدودسازی" : "رفع مسدودی",
+                                icon: u.status === "active" ? <Ban /> : <UserCheck />,
+                                onSelect: () =>
+                                  void setUserStatus(u, u.status === "active" ? "blocked" : "active"),
+                              },
+                            ]}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {open && (
+                      <ListDetailRow colSpan={8}>
+                        <DetailGrid>
+                          <DetailItem label="شمارهٔ موبایل" dir="ltr">
+                            {formatIranMobile(u.mobile)}
+                          </DetailItem>
+                          <DetailItem label="ایمیل" dir="ltr">
+                            {u.email || "—"}
+                          </DetailItem>
+                          <DetailItem label="وضعیت">{meta.label}</DetailItem>
+                          <DetailItem label="تاریخ عضویت">{formatJalali(new Date(u.created_at))}</DetailItem>
+                          <DetailItem label="آخرین ورود">
+                            {u.last_login_at ? formatJalali(new Date(u.last_login_at)) : "هنوز وارد نشده"}
+                          </DetailItem>
+                          <DetailItem label="شناسه">
+                            <span dir="ltr" className="text-xs">
+                              {u.id.slice(0, 8)}…
+                            </span>
+                          </DetailItem>
+                        </DetailGrid>
+                        <DetailSection title="نقش‌ها">
+                          <div className="flex flex-wrap gap-1">
+                            {u.roles.length === 0 ? (
+                              <span className="text-sm text-muted-foreground">نقشی ندارد</span>
+                            ) : (
+                              u.roles.map((role) => (
+                                <span
+                                  key={role}
+                                  className="inline-flex items-center gap-1 rounded-full bg-primary-tint px-2 py-1 text-xs text-accent-strong"
+                                >
+                                  {ROLE_FA[role] ?? role}
+                                  {isOwner && role !== "owner" && (
+                                    <button
+                                      type="button"
+                                      aria-label={`حذف نقش ${ROLE_FA[role] ?? role}`}
+                                      disabled={busy === u.id}
+                                      onClick={() => void changeRole(u, "remove", role)}
+                                      className="rounded-full px-1 hover:bg-primary/15"
+                                    >
+                                      ×
+                                    </button>
+                                  )}
+                                </span>
+                              ))
+                            )}
+                          </div>
+                          {isOwner && (
+                            <div className="mt-3 flex items-center gap-2">
+                              <Select
+                                aria-label="افزودن نقش"
+                                value={roleDraft[u.id] ?? ""}
+                                onChange={(e) =>
+                                  setRoleDraft((d) => ({ ...d, [u.id]: e.target.value }))
+                                }
+                                className="w-40"
+                              >
+                                <option value="">افزودن نقش…</option>
+                                {GRANTABLE.filter((role) => !u.roles.includes(role)).map((role) => (
+                                  <option key={role} value={role}>
+                                    {ROLE_FA[role] ?? role}
+                                  </option>
+                                ))}
+                              </Select>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                loading={busy === u.id}
+                                disabled={!roleDraft[u.id]}
+                                onClick={() => void changeRole(u, "add", roleDraft[u.id] ?? "")}
+                              >
+                                <ShieldCheck />
+                                اعمال
+                              </Button>
+                            </div>
+                          )}
+                        </DetailSection>
+                      </ListDetailRow>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </TableBody>
           </Table>
         )}
 
-        {loaded && total > 0 && (
-          <div className="flex items-center justify-between gap-3 border-t border-border-variant px-4 py-3 text-sm">
-            <span className="text-muted-foreground">
-              صفحهٔ {fa(page)} از {fa(pages)}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                قبلی
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={page >= pages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                بعدی
-              </Button>
-            </div>
-          </div>
-        )}
+        <ListPagination page={list.page} pages={list.pages} total={list.total} onPage={list.setPage} />
       </Card>
     </div>
   );

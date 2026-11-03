@@ -341,11 +341,21 @@ export function DetailGrid({ children }: { children: React.ReactNode }) {
   return <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">{children}</div>;
 }
 
-export function DetailItem({ label, children }: { label: string; children: React.ReactNode }) {
+export function DetailItem({
+  label,
+  dir,
+  children,
+}: {
+  label: string;
+  dir?: "rtl" | "ltr";
+  children: React.ReactNode;
+}) {
   return (
     <div className="min-w-0">
       <p className="text-[11px] font-medium tracking-wide text-muted-foreground">{label}</p>
-      <div className="mt-0.5 truncate text-sm text-foreground">{children}</div>
+      <div className="mt-0.5 truncate text-sm text-foreground" dir={dir}>
+        {children}
+      </div>
     </div>
   );
 }

@@ -77,7 +77,11 @@ func (a *App) handleAdminSettingsPatch(w http.ResponseWriter, r *http.Request) {
 // GET /api/v1/admin/users?q=&page=
 func (a *App) handleAdminUsers(w http.ResponseWriter, r *http.Request) {
 	page, perPage := pageParams(r)
-	list, total, err := a.UserAdmin.List(r.Context(), r.URL.Query().Get("q"), page, perPage)
+	list, total, err := a.UserAdmin.List(r.Context(), ports.UserAdminFilter{
+		Q:      r.URL.Query().Get("q"),
+		Status: r.URL.Query().Get("status"),
+		Sort:   r.URL.Query().Get("sort"),
+	}, page, perPage)
 	if err != nil {
 		a.writeError(w, r, err)
 		return
