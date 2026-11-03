@@ -73,7 +73,7 @@ export default async function HomePage() {
             </Link>
             <Link
               href="/instructor"
-              className="inline-flex h-11 items-center rounded-control border border-ink/15 bg-card px-6 text-sm font-medium text-foreground transition-colors duration-(--motion) ease-motion hover:border-primary/40 hover:text-accent-strong"
+              className="inline-flex h-11 items-center rounded-control border border-line bg-card px-6 text-sm font-medium text-foreground transition-colors duration-(--motion) ease-motion hover:border-primary/40 hover:text-accent-strong"
             >
               آشنایی با مدرس
             </Link>

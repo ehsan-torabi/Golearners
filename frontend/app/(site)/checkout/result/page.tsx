@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/section-head";
 
 function CheckMark() {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" className="mx-auto size-14 text-success" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden viewBox="0 0 24 24" className="mx-auto size-14 text-success-text" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" className="opacity-25" />
       <path d="m7.5 12.5 3 3 6-7" />
     </svg>
@@ -17,7 +17,7 @@ function CheckMark() {
 
 function CrossMark() {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" className="mx-auto size-14 text-destructive" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden viewBox="0 0 24 24" className="mx-auto size-14 text-destructive-text" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" className="opacity-25" />
       <path d="m9 9 6 6M15 9l-6 6" />
     </svg>

@@ -303,7 +303,7 @@ export default function AdminCouponsPage() {
                         >
                           {c.code}
                           {copied === c.code ? (
-                            <Check className="size-3.5 text-success" />
+                            <Check className="size-3.5 text-success-text" />
                           ) : (
                             <Copy className="size-3.5 text-muted-foreground" />
                           )}

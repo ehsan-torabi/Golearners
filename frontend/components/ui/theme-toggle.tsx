@@ -1,6 +1,8 @@
 "use client";
 
+import * as React from "react";
 import { cn } from "@/lib/utils";
+import { followSystemTheme, toggleTheme } from "@/lib/theme";
 
 /* Icons here are functional state glyphs, not decoration (DESIGN.md):
    sun/moon is the clearest possible label for a theme switch. */
@@ -22,32 +24,38 @@ function MoonIcon() {
 }
 
 export function ThemeToggle({ className }: { className?: string }) {
+  /* the mode is announced, because the icon swap alone tells a screen
+     reader nothing about the state that just changed */
+  const [announcement, setAnnouncement] = React.useState("");
+
+  React.useEffect(() => followSystemTheme(), []);
+
   const toggle = () => {
-    const root = document.documentElement;
-    const next = root.dataset.theme === "dark" ? "light" : "dark";
-    root.dataset.theme = next;
-    try {
-      localStorage.setItem("gl-theme", next);
-    } catch {
-      /* private mode: theme just does not persist */
-    }
+    const next = toggleTheme();
+    setAnnouncement(next === "dark" ? "تم تاریک فعال شد" : "تم روشن فعال شد");
   };
+
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label="تغییر تم روشن و تاریک"
-      className={cn(
-        "inline-flex size-10 items-center justify-center rounded-control border border-line bg-card text-foreground transition-colors duration-(--motion) ease-motion hover:bg-muted",
-        className,
-      )}
-    >
-      <span className="hidden dark:inline">
-        <SunIcon />
+    <>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label="تغییر تم روشن و تاریک"
+        className={cn(
+          "inline-flex size-10 items-center justify-center rounded-control border border-line bg-card text-foreground transition-colors duration-(--motion) ease-motion hover:bg-muted",
+          className,
+        )}
+      >
+        <span className="hidden dark:inline">
+          <SunIcon />
+        </span>
+        <span className="inline dark:hidden">
+          <MoonIcon />
+        </span>
+      </button>
+      <span aria-live="polite" className="sr-only">
+        {announcement}
       </span>
-      <span className="inline dark:hidden">
-        <MoonIcon />
-      </span>
-    </button>
+    </>
   );
 }

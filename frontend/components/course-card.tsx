@@ -24,7 +24,7 @@ export function CourseCard({ course }: { course: CourseSummary }) {
               src={course.cover_url}
               alt=""
               loading="lazy"
-              className="absolute inset-0 size-full object-cover transition-transform duration-(--motion-slow) ease-motion group-hover:scale-105"
+              className="media-dim absolute inset-0 size-full object-cover transition-transform duration-(--motion-slow) ease-motion group-hover:scale-105"
             />
           ) : (
             <span
@@ -35,7 +35,7 @@ export function CourseCard({ course }: { course: CourseSummary }) {
             </span>
           )}
           {hasDiscount && (
-            <span className="absolute top-3 start-3 rounded-tag bg-destructive px-2 py-1 text-xs font-medium text-white">
+            <span className="absolute top-3 start-3 rounded-tag bg-destructive px-2 py-1 text-xs font-medium text-destructive-foreground">
               {faPercent(offPct)} تخفیف
             </span>
           )}

@@ -318,7 +318,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
         </div>
 
         <aside className="h-fit lg:sticky lg:top-24">
-          <Card className="overflow-hidden border-ink/20 p-0 shadow-raise">
+          <Card className="overflow-hidden border-line p-0 shadow-raise">
             {/* promo video with the cover as poster when present; otherwise
                 the uploaded cover; otherwise the honest tinted placeholder */}
             {d.course.has_promo ? (
@@ -329,7 +329,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                   <img
                     src={d.course.cover_url}
                     alt={`کاور دورهٔ ${d.course.title}`}
-                    className="absolute inset-0 size-full object-cover"
+                    className="media-dim absolute inset-0 size-full object-cover"
                   />
                 ) : (
                   <span aria-hidden className="font-display text-6xl font-semibold text-primary/40">
@@ -376,7 +376,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                       )}
                     </div>
                     {hasDiscount && (
-                      <span className="rounded-tag bg-destructive px-2 py-1 text-xs font-medium text-white">
+                      <span className="rounded-tag bg-destructive px-2 py-1 text-xs font-medium text-destructive-foreground">
                         {faPercent(offPct)} تخفیف
                       </span>
                     )}

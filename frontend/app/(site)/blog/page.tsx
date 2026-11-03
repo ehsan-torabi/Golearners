@@ -194,7 +194,7 @@ function Cover({ post, priority = false }: { post: Post; priority?: boolean }) {
         alt={`تصویر مقالهٔ ${post.title}`}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : undefined}
-        className="aspect-video w-full object-cover transition-transform duration-(--motion-slow) ease-motion group-hover:scale-[1.02]"
+        className="media-dim aspect-video w-full object-cover transition-transform duration-(--motion-slow) ease-motion group-hover:scale-[1.02]"
       />
     );
   }

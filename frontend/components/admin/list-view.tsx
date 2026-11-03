@@ -233,7 +233,7 @@ export function ListThumb({ src, alt, fallback }: { src?: string | null; alt: st
     <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-muted text-muted-foreground">
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt} className="size-full object-cover" loading="lazy" />
+        <img src={src} alt={alt} className="media-dim size-full object-cover" loading="lazy" />
       ) : (
         fallback ?? <span className="size-2 rounded-full bg-border" />
       )}

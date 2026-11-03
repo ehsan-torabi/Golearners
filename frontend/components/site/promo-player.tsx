@@ -62,7 +62,7 @@ export function PromoPlayer({
         <img
           src={poster}
           alt=""
-          className="absolute inset-0 size-full object-cover transition-transform duration-(--motion-slow) ease-motion group-hover:scale-105"
+          className="media-dim absolute inset-0 size-full object-cover transition-transform duration-(--motion-slow) ease-motion group-hover:scale-105"
         />
       )}
       {!poster && (
@@ -72,18 +72,20 @@ export function PromoPlayer({
       )}
       <span
         aria-hidden
-        className="absolute inset-0 flex items-center justify-center bg-ink/25 transition-colors duration-(--motion) ease-motion group-hover:bg-ink/35"
+        className="absolute inset-0 flex items-center justify-center bg-invert/35 transition-colors duration-(--motion) ease-motion group-hover:bg-invert/45"
       >
-        <span className="flex size-16 items-center justify-center rounded-full bg-white/95 text-primary shadow-raise transition-transform duration-(--motion) ease-motion group-hover:scale-105">
+        <span className="flex size-16 items-center justify-center rounded-full border border-border bg-card text-primary shadow-raise transition-transform duration-(--motion) ease-motion group-hover:scale-105">
           <Play className="size-7 translate-x-0.5 fill-current" strokeWidth={1.5} />
         </span>
       </span>
-      <span className="absolute bottom-3 start-3 rounded-tag bg-ink/70 px-2.5 py-1 text-xs font-medium text-white">
+      <span className="absolute bottom-3 start-3 rounded-tag bg-invert/75 px-2.5 py-1 text-xs font-medium text-invert-foreground">
         ویدیوی معرفی دوره
       </span>
       {failed && (
-        <span className="absolute inset-x-0 bottom-10 text-center text-xs text-white">
-          پخش ویدیوی معرفی در دسترس نیست.
+        <span className="absolute inset-x-0 bottom-10 text-center">
+          <span className="inline-block rounded-tag bg-invert/75 px-2.5 py-1 text-xs text-invert-foreground">
+            پخش ویدیوی معرفی در دسترس نیست.
+          </span>
         </span>
       )}
     </button>

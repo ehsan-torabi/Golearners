@@ -60,7 +60,8 @@
   --warning: #f0a417;
   --warning-text: #925e00;
   --warning-bg: #fff8e9;
-  --destructive: #e5484d;
+  --destructive: #d13a40;
+  --destructive-foreground: #ffffff;
   --destructive-text: #ce2c31;
   --destructive-bg: #fff0f1;
   --info: #4353ee;
@@ -84,6 +85,12 @@
   --sidebar-accent-foreground: #4353ee;
   --sidebar-border: #e4e6f0;
   --sidebar-ring: #4353ee;
+
+  /* modal veil: a black 10% scrim vanishes on a dark page, so the veil is
+     a token that each theme tunes */
+  --scrim: rgba(12, 14, 30, 0.32);
+  --scrollbar-thumb: rgba(28, 31, 43, 0.16);
+  --scrollbar-thumb-hover: rgba(28, 31, 43, 0.3);
 
   /* hero band: the one brand gradient, lavender to white (hierarchy, R-01) */
   --hero-from: #e9ecff;
@@ -117,59 +124,79 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --background: #0e1020;
-  --card: #161930;
-  --card-foreground: rgba(240, 241, 250, 0.92);
-  --popover: #1b1e38;
-  --popover-foreground: rgba(240, 241, 250, 0.92);
-  --foreground: rgba(240, 241, 250, 0.92);
-  --muted: #1b1e38;
-  --muted-foreground: rgba(225, 227, 244, 0.68);
-  --primary: #7c89ff;
-  --primary-hover: #939eff;
-  --primary-active: #6472f5;
-  --primary-foreground: #10122a;
-  --primary-tint: rgba(124, 137, 255, 0.16);
-  --secondary: #1b1e38;
-  --secondary-foreground: rgba(240, 241, 250, 0.92);
-  --accent: #232747;
-  --accent-foreground: rgba(240, 241, 250, 0.92);
-  --accent-strong: #9da7ff;
-  --accent-display: #9da7ff;
-  --success: #4ade80;
-  --success-text: #86efac;
-  --success-bg: rgba(74, 222, 128, 0.12);
-  --warning: #fbbf24;
-  --warning-text: #fcd34d;
-  --warning-bg: rgba(251, 191, 36, 0.12);
-  --destructive: #f2555a;
-  --destructive-text: #ff8589;
-  --destructive-bg: rgba(242, 85, 90, 0.14);
-  --info: #7c89ff;
-  --info-text: #9da7ff;
-  --info-bg: rgba(124, 137, 255, 0.14);
-  --border: #2b2f55;
-  --border-variant: #22264a;
-  --input: #3a3f6e;
-  --field: #161930;
-  --ring: #7c89ff;
+  /* Surface ladder. Elevation is carried by lighter shades, never by
+     shadow (shadows do not read on a dark page). Each step is a real
+     surface, so a card on the page and a menu over a card both sit
+     above their background instead of dissolving into it.
+     page -> card -> subtle fill -> overlay -> hover fill */
+  --background: #0b0d1c;
+  --card: #141830;
+  --card-foreground: #e6e8f2;
+  --popover: #21264a;
+  --popover-foreground: #e6e8f2;
+  --foreground: #e6e8f2;
+  --muted: #1a1e3c;
+  --muted-foreground: #9aa0bd;
+  --secondary: #1a1e3c;
+  --secondary-foreground: #e6e8f2;
+  --accent: #272d55;
+  --accent-foreground: #e6e8f2;
+
+  /* the brand indigo, desaturated one step: the light-mode hex glows
+     against a near-black page */
+  --primary: #8b93f2;
+  --primary-hover: #9aa1f7;
+  --primary-active: #757de0;
+  --primary-foreground: #0d1024;
+  --primary-tint: rgba(139, 147, 242, 0.16);
+  --accent-strong: #a3aaf7;
+  --accent-display: #a3aaf7;
+
+  /* semantics: desaturated and lifted so they clear 4.5:1 on --background */
+  --success: #55c98a;
+  --success-text: #7fdca6;
+  --success-bg: rgba(85, 201, 138, 0.14);
+  --warning: #e8b04b;
+  --warning-text: #f2c66d;
+  --warning-bg: rgba(232, 176, 75, 0.14);
+  --destructive: #e8636a;
+  --destructive-foreground: #1a0d10;
+  --destructive-text: #ff9095;
+  --destructive-bg: rgba(232, 99, 106, 0.16);
+  --info: #8b93f2;
+  --info-text: #a3aaf7;
+  --info-bg: rgba(139, 147, 242, 0.14);
+
+  /* hairlines: low-opacity white, so one value reads the same on every
+     surface in the ladder */
+  --border: rgba(255, 255, 255, 0.12);
+  --border-variant: rgba(255, 255, 255, 0.07);
+  --input: rgba(255, 255, 255, 0.16);
+  --field: #141830;
+  --ring: #8b93f2;
   --invert: #05060f;
   --invert-foreground: #ffffff;
   --invert-muted: rgba(255, 255, 255, 0.68);
-  --sidebar: #161930;
-  --sidebar-foreground: rgba(225, 227, 244, 0.8);
-  --sidebar-primary: #7c89ff;
-  --sidebar-primary-foreground: #10122a;
-  --sidebar-accent: rgba(124, 137, 255, 0.14);
-  --sidebar-accent-foreground: #9da7ff;
-  --sidebar-border: #2b2f55;
-  --sidebar-ring: #7c89ff;
+  --sidebar: #141830;
+  --sidebar-foreground: #9aa0bd;
+  --sidebar-primary: #8b93f2;
+  --sidebar-primary-foreground: #0d1024;
+  --sidebar-accent: rgba(139, 147, 242, 0.14);
+  --sidebar-accent-foreground: #a3aaf7;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-ring: #8b93f2;
 
-  --hero-from: #1c2044;
-  --hero-to: #0e1020;
+  --hero-from: #1a1f3d;
+  --hero-to: #0b0d1c;
 
-  --depth-raise: 0 6px 16px -6px rgba(0, 0, 0, 0.55), 0 2px 6px -2px rgba(0, 0, 0, 0.35);
-  --depth-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.6), 0 4px 12px -4px rgba(0, 0, 0, 0.45);
+  --scrim: rgba(2, 3, 10, 0.66);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+
+  /* the ladder carries elevation, so shadows only need to separate an
+     overlay from what it covers */
+  --depth-raise: 0 6px 16px -6px rgba(0, 0, 0, 0.45), 0 2px 6px -2px rgba(0, 0, 0, 0.3);
+  --depth-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.55), 0 4px 12px -4px rgba(0, 0, 0, 0.4);
 }
 
 @theme inline {
@@ -199,6 +226,7 @@
   --color-warning-text: var(--warning-text);
   --color-warning-bg: var(--warning-bg);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-text: var(--destructive-text);
   --color-destructive-bg: var(--destructive-bg);
   --color-info: var(--info);
@@ -208,7 +236,9 @@
   --color-border-variant: var(--border-variant);
   --color-line: var(--border);
   --color-input: var(--input);
+  --color-field: var(--field);
   --color-ring: var(--ring);
+  --color-scrim: var(--scrim);
   --color-invert: var(--invert);
   --color-invert-foreground: var(--invert-foreground);
   --color-invert-muted: var(--invert-muted);
@@ -251,7 +281,45 @@ body {
 }
 
 ::selection {
-  background: rgba(67, 83, 238, 0.22);
+  /* follows the theme's primary, not the light-mode hex */
+  background: color-mix(in oklab, var(--primary) 26%, transparent);
+}
+
+/* placeholders inherit the muted ink instead of the UA's translucent grey,
+   which drops below AA on a dark surface */
+::placeholder {
+  color: var(--muted-foreground);
+  opacity: 1;
+}
+
+/* Chrome paints its own autofill yellow over the field, which reads as a
+   hole in a dark form. Repaint the well and the ink instead. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--foreground);
+  -webkit-box-shadow: 0 0 0 1000px var(--field) inset;
+  caret-color: var(--foreground);
+}
+
+/* dark mode: a cover keeps its own colour but sits a touch under the page
+   brightness, so imagery does not glare against the dark surface */
+[data-theme="dark"] .media-dim {
+  filter: brightness(0.94) saturate(0.95);
+}
+
+/* smooth theme swap: the token change animates once, then the attribute
+   comes off so component hover transitions are not held back */
+html[data-theme-swap] *,
+html[data-theme-swap] *::before,
+html[data-theme-swap] *::after {
+  transition:
+    background-color var(--motion) var(--motion-ease),
+    border-color var(--motion) var(--motion-ease),
+    color var(--motion) var(--motion-ease),
+    fill var(--motion) var(--motion-ease),
+    stroke var(--motion) var(--motion-ease),
+    box-shadow var(--motion) var(--motion-ease) !important;
 }
 
 /* Video.js skin: brand it with the site tokens (one indigo primary, Vazirmatn)

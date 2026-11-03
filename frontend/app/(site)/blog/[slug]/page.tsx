@@ -126,7 +126,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           src={p.cover_url}
           alt={`تصویر مقالهٔ ${p.title}`}
           fetchPriority="high"
-          className="mt-8 aspect-video w-full rounded-surface border border-line object-cover"
+          className="media-dim mt-8 aspect-video w-full rounded-surface border border-line object-cover"
         />
       )}
 
@@ -189,7 +189,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     src={r.cover_url}
                     alt={`تصویر مقالهٔ ${r.title}`}
                     loading="lazy"
-                    className="aspect-video w-full rounded-field object-cover"
+                    className="media-dim aspect-video w-full rounded-field object-cover"
                   />
                 ) : (
                   <div className="flex aspect-video w-full items-center justify-center rounded-field bg-primary-tint">

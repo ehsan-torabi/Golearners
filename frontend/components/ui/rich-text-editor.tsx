@@ -12,7 +12,7 @@ import type {
 import { RichTextEditorToolbar } from "@/components/ui/rich-text-editor-toolbar"
 
 const editorSurfaceClassName = cn(
-  "rounded-b-md border border-input bg-transparent shadow-xs dark:bg-input/30",
+  "rounded-b-md border border-input bg-field shadow-xs",
   "aria-invalid:border-destructive",
   // Only the real editor root — never [contenteditable] alone (matches
   // task-item labels with contenteditable="false" and blows min-height up).

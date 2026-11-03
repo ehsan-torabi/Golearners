@@ -104,7 +104,7 @@ export function MediaField({
         <img
           src={selected.url}
           alt={mediaLabel(selected)}
-          className="h-36 w-auto max-w-full rounded-field border border-line object-cover"
+          className="media-dim h-36 w-auto max-w-full rounded-field border border-line object-cover"
         />
       )}
 

@@ -138,7 +138,7 @@ function CheckoutInner() {
               </div>
             ))}
             {order.discount_rial > 0 && (
-              <div className="flex items-center justify-between text-success">
+              <div className="flex items-center justify-between text-success-text">
                 <span>تخفیف</span>
                 <span>{formatTomanFromRial(order.discount_rial)}</span>
               </div>

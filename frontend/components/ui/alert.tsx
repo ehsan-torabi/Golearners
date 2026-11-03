@@ -15,8 +15,8 @@ export function Alert({
       className={cn(
         "rounded-field border px-4 py-3 text-sm leading-7",
         tone === "destructive"
-          ? "border-destructive/30 bg-destructive/10 text-destructive"
-          : "border-success/30 bg-success/10 text-success",
+          ? "border-destructive/30 bg-destructive/10 text-destructive-text"
+          : "border-success/30 bg-success/10 text-success-text",
         className,
       )}
       {...props}

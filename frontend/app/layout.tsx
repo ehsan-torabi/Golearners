@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: { default: "گوLearn | آموزش برنامه‌نویسی به فارسی", template: "%s | گوLearn" },
@@ -9,20 +10,16 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f5f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
-  ],
+  // themeColor is deliberately left unset here: the browser chrome has to
+  // follow the theme the visitor actually picked, not the OS preference.
+  // The inline script below writes the meta tag from the resolved theme.
 };
-
-/* runs before first paint: stored theme wins, else system preference, else light */
-const themeInit = `(function(){try{var t=localStorage.getItem("gl-theme");if(t!=="dark"&&t!=="light"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="light";}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
