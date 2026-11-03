@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { Check, ChevronDown, ChevronUp, Star, X } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -16,20 +17,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  ApiError,
-  adminListReviews,
-  adminModerateReview,
-  type AdminReview,
-} from "@/lib/admin";
+  DetailCard,
+  DetailGrid,
+  DetailItem,
+  DetailSection,
+  ListDetailRow,
+  ListHeader,
+  ListLoading,
+  ListPagination,
+  ListToolbar,
+  RowMenu,
+  useAdminList,
+  useFacetCounts,
+  type ListChip,
+} from "@/components/admin/list-view";
+import { ApiError, adminModerateReview, type AdminReview } from "@/lib/admin";
 import { formatJalali } from "@/lib/jalali";
 import { fa } from "@/lib/utils";
-
-const FILTERS = [
-  { value: "pending", label: "در انتظار تأیید" },
-  { value: "approved", label: "تأییدشده" },
-  { value: "rejected", label: "ردشده" },
-  { value: "", label: "همه" },
-];
 
 const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "destructive" }> = {
   pending: { label: "در انتظار تأیید", tone: "warning" },
@@ -37,40 +41,30 @@ const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "
   rejected: { label: "ردشده", tone: "destructive" },
 };
 
-const PER_PAGE = 20;
+const STATUS_VALUES = ["pending", "approved", "rejected"];
 
 export default function AdminReviewsPage() {
-  const [reviews, setReviews] = React.useState<AdminReview[]>([]);
-  const [total, setTotal] = React.useState(0);
-  const [page, setPage] = React.useState(1);
   const [status, setStatus] = React.useState("pending");
-  const [loaded, setLoaded] = React.useState(false);
-  const [error, setError] = React.useState("");
+  const [allStatuses, setAllStatuses] = React.useState(false);
+  const [expanded, setExpanded] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState("");
+  const [error, setError] = React.useState("");
 
-  const load = React.useCallback(async () => {
-    setError("");
-    try {
-      const res = await adminListReviews({ page, per_page: PER_PAGE, status });
-      setReviews(res.data ?? []);
-      setTotal(res.meta?.total ?? 0);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "خطا در دریافت نظرها");
-    } finally {
-      setLoaded(true);
-    }
-  }, [page, status]);
+  const filters = React.useMemo(() => ({ status: allStatuses ? "" : status }), [allStatuses, status]);
 
-  React.useEffect(() => {
-    void load();
-  }, [load]);
+  const list = useAdminList<AdminReview>({ path: "/admin/reviews", filters });
+  const statusCounts = useFacetCounts({
+    path: "/admin/reviews",
+    param: "status",
+    values: STATUS_VALUES,
+  });
 
   async function moderate(review: AdminReview, approve: boolean) {
     setError("");
     setBusy(review.id);
     try {
       await adminModerateReview(review.id, approve);
-      await load();
+      await list.reload();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "تغییر وضعیت نظر ناموفق بود.");
     } finally {
@@ -78,150 +72,205 @@ export default function AdminReviewsPage() {
     }
   }
 
-  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const chips: ListChip[] = [];
+  if (!allStatuses) {
+    chips.push({
+      key: "status",
+      label: `وضعیت: ${STATUS_FA[status]?.label ?? status}`,
+      count: statusCounts[status] ?? null,
+      onRemove: () => setStatus(""),
+    });
+  }
 
   return (
     <div className="space-y-4">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="reveal text-xl leading-7 text-foreground">نظرهای دانشجوها</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {loaded
-              ? `${fa(total)} نظر${status === "pending" ? " منتظر تأیید" : ""}.`
-              : "در حال شمارش نظرها…"}
-          </p>
-        </div>
-        <Tabs
-          value={status}
-          onValueChange={(v) => {
-            setStatus(v);
-            setPage(1);
-          }}
-        >
-          <TabsList variant="line" className="h-9 gap-4 p-0">
-            {FILTERS.map((f) => (
-              <TabsTrigger key={f.value} value={f.value}>
-                {f.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </header>
+      <ListHeader title="نظرهای دانشجوها" count={list.loading ? null : list.total} unit="نظر" />
 
       {error && <Alert>{error}</Alert>}
 
       <Card className="p-0">
-        {!loaded ? (
-          <div className="space-y-3 p-6" aria-label="در حال بارگذاری نظرها">
-            <div className="h-5 w-1/3 animate-pulse rounded bg-muted" />
-            <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
-          </div>
-        ) : reviews.length === 0 ? (
+        <ListToolbar
+          chips={chips}
+          toggle={{
+            checked: allStatuses,
+            onChange: setAllStatuses,
+            label: "نمایش همهٔ وضعیت‌ها",
+          }}
+          filters={
+            <div className="space-y-3">
+              <div>
+                <p className="mb-1 text-xs font-medium text-muted-foreground">وضعیت</p>
+                <Select
+                  aria-label="فیلتر وضعیت"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full"
+                  disabled={allStatuses}
+                >
+                  {STATUS_VALUES.map((value) => (
+                    <option key={value} value={value}>
+                      {STATUS_FA[value].label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  setStatus("pending");
+                  setAllStatuses(false);
+                }}
+              >
+                بازگشت به صف تأیید
+              </Button>
+            </div>
+          }
+        />
+
+        {list.loading ? (
+          <ListLoading label="در حال بارگذاری نظرها" />
+        ) : list.items.length === 0 ? (
           <EmptyState
-            title="نظری با این فیلتر نیست"
-            body="نظرها پس از ثبت توسط دانشجوهای دوره در همین صف دیده می‌شوند."
+            title="نظری در این صف نیست"
+            body="همهٔ نظرها بررسی شده‌اند یا فیلتر دیگری را انتخاب کنید."
           />
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-start">دوره</TableHead>
-                <TableHead className="text-start">نویسنده</TableHead>
-                <TableHead className="text-start">امتیاز</TableHead>
-                <TableHead className="text-start">متن</TableHead>
-                <TableHead className="text-start">تاریخ</TableHead>
-                <TableHead className="text-start">وضعیت</TableHead>
-                <TableHead className="text-start">کنش‌ها</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">دانشجو</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">دوره</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">امتیاز</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">متن نظر</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">تاریخ</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">وضعیت</TableHead>
+                <TableHead className="w-20" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {reviews.map((rv) => {
-                const meta = STATUS_FA[rv.status] ?? { label: rv.status, tone: "neutral" as const };
+              {list.items.map((review) => {
+                const meta = STATUS_FA[review.status] ?? {
+                  label: review.status,
+                  tone: "neutral" as const,
+                };
+                const open = expanded === review.id;
                 return (
-                  <TableRow key={rv.id}>
-                    <TableCell className="text-start text-sm">{rv.course_title || "—"}</TableCell>
-                    <TableCell className="text-start text-sm">
-                      {rv.author_name || "دانشجو"}
-                    </TableCell>
-                    <TableCell className="text-start">
-                      <span className="text-warning" aria-label={`امتیاز ${fa(rv.rating)} از ۵`}>
-                        {[1, 2, 3, 4, 5].map((i) => (
-                          <span key={i} aria-hidden className={rv.rating >= i ? "" : "opacity-30"}>
-                            ★
+                  <React.Fragment key={review.id}>
+                    <TableRow>
+                      <TableCell className="text-start whitespace-normal">
+                        <div className="flex items-center gap-3">
+                          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary-tint text-xs font-semibold text-accent-strong">
+                            {(review.author_name || "؟").trim().slice(0, 1)}
                           </span>
-                        ))}
-                      </span>
-                    </TableCell>
-                    <TableCell className="max-w-72 text-start text-sm leading-6">
-                      {rv.body ? (
-                        <span className="line-clamp-3 text-muted-foreground">{rv.body}</span>
-                      ) : (
-                        <span className="text-muted-foreground">بدون متن</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-start text-muted-foreground">
-                      {formatJalali(new Date(rv.submitted_at ?? rv.approved_at ?? Date.now()))}
-                    </TableCell>
-                    <TableCell className="text-start">
-                      <Badge tone={meta.tone}>{meta.label}</Badge>
-                    </TableCell>
-                    <TableCell className="text-start">
-                      <div className="flex flex-wrap items-center gap-1">
-                        {rv.status !== "approved" && (
+                          <span className="truncate font-medium text-foreground">
+                            {review.author_name || "دانشجو"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-start text-muted-foreground">
+                        <span className="block max-w-40 truncate">{review.course_title}</span>
+                      </TableCell>
+                      <TableCell className="text-start">
+                        <span className="inline-flex items-center gap-0.5 text-foreground">
+                          <Star className="size-3.5 fill-warning text-warning" />
+                          {fa(review.rating)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-start whitespace-normal">
+                        <span className="block max-w-72 truncate text-muted-foreground">{review.body}</span>
+                      </TableCell>
+                      <TableCell className="text-start text-muted-foreground">
+                        {review.submitted_at ? formatJalali(new Date(review.submitted_at)) : "—"}
+                      </TableCell>
+                      <TableCell className="text-start">
+                        <Badge tone={meta.tone}>{meta.label}</Badge>
+                      </TableCell>
+                      <TableCell className="text-start">
+                        <div className="flex items-center gap-1">
                           <Button
-                            size="sm"
-                            variant="outline"
-                            loading={busy === rv.id}
-                            onClick={() => void moderate(rv, true)}
-                          >
-                            تأیید
-                          </Button>
-                        )}
-                        {rv.status !== "rejected" && (
-                          <Button
-                            size="sm"
                             variant="ghost"
-                            className="text-destructive-text"
-                            loading={busy === rv.id}
-                            onClick={() => void moderate(rv, false)}
+                            size="icon-sm"
+                            aria-label={open ? "بستن جزئیات" : "نمایش جزئیات"}
+                            aria-expanded={open}
+                            onClick={() => setExpanded(open ? null : review.id)}
                           >
-                            رد
+                            {open ? <ChevronUp /> : <ChevronDown />}
                           </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                          <RowMenu
+                            label={`کنش‌های نظر ${review.author_name}`}
+                            items={[
+                              {
+                                label: "تأیید نظر",
+                                icon: <Check />,
+                                disabled: review.status === "approved" || busy === review.id,
+                                onSelect: () => void moderate(review, true),
+                              },
+                              {
+                                label: "رد نظر",
+                                icon: <X />,
+                                variant: "destructive",
+                                disabled: review.status === "rejected" || busy === review.id,
+                                onSelect: () => void moderate(review, false),
+                              },
+                            ]}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {open && (
+                      <ListDetailRow colSpan={7}>
+                        <DetailGrid>
+                          <DetailItem label="دانشجو">{review.author_name || "—"}</DetailItem>
+                          <DetailItem label="دوره">{review.course_title}</DetailItem>
+                          <DetailItem label="امتیاز">{fa(review.rating)} از ۵</DetailItem>
+                          <DetailItem label="زمان ارسال">
+                            {review.submitted_at ? formatJalali(new Date(review.submitted_at)) : "—"}
+                          </DetailItem>
+                          <DetailItem label="زمان تأیید">
+                            {review.approved_at ? formatJalali(new Date(review.approved_at)) : "—"}
+                          </DetailItem>
+                          <DetailItem label="شناسه">
+                            <span dir="ltr" className="text-xs">
+                              {review.id.slice(0, 8)}…
+                            </span>
+                          </DetailItem>
+                        </DetailGrid>
+                        <DetailSection title="متن نظر">
+                          <DetailCard title={review.body}>
+                            <div className="mt-3 flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                loading={busy === review.id}
+                                onClick={() => void moderate(review, true)}
+                              >
+                                <Check />
+                                تأیید
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                loading={busy === review.id}
+                                onClick={() => void moderate(review, false)}
+                              >
+                                <X />
+                                رد
+                              </Button>
+                            </div>
+                          </DetailCard>
+                        </DetailSection>
+                      </ListDetailRow>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </TableBody>
           </Table>
         )}
 
-        {loaded && total > 0 && (
-          <div className="flex items-center justify-between gap-3 border-t border-border-variant px-4 py-3 text-sm">
-            <span className="text-muted-foreground">
-              صفحهٔ {fa(page)} از {fa(pages)}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                قبلی
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={page >= pages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                بعدی
-              </Button>
-            </div>
-          </div>
-        )}
+        <ListPagination page={list.page} pages={list.pages} total={list.total} onPage={list.setPage} />
       </Card>
     </div>
   );

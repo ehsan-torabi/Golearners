@@ -165,8 +165,8 @@ func ptrStr(s *string) string {
 func strPtr(s string) *string { return &s }
 
 // ListAdmin lists orders for the admin grid.
-func (s *Service) ListAdmin(ctx context.Context, status string, page, perPage int) ([]*commerce.Order, int, error) {
-	return s.d.Orders.ListAdmin(ctx, status, page, perPage)
+func (s *Service) ListAdmin(ctx context.Context, f ports.OrderAdminFilter, page, perPage int) ([]*commerce.Order, int, error) {
+	return s.d.Orders.ListAdmin(ctx, f, page, perPage)
 }
 
 // OrderDetailForAdmin returns order + items + payments + event ledger.

@@ -83,10 +83,7 @@ export function ListHeader({
 /* ---------- toolbar ---------- */
 
 export function ListToolbar({
-  searchValue,
-  onSearchValue,
-  onSearchSubmit,
-  searchPlaceholder = "جست‌وجو…",
+  search,
   chips = [],
   filters,
   filterLabel = "فیلتر",
@@ -94,10 +91,12 @@ export function ListToolbar({
   toggle,
   trailing,
 }: {
-  searchValue: string;
-  onSearchValue: (value: string) => void;
-  onSearchSubmit: () => void;
-  searchPlaceholder?: string;
+  search?: {
+    value: string;
+    onChange: (value: string) => void;
+    onSubmit: () => void;
+    placeholder?: string;
+  };
   chips?: ListChip[];
   filters?: React.ReactNode;
   filterLabel?: string;
@@ -108,23 +107,25 @@ export function ListToolbar({
   const sortLabel = sort?.options.find((o) => o.value === sort.value)?.label ?? "ترتیب";
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-border-variant px-4 py-3">
-      <form
-        className="relative"
-        role="search"
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSearchSubmit();
-        }}
-      >
-        <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={searchValue}
-          onChange={(e) => onSearchValue(e.target.value)}
-          placeholder={searchPlaceholder}
-          aria-label={searchPlaceholder}
-          className="h-9 w-64 rounded-full bg-muted ps-9 pe-3"
-        />
-      </form>
+      {search && (
+        <form
+          className="relative"
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault();
+            search.onSubmit();
+          }}
+        >
+          <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search.value}
+            onChange={(e) => search.onChange(e.target.value)}
+            placeholder={search.placeholder ?? "جست‌وجو…"}
+            aria-label={search.placeholder ?? "جست‌وجو"}
+            className="h-9 w-64 rounded-full bg-muted ps-9 pe-3"
+          />
+        </form>
+      )}
 
       {chips.map((chip) => (
         <span

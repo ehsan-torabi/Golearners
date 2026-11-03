@@ -1,21 +1,52 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { ChevronDown, ChevronUp, ExternalLink, RotateCcw } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Field, Textarea } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Field, Select, Textarea } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DetailCard,
+  DetailGrid,
+  DetailItem,
+  DetailSection,
+  ListDetailRow,
+  ListHeader,
+  ListLoading,
+  ListPagination,
+  ListToolbar,
+  RowMenu,
+  useAdminList,
+  useFacetCounts,
+  type ListChip,
+} from "@/components/admin/list-view";
 import { ApiError, formatTomanFromRial } from "@/lib/api";
-import { adminRefundOrder, fetchAdmin } from "@/lib/admin";
+import { adminGetOrder, adminRefundOrder, type AdminOrderDetail } from "@/lib/admin";
 import { formatJalali } from "@/lib/jalali";
-import { fa } from "@/lib/utils";
+import { fa, formatIranMobile } from "@/lib/persian";
 
-const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "destructive" | "neutral" }> = {
+const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "neutral" | "destructive" }> = {
   awaiting_payment: { label: "در انتظار پرداخت", tone: "warning" },
   paid: { label: "پرداخت‌شده", tone: "success" },
   canceled: { label: "لغوشده", tone: "neutral" },
@@ -23,15 +54,14 @@ const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "
   refunded: { label: "بازگشت‌خورده", tone: "destructive" },
 };
 
-const FILTERS = [
-  { value: "", label: "همه" },
-  { value: "awaiting_payment", label: "در انتظار" },
-  { value: "paid", label: "پرداخت‌شده" },
-  { value: "refunded", label: "بازگشت‌خورده" },
-  { value: "expired", label: "منقضی" },
-];
+const STATUS_VALUES = ["awaiting_payment", "paid", "canceled", "expired", "refunded"];
 
-const PER_PAGE = 20;
+const SORT_OPTIONS = [
+  { value: "newest", label: "تازه‌ترین" },
+  { value: "oldest", label: "قدیمی‌ترین" },
+  { value: "amount_desc", label: "بیشترین مبلغ" },
+  { value: "amount_asc", label: "کمترین مبلغ" },
+];
 
 interface OrderRow {
   id: string;
@@ -42,253 +72,309 @@ interface OrderRow {
   total_rial: number;
   paid_at: string | null;
   created_at: string;
-}
-
-interface OrderDetail {
-  id: string;
-  status: string;
-  subtotal_rial: number;
-  discount_rial: number;
-  total_rial: number;
-  created_at: string;
-  items?: { title_snapshot: string; unit_price_rial: number }[];
-  payments?: {
-    id: string;
-    gateway: string;
-    status: string;
-    amount_rial: number;
-    card_masked: string | null;
-    failure_reason: string | null;
-    created_at: string;
-  }[];
-}
-
-/* native <dialog>: Escape closes it, focus is trapped, no library needed */
-function RefundDialog({
-  order,
-  onClose,
-  onDone,
-}: {
-  order: OrderRow | null;
-  onClose: () => void;
-  onDone: () => void;
-}) {
-  const ref = React.useRef<HTMLDialogElement>(null);
-  const [reason, setReason] = React.useState("");
-  const [busy, setBusy] = React.useState(false);
-  const [error, setError] = React.useState("");
-
-  React.useEffect(() => {
-    const dlg = ref.current;
-    if (!dlg) return;
-    if (order && !dlg.open) dlg.showModal();
-    if (!order && dlg.open) dlg.close();
-  }, [order]);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!order) return;
-    setBusy(true);
-    setError("");
-    try {
-      await adminRefundOrder(order.id, reason.trim() || "بدون توضیح");
-      ref.current?.close();
-      setReason("");
-      onDone();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "بازگشت وجه ناموفق بود");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <dialog
-      ref={ref}
-      onClose={onClose}
-      onClick={(e) => e.target === ref.current && ref.current.close()}
-      className="m-auto rounded-lg border border-border bg-card p-0 text-foreground backdrop:bg-black/45"
-    >
-      {order && (
-        <form onSubmit={submit} className="w-[min(90vw,26rem)] p-6">
-          <h2 className="text-base font-medium">بازگشت وجه سفارش</h2>
-          <p className="mt-1 text-xs text-muted-foreground" dir="ltr">
-            {order.id.slice(0, 8)}… · {formatTomanFromRial(order.total_rial)}
-          </p>
-          <Field label="دلیل (برای مدیر بعدی)" htmlFor="refund-reason" className="mt-4">
-            <Textarea
-              id="refund-reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="min-h-20"
-            />
-          </Field>
-          {error && <Alert className="mt-3">{error}</Alert>}
-          <div className="mt-5 flex justify-start gap-2">
-            <Button type="submit" variant="destructive" loading={busy} disabled={reason.trim().length < 3}>
-              ثبت بازگشت وجه
-            </Button>
-            <Button type="button" variant="outline" onClick={() => ref.current?.close()}>
-              انصراف
-            </Button>
-          </div>
-        </form>
-      )}
-    </dialog>
-  );
+  user_name: string;
+  user_mobile: string;
 }
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = React.useState<OrderRow[]>([]);
-  const [total, setTotal] = React.useState(0);
-  const [page, setPage] = React.useState(1);
+  const [query, setQuery] = React.useState("");
+  const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState("");
-  const [loaded, setLoaded] = React.useState(false);
+  const [sort, setSort] = React.useState("newest");
+  const [expanded, setExpanded] = React.useState<string | null>(null);
+  const [detail, setDetail] = React.useState<AdminOrderDetail | null>(null);
+  const [refunding, setRefunding] = React.useState<OrderRow | null>(null);
+  const [reason, setReason] = React.useState("");
+  const [busy, setBusy] = React.useState("");
   const [error, setError] = React.useState("");
-  const [target, setTarget] = React.useState<OrderRow | null>(null);
 
-  const load = React.useCallback(async () => {
-    setError("");
-    try {
-      const params = new URLSearchParams({ page: String(page), per_page: String(PER_PAGE) });
-      if (status) params.set("status", status);
-      const res = await fetchAdmin<{ data: OrderRow[]; meta: { total: number } }>(
-        `/admin/orders?${params}`,
-      );
-      setOrders(res.data ?? []);
-      setTotal(res.meta?.total ?? 0);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "خطا در دریافت سفارش‌ها");
-    } finally {
-      setLoaded(true);
-    }
-  }, [page, status]);
+  const filters = React.useMemo(() => ({ q: search, status, sort }), [search, status, sort]);
 
+  const list = useAdminList<OrderRow>({ path: "/admin/orders", filters });
+  const statusCounts = useFacetCounts({
+    path: "/admin/orders",
+    param: "status",
+    filters: { q: search },
+    values: STATUS_VALUES,
+  });
+
+  // the expanded row pulls the full order: line items, payments, events
   React.useEffect(() => {
-    void load();
-  }, [load]);
+    if (!expanded) {
+      setDetail(null);
+      return;
+    }
+    let cancelled = false;
+    adminGetOrder(expanded)
+      .then((res) => {
+        if (!cancelled) setDetail(res ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setDetail(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [expanded]);
 
-  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+  async function refund() {
+    if (!refunding) return;
+    setError("");
+    setBusy(refunding.id);
+    try {
+      await adminRefundOrder(refunding.id, reason.trim() || "بازگشت وجه توسط مدیر");
+      setRefunding(null);
+      setReason("");
+      setExpanded(null);
+      await list.reload();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "بازگشت وجه ناموفق بود");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  const chips: ListChip[] = [];
+  if (status) {
+    chips.push({
+      key: "status",
+      label: `وضعیت: ${STATUS_FA[status]?.label ?? status}`,
+      count: statusCounts[status] ?? null,
+      onRemove: () => setStatus(""),
+    });
+  }
 
   return (
     <div className="space-y-4">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="reveal text-xl leading-7 text-foreground">سفارش‌ها</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {loaded ? `${fa(total)} سفارش ثبت شده است.` : "در حال شمارش سفارش‌ها…"}
-          </p>
-        </div>
-        <Tabs
-          value={status}
-          onValueChange={(v) => {
-            setStatus(v);
-            setPage(1);
-          }}
-        >
-          <TabsList variant="line" className="h-9 gap-4 p-0">
-            {FILTERS.map((f) => (
-              <TabsTrigger key={f.value} value={f.value}>
-                {f.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </header>
+      <ListHeader title="سفارش‌ها" count={list.loading ? null : list.total} unit="سفارش" />
 
       {error && <Alert>{error}</Alert>}
 
       <Card className="p-0">
-        {!loaded ? (
-          <div className="space-y-3 p-6" aria-label="در حال بارگذاری سفارش‌ها">
-            <div className="h-5 w-1/3 animate-pulse rounded bg-muted" />
-            <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
-          </div>
-        ) : orders.length === 0 ? (
-          <EmptyState title="سفارشی با این فیلترها نیست" body="فیلتر وضعیت را تغییر دهید." />
+        <ListToolbar
+          search={{
+            value: query,
+            onChange: setQuery,
+            onSubmit: () => setSearch(query.trim()),
+            placeholder: "شناسهٔ سفارش",
+          }}
+          chips={chips}
+          sort={{ value: sort, options: SORT_OPTIONS, onChange: setSort }}
+          filters={
+            <div className="space-y-3">
+              <div>
+                <p className="mb-1 text-xs font-medium text-muted-foreground">وضعیت</p>
+                <Select aria-label="فیلتر وضعیت" value={status} onChange={(e) => setStatus(e.target.value)} className="w-full">
+                  <option value="">همهٔ وضعیت‌ها</option>
+                  {STATUS_VALUES.map((value) => (
+                    <option key={value} value={value}>
+                      {STATUS_FA[value].label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <Button size="sm" variant="ghost" className="w-full" onClick={() => setStatus("")}>
+                پاک کردن فیلترها
+              </Button>
+            </div>
+          }
+        />
+
+        {list.loading ? (
+          <ListLoading label="در حال بارگذاری سفارش‌ها" />
+        ) : list.items.length === 0 ? (
+          <EmptyState title="سفارشی با این فیلترها نیست" body="شناسهٔ سفارش یا فیلتر وضعیت را تغییر دهید." />
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-start">سفارش</TableHead>
-                <TableHead className="text-start">مبلغ</TableHead>
-                <TableHead className="text-start">تاریخ</TableHead>
-                <TableHead className="text-start">وضعیت</TableHead>
-                <TableHead className="text-start">کنش‌ها</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">سفارش</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">خریدار</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">مبلغ</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">تخفیف</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">تاریخ</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">وضعیت</TableHead>
+                <TableHead className="w-20" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((o) => {
+              {list.items.map((o) => {
                 const meta = STATUS_FA[o.status] ?? { label: o.status, tone: "neutral" as const };
+                const open = expanded === o.id;
                 return (
-                  <TableRow key={o.id}>
-                    <TableCell className="text-start" dir="ltr">
-                      {o.id.slice(0, 8)}…
-                    </TableCell>
-                    <TableCell className="text-start">{formatTomanFromRial(o.total_rial)}</TableCell>
-                    <TableCell className="text-start text-muted-foreground">
-                      {formatJalali(new Date(o.created_at))}
-                    </TableCell>
-                    <TableCell className="text-start">
-                      <Badge tone={meta.tone}>{meta.label}</Badge>
-                    </TableCell>
-                    <TableCell className="text-start">
-                      <div className="flex flex-wrap items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          render={<Link href={`/admin/orders/${o.id}`} />}
-                          nativeButton={false}
-                        >
-                          جزئیات
-                        </Button>
-                        {o.status === "paid" && (
+                  <React.Fragment key={o.id}>
+                    <TableRow>
+                      <TableCell className="text-start">
+                        <span className="font-medium text-foreground" dir="ltr">
+                          #{o.id.slice(0, 8)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-start whitespace-normal">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-foreground">
+                            {o.user_name || "کاربر"}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground" dir="ltr">
+                            {o.user_mobile ? formatIranMobile(o.user_mobile) : "—"}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-start">{formatTomanFromRial(o.total_rial)}</TableCell>
+                      <TableCell className="text-start text-muted-foreground">
+                        {o.discount_rial > 0 ? formatTomanFromRial(o.discount_rial) : "—"}
+                      </TableCell>
+                      <TableCell className="text-start text-muted-foreground">
+                        {formatJalali(new Date(o.created_at))}
+                      </TableCell>
+                      <TableCell className="text-start">
+                        <Badge tone={meta.tone}>{meta.label}</Badge>
+                      </TableCell>
+                      <TableCell className="text-start">
+                        <div className="flex items-center gap-1">
                           <Button
-                            size="sm"
                             variant="ghost"
-                            className="text-destructive-text"
-                            onClick={() => setTarget(o)}
+                            size="icon-sm"
+                            aria-label={open ? "بستن جزئیات" : "نمایش جزئیات"}
+                            aria-expanded={open}
+                            onClick={() => setExpanded(open ? null : o.id)}
                           >
-                            بازگشت وجه
+                            {open ? <ChevronUp /> : <ChevronDown />}
                           </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                          <RowMenu
+                            label={`کنش‌های سفارش ${o.id.slice(0, 8)}`}
+                            items={[
+                              {
+                                label: "مشاهدهٔ سفارش",
+                                icon: <ExternalLink />,
+                                onSelect: () => setExpanded(o.id),
+                              },
+                              {
+                                label: "بازگشت وجه",
+                                icon: <RotateCcw />,
+                                variant: "destructive",
+                                disabled: o.status !== "paid",
+                                onSelect: () => setRefunding(o),
+                              },
+                            ]}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {open && (
+                      <ListDetailRow colSpan={7}>
+                        <DetailGrid>
+                          <DetailItem label="خریدار">{o.user_name || "کاربر"}</DetailItem>
+                          <DetailItem label="جمع کل">{formatTomanFromRial(o.total_rial)}</DetailItem>
+                          <DetailItem label="تخفیف">
+                            {o.discount_rial > 0 ? formatTomanFromRial(o.discount_rial) : "—"}
+                          </DetailItem>
+                          <DetailItem label="پرداخت">
+                            {o.paid_at ? formatJalali(new Date(o.paid_at)) : "پرداخت نشده"}
+                          </DetailItem>
+                          <DetailItem label="مهلت پرداخت">
+                            {detail?.expires_at ? formatJalali(new Date(detail.expires_at)) : "—"}
+                          </DetailItem>
+                          <DetailItem label="شناسه">
+                            <span dir="ltr" className="text-xs">
+                              {o.id}
+                            </span>
+                          </DetailItem>
+                        </DetailGrid>
+                        <div className="space-y-4">
+                          <DetailSection title="اقلام سفارش" count={detail?.items?.length}>
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              {(detail?.items ?? []).map((item) => (
+                                <DetailCard
+                                  key={item.course_id}
+                                  title={item.title_snapshot}
+                                  subtitle={formatTomanFromRial(item.unit_price_rial)}
+                                />
+                              ))}
+                              {(detail?.items ?? []).length === 0 && (
+                                <p className="text-sm text-muted-foreground">قلمی ثبت نشده است.</p>
+                              )}
+                            </div>
+                          </DetailSection>
+                          <DetailSection title="پرداخت‌ها" count={detail?.payments?.length}>
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              {(detail?.payments ?? []).map((payment) => (
+                                <DetailCard
+                                  key={payment.id}
+                                  title={payment.gateway}
+                                  subtitle={`${payment.status} · ${formatTomanFromRial(payment.amount_rial)}`}
+                                />
+                              ))}
+                              {(detail?.payments ?? []).length === 0 && (
+                                <p className="text-sm text-muted-foreground">پرداختی ثبت نشده است.</p>
+                              )}
+                            </div>
+                          </DetailSection>
+                        </div>
+                      </ListDetailRow>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </TableBody>
           </Table>
         )}
 
-        {loaded && total > 0 && (
-          <div className="flex items-center justify-between gap-3 border-t border-border-variant px-4 py-3 text-sm">
-            <span className="text-muted-foreground">
-              صفحهٔ {fa(page)} از {fa(pages)}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                قبلی
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={page >= pages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                بعدی
-              </Button>
-            </div>
-          </div>
-        )}
+        <ListPagination page={list.page} pages={list.pages} total={list.total} onPage={list.setPage} />
       </Card>
 
-      <RefundDialog order={target} onClose={() => setTarget(null)} onDone={() => void load()} />
+      <RefundDialog
+        order={refunding}
+        reason={reason}
+        busy={busy === refunding?.id}
+        onReason={setReason}
+        onClose={() => setRefunding(null)}
+        onConfirm={() => void refund()}
+      />
     </div>
+  );
+}
+
+/** Refund confirmation with a reason the customer can be told about. */
+function RefundDialog({
+  order,
+  reason,
+  busy,
+  onReason,
+  onClose,
+  onConfirm,
+}: {
+  order: OrderRow | null;
+  reason: string;
+  busy: boolean;
+  onReason: (value: string) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog open={order !== null} onOpenChange={(open) => !open && onClose()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>بازگشت وجه سفارش</AlertDialogTitle>
+          <AlertDialogDescription>
+            مبلغ {order ? formatTomanFromRial(order.total_rial) : ""} به خریدار بازگردانده می‌شود و دسترسی او به
+            دوره‌ها لغو می‌گردد.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <Field label="دلیل بازگشت وجه" hint="این متن در گزارش رویدادها ثبت می‌شود.">
+          <Textarea
+            value={reason}
+            onChange={(e) => onReason(e.target.value)}
+            placeholder="مثلاً: خریدار درخواست لغو سفارش داد."
+            rows={3}
+          />
+        </Field>
+        <AlertDialogFooter>
+          <AlertDialogCancel>انصراف</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" loading={busy} onClick={onConfirm}>
+            بازگشت وجه
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

@@ -288,10 +288,12 @@ export default function AdminCoursesPage() {
           </ListSelectionBar>
         ) : (
           <ListToolbar
-            searchValue={query}
-            onSearchValue={setQuery}
-            onSearchSubmit={() => setSearch(query.trim())}
-            searchPlaceholder="عنوان یا نامک دوره"
+            search={{
+              value: query,
+              onChange: setQuery,
+              onSubmit: () => setSearch(query.trim()),
+              placeholder: "عنوان یا نامک دوره",
+            }}
             chips={chips}
             sort={{ value: sort, options: SORT_OPTIONS, onChange: setSort }}
             filters={

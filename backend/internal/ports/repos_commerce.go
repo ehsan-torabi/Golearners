@@ -17,7 +17,7 @@ type OrderRepo interface {
 	ItemsOf(ctx context.Context, orderID uuid.UUID) ([]commerce.OrderItem, error)
 	ByID(ctx context.Context, id uuid.UUID) (*commerce.Order, error)
 	ListForUser(ctx context.Context, userID uuid.UUID, page, perPage int) ([]*commerce.Order, int, error)
-	ListAdmin(ctx context.Context, status string, page, perPage int) ([]*commerce.Order, int, error)
+	ListAdmin(ctx context.Context, f OrderAdminFilter, page, perPage int) ([]*commerce.Order, int, error)
 	// MarkPaid transitions awaiting_payment → paid conditionally.
 	MarkPaid(ctx context.Context, id uuid.UUID) (bool, error)
 	Expire(ctx context.Context, id uuid.UUID) error
@@ -25,6 +25,13 @@ type OrderRepo interface {
 	MarkRefunded(ctx context.Context, id uuid.UUID) error
 	// ExpireDue flips every stale awaiting_payment order; returns affected count.
 	ExpireDue(ctx context.Context, now time.Time) (int64, error)
+}
+
+// OrderAdminFilter narrows the admin order list.
+type OrderAdminFilter struct {
+	Status string
+	Q      string
+	Sort   string
 }
 
 // CouponRepo — discount codes + redemption counting.

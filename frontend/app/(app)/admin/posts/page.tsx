@@ -232,10 +232,12 @@ export default function AdminPostsPage() {
           </ListSelectionBar>
         ) : (
           <ListToolbar
-            searchValue={query}
-            onSearchValue={setQuery}
-            onSearchSubmit={() => setSearch(query.trim())}
-            searchPlaceholder="عنوان یا متن نوشته"
+            search={{
+              value: query,
+              onChange: setQuery,
+              onSubmit: () => setSearch(query.trim()),
+              placeholder: "عنوان یا متن نوشته",
+            }}
             chips={chips}
             sort={{ value: sort, options: SORT_OPTIONS, onChange: setSort }}
             filters={

@@ -213,10 +213,12 @@ export default function AdminUsersPage() {
           </ListSelectionBar>
         ) : (
           <ListToolbar
-            searchValue={query}
-            onSearchValue={setQuery}
-            onSearchSubmit={() => setSearch(query.trim())}
-            searchPlaceholder="نام یا شمارهٔ موبایل"
+            search={{
+              value: query,
+              onChange: setQuery,
+              onSubmit: () => setSearch(query.trim()),
+              placeholder: "نام یا شمارهٔ موبایل",
+            }}
             chips={chips}
             sort={{ value: sort, options: SORT_OPTIONS, onChange: setSort }}
             filters={

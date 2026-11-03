@@ -750,7 +750,7 @@ func (f *OrderRepo) ListForUser(context.Context, uuid.UUID, int, int) ([]*commer
 	return nil, 0, nil
 }
 
-func (f *OrderRepo) ListAdmin(context.Context, string, int, int) ([]*commerce.Order, int, error) {
+func (f *OrderRepo) ListAdmin(context.Context, ports.OrderAdminFilter, int, int) ([]*commerce.Order, int, error) {
 	return nil, 0, nil
 }
 

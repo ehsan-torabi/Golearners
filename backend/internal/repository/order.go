@@ -161,16 +161,29 @@ func (r *OrderRepo) ExpireDue(ctx context.Context, now time.Time) (int64, error)
 	return tag.RowsAffected(), nil
 }
 
-func (r *OrderRepo) ListAdmin(ctx context.Context, status string, page, perPage int) ([]*commerce.Order, int, error) {
+func (r *OrderRepo) ListAdmin(ctx context.Context, f ports.OrderAdminFilter, page, perPage int) ([]*commerce.Order, int, error) {
 	where := "TRUE"
 	args := []any{}
-	if status != "" {
-		where = "o.status = $1"
-		args = append(args, status)
+	if f.Status != "" {
+		args = append(args, f.Status)
+		where += fmt.Sprintf(" AND o.status = $%d", len(args))
+	}
+	if f.Q != "" {
+		args = append(args, f.Q)
+		where += fmt.Sprintf(" AND o.id::text LIKE $%d || '%%'", len(args))
+	}
+	order := "o.created_at DESC"
+	switch f.Sort {
+	case "oldest":
+		order = "o.created_at ASC"
+	case "amount_desc":
+		order = "o.total_rial DESC"
+	case "amount_asc":
+		order = "o.total_rial ASC"
 	}
 	rows, err := querierOf(ctx, r.pool).Query(ctx,
 		`SELECT `+orderColumns+` FROM orders o WHERE `+where+
-			` ORDER BY o.created_at DESC LIMIT $`+fmt.Sprint(len(args)+1)+
+			` ORDER BY `+order+` LIMIT $`+fmt.Sprint(len(args)+1)+
 			` OFFSET $`+fmt.Sprint(len(args)+2),
 		append(args, perPage, (page-1)*perPage)...)
 	orders, err := collectOrders(rows, err)

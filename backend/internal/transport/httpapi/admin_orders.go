@@ -9,23 +9,35 @@ import (
 
 	"golearn/backend/internal/apperr"
 	"golearn/backend/internal/domain/identity"
+	"golearn/backend/internal/ports"
 	"golearn/backend/internal/service/checkout"
 )
 
 // GET /api/v1/admin/orders?status=
 func (a *App) handleAdminOrders(w http.ResponseWriter, r *http.Request) {
 	page, perPage := pageParams(r)
-	list, total, err := a.Checkout.ListAdmin(r.Context(), r.URL.Query().Get("status"), page, perPage)
+	list, total, err := a.Checkout.ListAdmin(r.Context(), ports.OrderAdminFilter{
+		Status: r.URL.Query().Get("status"),
+		Q:      r.URL.Query().Get("q"),
+		Sort:   r.URL.Query().Get("sort"),
+	}, page, perPage)
 	if err != nil {
 		a.writeError(w, r, err)
 		return
 	}
 	items := make([]map[string]any, 0, len(list))
 	for _, o := range list {
+		// the buyer is the first thing an admin needs; one lookup per row.
+		userName, userMobile := "", ""
+		if u, err := a.Auth.Me(r.Context(), o.UserID); err == nil && u != nil {
+			userName = u.FullName
+			userMobile = u.Mobile
+		}
 		items = append(items, map[string]any{
 			"id": o.ID, "user_id": o.UserID, "status": o.Status,
 			"subtotal_rial": o.SubtotalRial, "discount_rial": o.DiscountRial,
 			"total_rial": o.TotalRial, "paid_at": o.PaidAt, "created_at": o.CreatedAt,
+			"user_name": userName, "user_mobile": userMobile,
 		})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
