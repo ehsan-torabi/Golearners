@@ -204,7 +204,7 @@ func NewCategoryRepo(pool *pgxpool.Pool) *CategoryRepo { return &CategoryRepo{po
 
 func scanCategory(row pgx.Row) (*course.Category, error) {
 	c := &course.Category{}
-	err := row.Scan(&c.ID, &c.Slug, &c.Title, &c.Icon, &c.Position)
+	err := row.Scan(&c.ID, &c.Slug, &c.Title, &c.Icon, &c.IconMediaID, &c.Position)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ports.ErrNotFound
 	}
@@ -216,8 +216,8 @@ func scanCategory(row pgx.Row) (*course.Category, error) {
 
 func (r *CategoryRepo) Create(ctx context.Context, c *course.Category) error {
 	_, err := querierOf(ctx, r.pool).Exec(ctx,
-		`INSERT INTO course_categories (id, slug, title, icon, position) VALUES ($1,$2,$3,$4,$5)`,
-		c.ID, c.Slug, c.Title, c.Icon, c.Position)
+		`INSERT INTO course_categories (id, slug, title, icon, icon_media_id, position) VALUES ($1,$2,$3,$4,$5,$6)`,
+		c.ID, c.Slug, c.Title, c.Icon, c.IconMediaID, c.Position)
 	if err != nil {
 		return fmt.Errorf("insert category: %w", err)
 	}
@@ -226,18 +226,18 @@ func (r *CategoryRepo) Create(ctx context.Context, c *course.Category) error {
 
 func (r *CategoryRepo) ByID(ctx context.Context, id uuid.UUID) (*course.Category, error) {
 	return scanCategory(querierOf(ctx, r.pool).QueryRow(ctx,
-		`SELECT id, slug, title, icon, position FROM course_categories WHERE id=$1`, id))
+		`SELECT id, slug, title, icon, icon_media_id, position FROM course_categories WHERE id=$1`, id))
 }
 
 func (r *CategoryRepo) BySlug(ctx context.Context, slug string) (*course.Category, error) {
 	return scanCategory(querierOf(ctx, r.pool).QueryRow(ctx,
-		`SELECT id, slug, title, icon, position FROM course_categories WHERE slug=$1`, slug))
+		`SELECT id, slug, title, icon, icon_media_id, position FROM course_categories WHERE slug=$1`, slug))
 }
 
 func (r *CategoryRepo) Update(ctx context.Context, c *course.Category) error {
 	_, err := querierOf(ctx, r.pool).Exec(ctx,
-		`UPDATE course_categories SET slug=$2, title=$3, icon=$4, position=$5 WHERE id=$1`,
-		c.ID, c.Slug, c.Title, c.Icon, c.Position)
+		`UPDATE course_categories SET slug=$2, title=$3, icon=$4, icon_media_id=$5, position=$6 WHERE id=$1`,
+		c.ID, c.Slug, c.Title, c.Icon, c.IconMediaID, c.Position)
 	if err != nil {
 		return fmt.Errorf("update category: %w", err)
 	}
@@ -254,7 +254,7 @@ func (r *CategoryRepo) Delete(ctx context.Context, id uuid.UUID) error {
 
 func (r *CategoryRepo) List(ctx context.Context) ([]*course.Category, error) {
 	rows, err := querierOf(ctx, r.pool).Query(ctx,
-		`SELECT id, slug, title, icon, position FROM course_categories ORDER BY position, title`)
+		`SELECT id, slug, title, icon, icon_media_id, position FROM course_categories ORDER BY position, title`)
 	if err != nil {
 		return nil, fmt.Errorf("list categories: %w", err)
 	}
@@ -289,7 +289,7 @@ func (r *CategoryRepo) SetForCourse(ctx context.Context, courseID uuid.UUID, cat
 
 func (r *CategoryRepo) ForCourse(ctx context.Context, courseID uuid.UUID) ([]*course.Category, error) {
 	rows, err := querierOf(ctx, r.pool).Query(ctx,
-		`SELECT c.id, c.slug, c.title, c.icon, c.position FROM course_categories c
+		`SELECT c.id, c.slug, c.title, c.icon, c.icon_media_id, c.position FROM course_categories c
 		 JOIN course_category_courses cc ON cc.category_id = c.id
 		 WHERE cc.course_id = $1 ORDER BY c.position`, courseID)
 	if err != nil {

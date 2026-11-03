@@ -224,6 +224,8 @@ export interface CourseCategory {
   slug: string;
   title: string;
   icon: string;
+  icon_media_id: string | null;
+  icon_url?: string | null;
   position: number;
 }
 
@@ -231,14 +233,28 @@ export function adminListCategories() {
   return fetchAdmin<{ data: CourseCategory[] }>("/admin/categories");
 }
 
-export async function adminCreateCategory(title: string, position = 0, icon = "") {
-  return api("/admin/categories", { method: "POST", body: JSON.stringify({ title, position, icon }) });
+export async function adminCreateCategory(
+  title: string,
+  position = 0,
+  icon = "",
+  iconMediaId: string | null = null,
+) {
+  return api("/admin/categories", {
+    method: "POST",
+    body: JSON.stringify({ title, position, icon, icon_media_id: iconMediaId }),
+  });
 }
 
-export async function adminUpdateCategory(id: string, title: string, position: number, icon = "") {
+export async function adminUpdateCategory(
+  id: string,
+  title: string,
+  position: number,
+  icon = "",
+  iconMediaId: string | null = null,
+) {
   return api(`/admin/categories/${id}`, {
     method: "PUT",
-    body: JSON.stringify({ title, position, icon }),
+    body: JSON.stringify({ title, position, icon, icon_media_id: iconMediaId }),
   });
 }
 
@@ -396,12 +412,12 @@ export interface AdminOrderDetail {
     created_at?: string;
     verified_at?: string | null;
   }[];
-  /** the API names the event list `events` */
+  /** the API names the event list `events`; payload is base64-encoded JSON */
   events?: {
     id: string;
     payment_id: string;
-    kind: string;
-    detail: string | null;
+    type: string;
+    payload: string;
     created_at: string;
   }[];
 }

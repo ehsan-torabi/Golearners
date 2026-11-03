@@ -38,19 +38,36 @@ import {
   type TaxonomyItem,
 } from "@/lib/admin";
 import { CATEGORY_ICONS, CATEGORY_ICON_KEYS, CategoryMark } from "@/components/site/category-icon";
+import { MediaField } from "@/components/admin/media-field";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fa } from "@/lib/utils";
 
-type Row = { id: string; slug: string; title: string; position: number; icon?: string };
+type Row = {
+  id: string;
+  slug: string;
+  title: string;
+  position: number;
+  icon?: string;
+  icon_media_id?: string | null;
+  icon_url?: string | null;
+};
 
 /* icon picker: a popover grid over the curated topic set; «بدون آیکون» keeps
    the initials fallback. */
 function IconPicker({
   value,
   onChange,
+  mediaId,
+  onMediaChange,
+  mediaUrl,
+  label = "آیکون",
 }: {
   value: string;
   onChange: (v: string) => void;
+  mediaId?: string | null;
+  onMediaChange?: (v: string | null) => void;
+  mediaUrl?: string | null;
+  label?: string;
 }) {
   const [open, setOpen] = React.useState(false);
   return (
@@ -58,19 +75,35 @@ function IconPicker({
       <PopoverTrigger
         render={
           <Button type="button" variant="outline" size="sm" className="gap-1.5">
-            <CategoryMark icon={value} title="" className="size-4 text-foreground" />
-            آیکون
+            <CategoryMark icon={value} title="" iconUrl={mediaUrl} className="size-4 text-foreground" />
+            {label}
           </Button>
         }
       />
       <PopoverContent className="w-72 p-3" dir="rtl" lang="fa">
         <p className="mb-2 text-xs font-medium text-muted-foreground">آیکون دسته</p>
+        {onMediaChange && (
+          <div className="mb-3 border-b border-border-variant pb-3">
+            <MediaField
+              id={`custom-icon-${label}`}
+              label="آیکون سفارشی (تصویر)"
+              kind="image"
+              value={mediaId ?? null}
+              onChange={(v) => {
+                onMediaChange(v);
+                if (v) onChange("");
+              }}
+              uploaderLabel="بارگذاری آیکون سفارشی"
+            />
+          </div>
+        )}
         <div className="grid grid-cols-6 gap-1.5">
           <button
             type="button"
             aria-label="بدون آیکون"
             onClick={() => {
               onChange("");
+              onMediaChange?.(null);
               setOpen(false);
             }}
             className={`flex size-9 items-center justify-center rounded-field border text-[10px] transition-colors ${
@@ -113,9 +146,11 @@ export default function AdminCategoriesPage() {
   const [busy, setBusy] = React.useState("");
   const [draft, setDraft] = React.useState({ course: "", blog: "" });
   const [draftIcon, setDraftIcon] = React.useState("");
+  const [draftIconMedia, setDraftIconMedia] = React.useState<string | null>(null);
   const [editing, setEditing] = React.useState<string | null>(null);
   const [editTitle, setEditTitle] = React.useState("");
   const [editIcon, setEditIcon] = React.useState("");
+  const [editIconMedia, setEditIconMedia] = React.useState<string | null>(null);
   const [editPosition, setEditPosition] = React.useState("0");
   const [removing, setRemoving] = React.useState<{ id: string; title: string; scope: "course" | "blog" } | null>(null);
 
@@ -207,8 +242,8 @@ export default function AdminCategoriesPage() {
                 ) : (
                   <span className="inline-flex items-center gap-2 font-medium text-foreground">
                     {scope === "course" && (
-                      <span className="flex size-6 items-center justify-center rounded-full bg-primary-tint text-accent-strong [&_svg]:size-3.5 [&_span]:text-[10px]">
-                        <CategoryMark icon={row.icon} title={row.title} />
+                      <span className="flex size-6 items-center justify-center rounded-full bg-primary-tint text-accent-strong [&_svg]:size-3.5 [&_span]:text-[10px] [&_img]:size-3.5">
+                        <CategoryMark icon={row.icon} title={row.title} iconUrl={row.icon_url} />
                       </span>
                     )}
                     {row.title}
@@ -237,7 +272,13 @@ export default function AdminCategoriesPage() {
                   {editing === row.id ? (
                     <>
                       {scope === "course" && (
-                        <IconPicker value={editIcon} onChange={setEditIcon} />
+                        <IconPicker
+                          value={editIcon}
+                          onChange={setEditIcon}
+                          mediaId={editIconMedia}
+                          onMediaChange={setEditIconMedia}
+                          mediaUrl={courseCategories.find((c) => c.id === row.id)?.icon_url}
+                        />
                       )}
                       <Button
                         size="sm"
@@ -246,7 +287,13 @@ export default function AdminCategoriesPage() {
                           void run(`save-${row.id}`, async () => {
                             const position = Number(editPosition || "0") || 0;
                             if (scope === "course") {
-                              await adminUpdateCategory(row.id, editTitle.trim() || row.title, position, editIcon);
+                              await adminUpdateCategory(
+                                row.id,
+                                editTitle.trim() || row.title,
+                                position,
+                                editIcon,
+                                editIconMedia,
+                              );
                             } else {
                               await adminUpdateBlogCategory(row.id, editTitle.trim() || row.title, position);
                             }
@@ -269,6 +316,7 @@ export default function AdminCategoriesPage() {
                           setEditing(row.id);
                           setEditTitle(row.title);
                           setEditIcon(row.icon ?? "");
+                          setEditIconMedia(row.icon_media_id ?? null);
                           setEditPosition(String(row.position));
                         }}
                       >
@@ -330,23 +378,36 @@ export default function AdminCategoriesPage() {
                       const title = draft.course.trim();
                       if (!title) return;
                       void run("add-course", async () => {
-                        await adminCreateCategory(title, courseCategories.length, draftIcon);
+                        await adminCreateCategory(title, courseCategories.length, draftIcon, draftIconMedia);
                         setDraft((d) => ({ ...d, course: "" }));
                         setDraftIcon("");
+                        setDraftIconMedia(null);
                       });
                     }
                   }}
                 />
               </div>
-              <IconPicker value={draftIcon} onChange={setDraftIcon} />
+              <IconPicker
+                value={draftIcon}
+                onChange={setDraftIcon}
+                mediaId={draftIconMedia}
+                onMediaChange={setDraftIconMedia}
+                label="آیکون"
+              />
               <Button
                 loading={busy === "add-course"}
                 disabled={!draft.course.trim()}
                 onClick={() =>
                   void run("add-course", async () => {
-                    await adminCreateCategory(draft.course.trim(), courseCategories.length, draftIcon);
+                    await adminCreateCategory(
+                      draft.course.trim(),
+                      courseCategories.length,
+                      draftIcon,
+                      draftIconMedia,
+                    );
                     setDraft((d) => ({ ...d, course: "" }));
                     setDraftIcon("");
+                    setDraftIconMedia(null);
                   })
                 }
               >

@@ -182,7 +182,7 @@ func (a *App) handleAdminCategoryList(w http.ResponseWriter, r *http.Request) {
 		a.writeError(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": list})
+	writeJSON(w, http.StatusOK, map[string]any{"data": categoryJSONList(list)})
 }
 
 // POST /api/v1/admin/categories

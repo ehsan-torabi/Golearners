@@ -27,9 +27,10 @@ func (s *Service) ModerateReview(ctx context.Context, actor Actor, reviewID uuid
 // PendingReviews lists unmoderated reviews (admin queue). Implemented via
 // ports.ReviewRepo.ApprovedByCourse? No — dedicated listing below.
 type CategoryInput struct {
-	Title    string
-	Icon     string
-	Position int
+	Title       string
+	Icon        string
+	IconMediaID *uuid.UUID
+	Position    int
 }
 
 func (s *Service) CreateCategory(ctx context.Context, actor Actor, in CategoryInput) (*course.Category, error) {
@@ -43,7 +44,7 @@ func (s *Service) CreateCategory(ctx context.Context, actor Actor, in CategoryIn
 	if err != nil {
 		return nil, apperr.ErrValidation.Wrap(err)
 	}
-	c := &course.Category{ID: uuid.Must(uuid.NewV7()), Slug: slug, Title: in.Title, Icon: in.Icon, Position: in.Position}
+	c := &course.Category{ID: uuid.Must(uuid.NewV7()), Slug: slug, Title: in.Title, Icon: in.Icon, IconMediaID: in.IconMediaID, Position: in.Position}
 	if err := s.d.TX.WithinTx(ctx, func(ctx context.Context) error {
 		if err := s.d.Categories.Create(ctx, c); err != nil {
 			return err
@@ -67,7 +68,7 @@ func (s *Service) UpdateCategory(ctx context.Context, actor Actor, id uuid.UUID,
 		return apperr.ErrValidation.Wrap(err)
 	}
 	return s.d.TX.WithinTx(ctx, func(ctx context.Context) error {
-		if err := s.d.Categories.Update(ctx, &course.Category{ID: id, Slug: slug, Title: in.Title, Icon: in.Icon, Position: in.Position}); err != nil {
+		if err := s.d.Categories.Update(ctx, &course.Category{ID: id, Slug: slug, Title: in.Title, Icon: in.Icon, IconMediaID: in.IconMediaID, Position: in.Position}); err != nil {
 			return err
 		}
 		return s.audit(ctx, actor, "category.update", "course_category", id.String(), nil, in)

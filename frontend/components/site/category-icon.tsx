@@ -62,12 +62,26 @@ export const CATEGORY_ICON_KEYS = Object.keys(CATEGORY_ICONS);
 export function CategoryMark({
   icon,
   title,
+  iconUrl,
   className,
 }: {
   icon?: string | null;
   title: string;
+  /** an uploaded custom icon wins over the built-in glyph */
+  iconUrl?: string | null;
   className?: string;
 }) {
+  if (iconUrl) {
+    return (
+      <img
+        src={iconUrl}
+        alt=""
+        aria-hidden
+        loading="lazy"
+        className={cn("size-6 object-contain", className)}
+      />
+    );
+  }
   const Icon = icon ? CATEGORY_ICONS[icon] : undefined;
   if (Icon) {
     return <Icon aria-hidden className={cn("size-6", className)} strokeWidth={1.8} />;

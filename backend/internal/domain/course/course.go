@@ -130,11 +130,12 @@ type Lesson struct {
 
 // Category is a course taxonomy term.
 type Category struct {
-	ID       uuid.UUID `json:"id"`
-	Slug     string    `json:"slug"`
-	Title    string    `json:"title"`
-	Icon     string    `json:"icon"`
-	Position int       `json:"position"`
+	ID          uuid.UUID  `json:"id"`
+	Slug        string     `json:"slug"`
+	Title       string     `json:"title"`
+	Icon        string     `json:"icon"`
+	IconMediaID *uuid.UUID `json:"icon_media_id"`
+	Position    int        `json:"position"`
 }
 
 // Review is a moderated learner rating.

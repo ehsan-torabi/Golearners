@@ -115,7 +115,23 @@ func (a *App) handleCategoryList(w http.ResponseWriter, r *http.Request) {
 		a.writeError(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": list})
+	writeJSON(w, http.StatusOK, map[string]any{"data": categoryJSONList(list)})
+}
+
+// categoryJSONList adds the resolved icon URL (custom upload or lucide key).
+func categoryJSONList(list []*course.Category) []map[string]any {
+	out := make([]map[string]any, 0, len(list))
+	for _, c := range list {
+		item := map[string]any{
+			"id": c.ID, "slug": c.Slug, "title": c.Title,
+			"icon": c.Icon, "icon_media_id": c.IconMediaID, "position": c.Position,
+		}
+		if c.IconMediaID != nil {
+			item["icon_url"] = mediaRef(c.IconMediaID)
+		}
+		out = append(out, item)
+	}
+	return out
 }
 
 // GET /api/v1/instructor

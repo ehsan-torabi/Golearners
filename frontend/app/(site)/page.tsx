@@ -11,7 +11,7 @@ import { fa } from "@/lib/utils";
 export const revalidate = 300;
 
 type Faq = { id: string; question: string; answer: string };
-type Category = { id: string; slug: string; title: string; icon?: string };
+type Category = { id: string; slug: string; title: string; icon?: string; icon_url?: string | null };
 
 async function featured(): Promise<CourseSummary[]> {
   try {
@@ -96,7 +96,7 @@ export default async function HomePage() {
                     aria-hidden
                     className="flex size-16 items-center justify-center rounded-full border border-line bg-card text-accent-strong transition-[border-color,box-shadow] duration-(--motion) ease-motion group-hover:border-primary/40 group-hover:shadow-raise"
                   >
-                    <CategoryMark icon={c.icon} title={c.title} />
+                    <CategoryMark icon={c.icon} title={c.title} iconUrl={c.icon_url} />
                   </span>
                   <span className="text-xs leading-5 text-muted-foreground transition-colors group-hover:text-foreground">
                     {c.title}
