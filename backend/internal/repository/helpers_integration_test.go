@@ -2,7 +2,10 @@ package repository_test
 
 import (
 	"context"
+	"fmt"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,6 +16,19 @@ import (
 	"golearn/backend/internal/domain/identity"
 	"golearn/backend/internal/repository"
 )
+
+// mobileSeq keeps two helpers in the same nanosecond apart.
+var mobileSeq atomic.Int64
+
+// uniqueSuffix keeps the test rows apart from every other run.
+func uniqueSuffix() string {
+	return fmt.Sprintf("%07d", (time.Now().UnixNano()+mobileSeq.Add(1))%10_000_000)
+}
+
+// uniqueMobile is an Iranian mobile number no other run has used.
+func uniqueMobile() string {
+	return "0912" + uniqueSuffix()
+}
 
 type repoHelper struct{ pool *pgxpool.Pool }
 

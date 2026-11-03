@@ -22,24 +22,24 @@ func TestCourseCRUDAndPublishFlow(t *testing.T) {
 	lessons := newLessonHelper(pool)
 
 	uid := uuid.Must(uuid.NewV7())
-	users.mustCreateUser(t, ctx, uid, "09121110000")
+	users.mustCreateUser(t, ctx, uid, uniqueMobile())
 	users.mustUpsertInstructor(t, ctx, uid)
 
 	c := &course.Course{
-		ID: uuid.Must(uuid.NewV7()), Slug: "go-advance", InstructorID: uid,
+		ID: uuid.Must(uuid.NewV7()), Slug: "go-advance-" + uniqueSuffix(), InstructorID: uid,
 		Title: "advance test", Level: course.LevelBeginner, Status: course.StatusDraft,
 		PriceRial: 1000000, Outcomes: []string{"a", "b"},
 	}
 	require.NoError(t, courses.Create(ctx, c))
 
-	got, err := courses.BySlug(ctx, "go-advance")
+	got, err := courses.BySlug(ctx, c.Slug)
 	require.NoError(t, err)
 	require.Equal(t, []string{"a", "b"}, got.Outcomes)
 
-	exists, err := courses.SlugExists(ctx, "go-advance", c.ID)
+	exists, err := courses.SlugExists(ctx, c.Slug, c.ID)
 	require.NoError(t, err)
 	require.False(t, exists, "same ID excluded")
-	exists, err = courses.SlugExists(ctx, "go-advance", uuid.Must(uuid.NewV7()))
+	exists, err = courses.SlugExists(ctx, c.Slug, uuid.Must(uuid.NewV7()))
 	require.NoError(t, err)
 	require.True(t, exists)
 
@@ -56,7 +56,7 @@ func TestCourseCRUDAndPublishFlow(t *testing.T) {
 	require.Equal(t, 1, ready)
 
 	require.NoError(t, courses.Publish(ctx, c.ID))
-	got, err = courses.BySlug(ctx, "go-advance")
+	got, err = courses.BySlug(ctx, c.Slug)
 	require.NoError(t, err)
 	require.Equal(t, course.StatusPublished, got.Status)
 	require.NotNil(t, got.PublishedAt)
@@ -71,14 +71,14 @@ func TestBlogPublishAndRelated(t *testing.T) {
 	taxonomy := newTaxonomyHelper(pool)
 
 	uid := uuid.Must(uuid.NewV7())
-	users.mustCreateUser(t, ctx, uid, "09121110001")
+	users.mustCreateUser(t, ctx, uid, uniqueMobile())
 
-	cat := &blogCategoryRow{ID: uuid.Must(uuid.NewV7()), Slug: "tut", Title: "Tutorials"}
+	cat := &blogCategoryRow{ID: uuid.Must(uuid.NewV7()), Slug: "tut-" + uniqueSuffix(), Title: "Tutorials"}
 	require.NoError(t, taxonomy.CreateCategory(ctx, cat))
 
-	p1 := newPostRow(uid, "post-one", &cat.ID)
+	p1 := newPostRow(uid, "post-one-"+uniqueSuffix(), &cat.ID)
 	require.NoError(t, posts.Create(ctx, p1))
-	p2 := newPostRow(uid, "post-two", &cat.ID)
+	p2 := newPostRow(uid, "post-two-"+uniqueSuffix(), &cat.ID)
 	require.NoError(t, posts.Create(ctx, p2))
 
 	require.NoError(t, posts.Publish(ctx, p1.ID))

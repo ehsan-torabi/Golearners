@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -46,7 +47,9 @@ func applyMigrations(t *testing.T, url string) {
 
 	driver, err := pgxv5migrate.WithInstance(sqlDB, &pgxv5migrate.Config{})
 	require.NoError(t, err)
-	m, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
+	// the test binary runs in the package directory, so the migrations
+	// folder sits two levels up
+	m, err := migrate.NewWithDatabaseInstance("file://"+filepath.Join("..", "..", "migrations"), "postgres", driver)
 	require.NoError(t, err)
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		require.NoError(t, err)
@@ -58,16 +61,17 @@ func TestUserRepoCreateAndLookup(t *testing.T) {
 	users := repository.NewUserRepo(pool)
 	ctx := context.Background()
 
+	mobile := uniqueMobile()
 	want := &identity.User{
 		ID:           uuid.Must(uuid.NewV7()),
-		Mobile:       "09121234567",
+		Mobile:       mobile,
 		FullName:     "دانجو تستی",
 		PasswordHash: "x",
 		Status:       identity.StatusActive,
 	}
 	require.NoError(t, users.Create(ctx, want))
 
-	got, err := users.ByMobile(ctx, "09121234567")
+	got, err := users.ByMobile(ctx, mobile)
 	require.NoError(t, err)
 	require.Equal(t, want.ID, got.ID)
 	require.Equal(t, want.FullName, got.FullName)
@@ -85,7 +89,7 @@ func TestOTPConsumeIsAtomic(t *testing.T) {
 
 	otp := &identity.OTP{
 		ID:        uuid.Must(uuid.NewV7()),
-		Mobile:    "09121234567",
+		Mobile:    uniqueMobile(),
 		CodeHash:  "h",
 		Purpose:   identity.PurposeVerify,
 		ExpiresAt: time.Now().Add(time.Minute),
@@ -124,7 +128,7 @@ func TestRefreshRotateAndReuseRevokesFamily(t *testing.T) {
 
 	uid := uuid.Must(uuid.NewV7())
 	require.NoError(t, users.Create(ctx, &identity.User{
-		ID: uid, Mobile: "09121234567", FullName: "دانجو", Status: identity.StatusActive,
+		ID: uid, Mobile: uniqueMobile(), FullName: "دانجو", Status: identity.StatusActive,
 	}))
 
 	plain1, hash1, err := identity.NewOpaqueRefreshToken()
