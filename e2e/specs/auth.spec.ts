@@ -109,11 +109,21 @@ test.describe("authentication", () => {
     expectNoClientErrors(diag);
   });
 
-  test("the dashboard asks anonymous visitors to sign in", async ({ page, diag }) => {
+  test("the dashboard sends anonymous visitors to the login page", async ({ page, diag }) => {
     await page.goto("/dashboard");
 
-    await expect(page.getByText("برای دیدن داشبورد ابتدا وارد شو")).toBeVisible();
-    await expect(page.getByRole("link", { name: "ورود به حساب" })).toBeVisible();
+    await page.waitForURL(/\/login(\?|$)/, { timeout: 20000 });
+    await expect(page.getByRole("heading", { name: "ورود به گوLearn" })).toBeVisible();
+    // the login page remembers where the visitor was heading
+    await expect(page).toHaveURL(/next=%2Fdashboard/);
+    expectNoClientErrors(diag);
+  });
+
+  test("the admin console sends anonymous visitors to the login page", async ({ page, diag }) => {
+    await page.goto("/admin");
+
+    await page.waitForURL(/\/login(\?|$)/, { timeout: 20000 });
+    await expect(page.getByRole("heading", { name: "ورود به گوLearn" })).toBeVisible();
     expectNoClientErrors(diag);
   });
 
