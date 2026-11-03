@@ -18,7 +18,9 @@ export type SessionState = {
 
 /* The access cookie is HttpOnly, so the browser learns the session from /me.
    Refetched on every navigation: signing in or out must change the header
-   immediately, so no long-lived cache. */
+   immediately, so no long-lived cache.
+   The readable CSRF cookie only exists for a signed-in visitor, so guests skip
+   the probe entirely — no pointless 401 in the network log. */
 export function useSession(): SessionState {
   const pathname = usePathname();
   const [session, setSession] = React.useState<Session>(null);
@@ -27,6 +29,11 @@ export function useSession(): SessionState {
   React.useEffect(() => {
     let alive = true;
     setStatus("loading");
+    if (typeof document !== "undefined" && !document.cookie.includes("gl_csrf=")) {
+      setSession(null);
+      setStatus("ready");
+      return;
+    }
     fetch("/api/v1/me", { credentials: "same-origin" })
       .then(async (res) => {
         if (!alive || !res.ok) return null;
