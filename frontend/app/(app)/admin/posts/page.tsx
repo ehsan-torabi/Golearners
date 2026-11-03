@@ -61,7 +61,7 @@ const STATUS_FA: Record<string, { label: string; tone: "success" | "warning" | "
   archived: { label: "بایگانی", tone: "neutral" },
 };
 
-const STATUS_VALUES = ["published", "draft", "archived"];
+const STATUS_VALUES = ["published", "draft"];
 
 const SORT_OPTIONS = [
   { value: "newest", label: "تازه‌ترین" },

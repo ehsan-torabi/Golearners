@@ -362,6 +362,7 @@ function RefundDialog({
         </AlertDialogHeader>
         <Field label="دلیل بازگشت وجه" hint="این متن در گزارش رویدادها ثبت می‌شود.">
           <Textarea
+            id="refund-reason"
             value={reason}
             onChange={(e) => onReason(e.target.value)}
             placeholder="مثلاً: خریدار درخواست لغو سفارش داد."
@@ -371,7 +372,7 @@ function RefundDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>انصراف</AlertDialogCancel>
           <AlertDialogAction variant="destructive" loading={busy} onClick={onConfirm}>
-            بازگشت وجه
+            ثبت بازگشت وجه
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

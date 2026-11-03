@@ -46,12 +46,13 @@ import { api, formatTomanFromRial } from "@/lib/api";
 import { formatJalali } from "@/lib/jalali";
 import { fa } from "@/lib/utils";
 
+// the coupons table check constraint only knows active | disabled
 const STATUS_FA: Record<string, { label: string; tone: "success" | "neutral" }> = {
   active: { label: "فعال", tone: "success" },
-  inactive: { label: "غیرفعال", tone: "neutral" },
+  disabled: { label: "غیرفعال", tone: "neutral" },
 };
 
-const STATUS_VALUES = ["active", "inactive"];
+const STATUS_VALUES = ["active", "disabled"];
 
 interface CouponRow {
   id: string;
@@ -106,7 +107,7 @@ export default function AdminCouponsPage() {
           value: Number(form.value),
           max_uses: form.max_uses ? Number(form.max_uses) : null,
           per_user_limit: form.per_user_limit ? Number(form.per_user_limit) : null,
-          status: "active",
+          status: "active", // the coupons table check constraint knows active | disabled
         }),
       });
       setForm({ code: "", type: "percent", value: "", max_uses: "", per_user_limit: "1" });
@@ -131,7 +132,7 @@ export default function AdminCouponsPage() {
           value: coupon.value,
           max_uses: coupon.max_uses,
           per_user_limit: coupon.per_user_limit,
-          status: coupon.status === "active" ? "inactive" : "active",
+          status: coupon.status === "active" ? "disabled" : "active",
         }),
       });
       await list.reload();

@@ -1,3 +1,4 @@
+import type { Locator, Page } from "@playwright/test";
 import {
   API_URL,
   createPublishedCourse,
@@ -14,6 +15,12 @@ test.describe("admin console", () => {
 
   /** Unique per test — the suite may run against a shared database. */
   const tag = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 90 + 10)}`;
+
+  /** The admin lists put their actions in a kebab menu on the row. */
+  const rowAction = async (page: Page, row: Locator, name: string) => {
+    await row.getByRole("button", { name: /^کنش‌های/ }).click();
+    await page.getByRole("menuitem", { name, exact: true }).click();
+  };
 
   test("the overview shows the platform numbers", async ({ page, diag }) => {
     await page.goto("/admin");
@@ -46,14 +53,15 @@ test.describe("admin console", () => {
 
     // the course is listed
     await page.goto("/admin/courses");
-    await page.locator("#course-q").fill(courseTitle);
-    await page.getByRole("button", { name: "اعمال" }).click();
+    const search = page.getByLabel("عنوان یا نامک دوره");
+    await search.fill(courseTitle);
+    await search.press("Enter");
 
     const row = page.getByRole("row").filter({ hasText: courseTitle });
     await expect(row).toHaveCount(1);
 
     // curriculum: one section with one ready lesson
-    await row.getByRole("link", { name: "ویرایش" }).click();
+    await row.getByRole("link", { name: courseTitle }).click();
     await expect(page.getByRole("heading", { name: "ویرایش دوره" })).toBeVisible();
 
     await page.getByRole("tab", { name: "سرفصل" }).click();
@@ -70,10 +78,11 @@ test.describe("admin console", () => {
 
     // publish from the list
     await page.goto("/admin/courses");
-    await page.locator("#course-q").fill(courseTitle);
-    await page.getByRole("button", { name: "اعمال" }).click();
+    const publishSearch = page.getByLabel("عنوان یا نامک دوره");
+    await publishSearch.fill(courseTitle);
+    await publishSearch.press("Enter");
     const publishRow = page.getByRole("row").filter({ hasText: courseTitle });
-    await publishRow.getByRole("button", { name: "انتشار" }).click();
+    await rowAction(page, publishRow, "انتشار");
     await expect(publishRow.getByText("منتشرشده").first()).toBeVisible();
 
     // the course is now on the public site
@@ -93,8 +102,9 @@ test.describe("admin console", () => {
     await api.dispose();
 
     await page.goto("/admin/courses");
-    await page.locator("#course-q").fill(course.slug);
-    await page.getByRole("button", { name: "اعمال" }).click();
+    const search = page.getByLabel("عنوان یا نامک دوره");
+    await search.fill(course.slug);
+    await search.press("Enter");
 
     // the placeholder promises "title or slug" and every row shows its slug
     await expect(page.getByRole("row").filter({ hasText: course.slug })).toHaveCount(1);
@@ -117,13 +127,10 @@ test.describe("admin console", () => {
     await api.dispose();
 
     await page.goto("/admin/courses");
-    await page.locator("#course-q").fill(title);
-    await page.getByRole("button", { name: "اعمال" }).click();
-    await page
-      .getByRole("row")
-      .filter({ hasText: course.slug })
-      .getByRole("link", { name: "ویرایش" })
-      .click();
+    const search = page.getByLabel("عنوان یا نامک دوره");
+    await search.fill(title);
+    await search.press("Enter");
+    await page.getByRole("row").filter({ hasText: course.slug }).getByRole("link", { name: title }).click();
 
     await page.getByRole("tab", { name: "رسانه و سئو" }).click();
     await page.getByLabel("بارگذاری تصویر کاور").setInputFiles(FIXTURE_PNG);
@@ -181,12 +188,13 @@ test.describe("admin console", () => {
     await expect(page.getByText("ذخیره شد")).toBeVisible();
 
     await page.goto("/admin/posts");
-    await page.locator("#post-q").fill(postTitle);
-    await page.getByRole("button", { name: "اعمال" }).click();
+    const search = page.getByLabel("عنوان یا متن نوشته");
+    await search.fill(postTitle);
+    await search.press("Enter");
 
     const row = page.getByRole("row").filter({ hasText: postTitle });
     await expect(row).toHaveCount(1);
-    await row.getByRole("button", { name: "انتشار" }).click();
+    await rowAction(page, row, "انتشار");
     await expect(row.getByText("منتشرشده").first()).toBeVisible({ timeout: 30000 });
 
     // it shows up on the public blog with its cover image (the page also
@@ -197,10 +205,11 @@ test.describe("admin console", () => {
 
     // and can be deleted again
     await page.goto("/admin/posts");
-    await page.locator("#post-q").fill(postTitle);
-    await page.getByRole("button", { name: "اعمال" }).click();
+    const delSearch = page.getByLabel("عنوان یا متن نوشته");
+    await delSearch.fill(postTitle);
+    await delSearch.press("Enter");
     const delRow = page.getByRole("row").filter({ hasText: postTitle });
-    await delRow.getByRole("button", { name: "حذف" }).click();
+    await rowAction(page, delRow, "حذف");
     await page.getByRole("button", { name: "حذف نوشته" }).click();
     await expect(delRow).toHaveCount(0);
 
@@ -220,9 +229,9 @@ test.describe("admin console", () => {
 
     const row = page.getByRole("row").filter({ hasText: couponCode });
     await expect(row).toHaveCount(1);
-    await expect(row.getByText("15٪")).toBeVisible();
+    await expect(row.getByText("۱۵٪")).toBeVisible();
 
-    await row.getByRole("button", { name: "غیرفعال کردن" }).click();
+    await rowAction(page, row, "غیرفعال کردن");
     await expect(row.getByText("غیرفعال")).toBeVisible();
 
     expectNoClientErrors(diag);
@@ -252,15 +261,16 @@ test.describe("admin console", () => {
     }
 
     await page.goto("/admin/users");
-    await page.locator("#user-q").fill(blockedName);
-    await page.getByRole("button", { name: "جست‌وجو" }).click();
+    const search = page.getByLabel("نام یا شمارهٔ موبایل");
+    await search.fill(blockedName);
+    await search.press("Enter");
 
     const row = page.getByRole("row").filter({ hasText: blockedName });
     await expect(row).toHaveCount(1);
-    await row.getByRole("button", { name: "مسدودسازی" }).click();
+    await rowAction(page, row, "مسدودسازی");
     await expect(row.getByText("مسدود").first()).toBeVisible();
 
-    await row.getByRole("button", { name: "رفع مسدودی" }).click();
+    await rowAction(page, row, "رفع مسدودی");
     await expect(row.getByText("فعال").first()).toBeVisible();
 
     expectNoClientErrors(diag);
@@ -289,7 +299,8 @@ test.describe("admin console", () => {
     await expect(page.getByRole("heading", { name: "پیام‌های تماس" })).toBeVisible();
     await expect(page.getByText("کاربر پیام تست").first()).toBeVisible();
 
-    await page.getByRole("button", { name: "بستن" }).first().click();
+    const messageRow = page.getByRole("row").filter({ hasText: "کاربر پیام تست" }).first();
+    await rowAction(page, messageRow, "بستن پیام");
     await expect(page.getByText("بسته").first()).toBeVisible();
 
     expectNoClientErrors(diag);
@@ -328,7 +339,7 @@ test.describe("admin console", () => {
 
     const row = page.getByRole("row").filter({ hasText: "پرداخت‌شده" }).first();
     await expect(row).toBeVisible();
-    await row.getByRole("button", { name: "بازگشت وجه" }).click();
+    await rowAction(page, row, "بازگشت وجه");
 
     await page.locator("#refund-reason").fill("بازگشت وجه تست خودکار");
     await page.getByRole("button", { name: "ثبت بازگشت وجه" }).click();
