@@ -284,6 +284,12 @@ func (s *Service) Login(ctx context.Context, in LoginInput) (*Session, error) {
 	if err := s.deps.Users.TouchLogin(ctx, user.ID); err != nil {
 		return nil, err
 	}
+	// A password login is a full re-authentication: drop the sessions that
+	// existed before it, so a refresh token captured earlier stops working
+	// once the owner proves the password again.
+	if err := s.deps.Tokens.RevokeAllForUser(ctx, user.ID); err != nil {
+		return nil, err
+	}
 	return s.issueSession(ctx, user, in.IP, in.UserAgent)
 }
 
@@ -355,7 +361,8 @@ func (s *Service) ResetPassword(ctx context.Context, in ResetPasswordInput) erro
 	if blocked, _, err := s.deps.Throttle.Blocked(ctx, failKey, otpVerifyLimit); err != nil {
 		return err
 	} else if blocked {
-		return nil
+		// the caller must be able to tell "blocked" from "reset done"
+		return apperr.ErrRateLimited
 	}
 
 	otp, err := s.deps.OTPs.Latest(ctx, mobile, identity.PurposeReset)
@@ -471,7 +478,7 @@ func (s *Service) buildSession(ctx context.Context, user *identity.User, refresh
 	if err != nil {
 		return nil, err
 	}
-	csrf, err := identity.NewCSRFToken()
+	csrf, err := identity.NewCSRFToken(s.deps.Pepper)
 	if err != nil {
 		return nil, err
 	}

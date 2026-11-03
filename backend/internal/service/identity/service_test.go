@@ -242,3 +242,35 @@ func TestBlockedAccountCannotLoginOrRefresh(t *testing.T) {
 	_, err = h.svc.Refresh(context.Background(), sess.RefreshToken, "", "")
 	require.ErrorIs(t, err, apperr.ErrAccountBlocked)
 }
+
+func TestLoginRevokesExistingSessions(t *testing.T) {
+	h := newHarness()
+	sess := h.registerAndVerify(t, "09121234567")
+	ctx := context.Background()
+
+	sess2, err := h.svc.Login(ctx, idsvc.LoginInput{Mobile: "09121234567", Password: "secret123"})
+	require.NoError(t, err)
+
+	_, err = h.svc.Refresh(ctx, sess.RefreshToken, "", "")
+	require.ErrorIs(t, err, apperr.ErrRefreshInvalid, "a password login revokes prior sessions")
+	_, err = h.svc.Refresh(ctx, sess2.RefreshToken, "", "")
+	require.NoError(t, err)
+}
+
+func TestPasswordResetRateLimitSurfaces(t *testing.T) {
+	h := newHarness()
+	h.registerAndVerify(t, "09121234567")
+	ctx := context.Background()
+
+	require.NoError(t, h.svc.RequestOTP(ctx, "09121234567", identity.PurposeReset, ""))
+	input := idsvc.ResetPasswordInput{
+		Mobile: "09121234567", Code: "000000", NewPassword: "newpass456",
+	}
+	for i := 0; i < 10; i++ {
+		err := h.svc.ResetPassword(ctx, input)
+		require.ErrorIs(t, err, apperr.ErrOTPInvalid)
+	}
+	// the blocked path must answer with an error, not a silent success
+	err := h.svc.ResetPassword(ctx, input)
+	require.ErrorIs(t, err, apperr.ErrRateLimited)
+}
