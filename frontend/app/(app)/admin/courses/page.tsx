@@ -16,8 +16,8 @@ export default function AdminCoursesPage() {
   return (
     <Tabs value={tab} onValueChange={setTab} className="gap-4">
       <TabsList variant="line">
-        <TabsTrigger value="courses">فهرست دوره‌ها</TabsTrigger>
-        <TabsTrigger value="stats">آمار دوره‌ها</TabsTrigger>
+        <TabsTrigger value="courses">فهرست</TabsTrigger>
+        <TabsTrigger value="stats">آمار</TabsTrigger>
       </TabsList>
       <TabsContent value="courses">
         <CoursesList />

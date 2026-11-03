@@ -131,7 +131,7 @@ export function CourseStatsList() {
   return (
     <div className="space-y-4">
       <ListHeader
-        title="آمار دوره‌ها"
+        title="گزارش عملکرد دوره‌ها"
         count={list.loading ? null : list.total}
         unit="دوره"
         subtitle="درآمد، تماشا و پیشرفت دانشجوهای هر دوره، از داده‌های واقعی سامانه"
@@ -223,12 +223,12 @@ export function CourseStatsList() {
             <TableHeader>
               <TableRow>
                 <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">دوره</TableHead>
-                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">دانشجو</TableHead>
-                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">درآمد</TableHead>
-                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">تماشا</TableHead>
-                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">امتیاز</TableHead>
-                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">فعال</TableHead>
-                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">تکمیل</TableHead>
+                <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">دانشجو</TableHead>
+                <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">درآمد</TableHead>
+                <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">تماشا</TableHead>
+                <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">امتیاز</TableHead>
+                <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">فعال</TableHead>
+                <TableHead className="hidden text-start text-[11px] font-medium tracking-wide text-muted-foreground sm:table-cell">تکمیل</TableHead>
                 <TableHead className="w-14" />
               </TableRow>
             </TableHeader>
@@ -253,17 +253,26 @@ export function CourseStatsList() {
                           <p className="truncate text-xs text-muted-foreground" dir="ltr">
                             /courses/{c.slug}
                           </p>
+                          {/* on a phone the metric columns are gone, so the
+                              numbers follow the title instead */}
+                          <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground sm:hidden">
+                            <span>{fa(c.enrollments)} دانشجو</span>
+                            <span>{c.revenue_rial > 0 ? formatTomanFromRial(c.revenue_rial) : "—"}</span>
+                            <span>{c.watch_seconds > 0 ? faDuration(c.watch_seconds) : "—"}</span>
+                            <span>{c.review_count > 0 ? `${fa(c.avg_rating)} از ۵` : "بدون نظر"}</span>
+                            <span>تکمیل {faPercent(c.completion_pct)}</span>
+                          </div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-start tabular-nums">{fa(c.enrollments)}</TableCell>
-                    <TableCell className="text-start tabular-nums">
+                    <TableCell className="hidden text-start tabular-nums sm:table-cell">{fa(c.enrollments)}</TableCell>
+                    <TableCell className="hidden text-start tabular-nums sm:table-cell">
                       {c.revenue_rial > 0 ? formatTomanFromRial(c.revenue_rial) : "—"}
                     </TableCell>
-                    <TableCell className="text-start tabular-nums text-muted-foreground">
-                      {faDuration(c.watch_seconds)}
+                    <TableCell className="hidden text-start tabular-nums text-muted-foreground sm:table-cell">
+                      {c.watch_seconds > 0 ? faDuration(c.watch_seconds) : "—"}
                     </TableCell>
-                    <TableCell className="text-start tabular-nums">
+                    <TableCell className="hidden text-start tabular-nums sm:table-cell">
                       {c.review_count > 0 ? (
                         <span title={`${fa(c.review_count)} نظر`}>
                           {fa(c.avg_rating)}
@@ -273,8 +282,8 @@ export function CourseStatsList() {
                         <span className="text-muted-foreground">بدون نظر</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-start tabular-nums">{fa(c.active_learners)}</TableCell>
-                    <TableCell className="text-start tabular-nums">{faPercent(c.completion_pct)}</TableCell>
+                    <TableCell className="hidden text-start tabular-nums sm:table-cell">{fa(c.active_learners)}</TableCell>
+                    <TableCell className="hidden text-start tabular-nums sm:table-cell">{faPercent(c.completion_pct)}</TableCell>
                     <TableCell className="text-start">
                       <RowMenu
                         label={`کنش‌های ${c.title}`}
