@@ -18,7 +18,7 @@ func postJSON(p *content.BlogPost, cat *content.BlogCategory) map[string]any {
 	out := map[string]any{
 		"id": p.ID, "slug": p.Slug, "title": p.Title, "excerpt": p.Excerpt,
 		"status": p.Status, "cover_media_id": p.CoverMediaID, "cover_url": mediaRef(p.CoverMediaID),
-		"category_id": p.CategoryID,
+		"category_id":     p.CategoryID,
 		"reading_minutes": p.ReadingMinutes, "published_at": p.PublishedAt,
 		"meta_title": p.MetaTitle, "meta_description": p.MetaDescription,
 	}
@@ -53,7 +53,7 @@ func (a *App) handleBlogList(w http.ResponseWriter, r *http.Request) {
 	items := make([]map[string]any, 0, len(list))
 	catMap := a.blogCategoryMap(r)
 	for _, p := range list {
-		items = append(items, postJSON(p, catMap[ derefCategoryID(p.CategoryID) ]))
+		items = append(items, postJSON(p, catMap[derefCategoryID(p.CategoryID)]))
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"data": items,
