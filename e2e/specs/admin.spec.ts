@@ -132,9 +132,10 @@ test.describe("admin console", () => {
     await expect(page.getByText("فایل بارگذاری شد.")).toBeVisible({ timeout: 30000 });
 
     // the picker lists the original filename with the ready status and the
-    // freshly uploaded asset is selected automatically
-    await expect(page.locator("#c-cover option").filter({ hasText: "sample.png" })).toBeVisible();
-    await expect(page.locator("#c-cover option").filter({ hasText: "آماده" }).first()).toBeVisible();
+    // freshly uploaded asset is selected automatically (earlier runs uploaded
+    // the same fixture, so assert on the selected option, not the list)
+    await expect(page.locator("#c-cover option:checked")).toHaveText(/sample\.png/);
+    await expect(page.locator("#c-cover option:checked")).toHaveText(/آماده/);
 
     // applied: the cover select already points at the new asset — save
     await page.getByRole("button", { name: "ذخیرهٔ دوره" }).click();
@@ -171,7 +172,7 @@ test.describe("admin console", () => {
     await page.getByRole("tab", { name: "رسانه و سئو" }).click();
     await page.getByLabel("بارگذاری تصویر کاور").setInputFiles(FIXTURE_PNG);
     await expect(page.getByText("فایل بارگذاری شد.")).toBeVisible({ timeout: 30000 });
-    await expect(page.locator("#p-cover option").filter({ hasText: "sample.png" })).toBeVisible();
+    await expect(page.locator("#p-cover option:checked")).toHaveText(/sample\.png/);
     await page.getByRole("tab", { name: "بدنه" }).click();
     await page.locator('#p-body [contenteditable="true"]').click();
     await page.locator('#p-body [contenteditable="true"]').pressSequentially("متن نوشتهٔ تست خودکار.");
