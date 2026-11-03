@@ -59,6 +59,9 @@ test.describe("public site", () => {
   test("unknown course slug renders the not-found page", async ({ page, diag }) => {
     const response = await page.goto("/courses/does-not-exist-e2e");
     expect(response?.status()).toBe(404);
+    // the project renders its own 404 (site shell + Persian copy)
+    await expect(page.getByText("این صفحه پیدا نشد")).toBeVisible();
+    await expect(page.getByRole("link", { name: "بازگشت به خانه" })).toBeVisible();
     expectNoClientErrors(diag);
   });
 

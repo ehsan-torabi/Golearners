@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { ButtonLink } from "@/components/ui/button";
 import { VideoPlayer } from "./player";
 import { cn, fa } from "@/lib/utils";
 
@@ -26,16 +27,22 @@ interface SectionRow {
   position: number;
 }
 
-async function curriculum(slug: string) {
+/** Fetches the learner's curriculum; null means "no access", 401 means "signed out". */
+async function curriculum(slug: string): Promise<{
+  data: { sections: SectionRow[]; lessons: LessonRow[] } | null;
+  signedOut: boolean;
+}> {
   const jar = await cookies();
   const access = jar.get("gl_at")?.value ?? "";
+  if (!access) return { data: null, signedOut: true };
   const base = process.env.API_INTERNAL ?? "http://localhost:8080";
   const res = await fetch(
     `${base}/api/v1/me/courses/${encodeURIComponent(slug)}/curriculum`,
     { headers: { Cookie: `gl_at=${access}` }, cache: "no-store" },
   );
-  if (!res.ok) return null;
-  return (await res.json()) as { sections: SectionRow[]; lessons: LessonRow[] };
+  if (res.status === 401) return { data: null, signedOut: true };
+  if (!res.ok) return { data: null, signedOut: false };
+  return { data: (await res.json()) as { sections: SectionRow[]; lessons: LessonRow[] }, signedOut: false };
 }
 
 export default async function LearnCoursePage({
@@ -47,8 +54,33 @@ export default async function LearnCoursePage({
 }) {
   const { slug } = await params;
   const { lesson: lessonParam } = await searchParams;
-  const data = await curriculum(decodeURIComponent(slug));
-  if (!data) notFound();
+  const { data, signedOut } = await curriculum(decodeURIComponent(slug));
+  /* no session (or an expired one): send the visitor to the login form with
+     a return path — a bare 404 would hide the reason */
+  if (signedOut) {
+    redirect(`/login?next=${encodeURIComponent(`/dashboard/courses/${slug}`)}`);
+  }
+  /* signed in but the course is unknown or not owned: an honest state, not a
+     404 — the learner needs the courses list, not a missing page */
+  if (!data) {
+    return (
+      <Card className="mx-auto max-w-md p-10 text-center">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted">
+          <Lock className="size-5 text-muted-foreground" aria-hidden />
+        </div>
+        <h1 className="mt-4 font-semibold text-lg">دسترسی به این دوره فعال نیست</h1>
+        <p className="mt-2 text-sm leading-7 text-muted-foreground">
+          این دوره را نخریده‌اید یا نشانی آن درست نیست. از فهرست دوره‌های خود ادامه دهید.
+        </p>
+        <div className="mt-5 flex items-center justify-center gap-3">
+          <ButtonLink href="/dashboard">آموزش‌های من</ButtonLink>
+          <ButtonLink href="/courses" variant="outline">
+            فهرست دوره‌ها
+          </ButtonLink>
+        </div>
+      </Card>
+    );
+  }
 
   /* the sidebar links here with ?lesson=; anything not accessible falls back to the first */
   const requested = data.lessons.find((l) => l.id === lessonParam && l.accessible);
