@@ -10,6 +10,7 @@ import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 import { ReviewForm } from "@/components/site/review-form";
 import { PromoPlayer } from "@/components/site/promo-player";
 import { PreviewLessonItem } from "@/components/site/preview-lesson";
+import { AddToCartButton } from "@/components/site/add-to-cart";
 import { cn, fa, faPercent } from "@/lib/utils";
 
 /* per-viewer state (owned, lesson progress) needs the session cookie */
@@ -382,23 +383,14 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                     )}
                   </div>
                   <div className="mt-5 space-y-3">
-                    {loggedIn ? (
-                      <ButtonLink
-                        href={`/checkout?course=${encodeURIComponent(d.course.slug)}`}
-                        className="w-full"
-                        size="lg"
-                      >
-                        خرید دوره
-                      </ButtonLink>
-                    ) : (
-                      <ButtonLink
-                        href={`/login?next=${encodeURIComponent(`/courses/${d.course.slug}`)}`}
-                        className="w-full"
-                        size="lg"
-                      >
-                        ورود برای خرید
-                      </ButtonLink>
-                    )}
+                    <AddToCartButton
+                      item={{
+                        course_id: d.course.id,
+                        slug: d.course.slug,
+                        title: d.course.title,
+                        price_rial: d.course.price_rial,
+                      }}
+                    />
                     <ul className="space-y-1.5 border-t border-border-variant pt-3.5 text-xs leading-6 text-muted-foreground">
                       <li>دسترسی مادام‌العمر به همه درس‌ها</li>
                       <li>پرداخت امن با درگاه‌های بانکی ایران</li>

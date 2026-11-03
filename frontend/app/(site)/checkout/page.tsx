@@ -1,195 +1,276 @@
 "use client";
 
-import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 import * as React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/section-head";
-import { ApiError, api, formatTomanFromRial, type Order } from "@/lib/api";
+import { api, ApiError, formatTomanFromRial, type Order } from "@/lib/api";
 import { fa } from "@/lib/utils";
+import { PayGateways, startPayment, type Gateway } from "@/components/site/pay-gateways";
 
+/* Two entry modes, one pay surface:
+   ?order=id  resume a still-awaiting order (dashboard links land here)
+   ?course=x  single-course fast path; the order is created on the pay
+              click only, never as a page-load side effect. */
 function CheckoutInner() {
-  const router = useRouter();
   const params = useSearchParams();
+  const orderParam = params.get("order") ?? "";
   const slug = params.get("course") ?? "";
-  const [coupon, setCoupon] = React.useState("");
+  const mode = orderParam ? "order" : slug ? "course" : "none";
+
   const [order, setOrder] = React.useState<Order | null>(null);
+  const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
-  const [busy, setBusy] = React.useState(false);
-  const [paying, setPaying] = React.useState<string | null>(null);
+  const [notice, setNotice] = React.useState("");
+  const [paying, setPaying] = React.useState<Gateway | null>(null);
+  const [coupon, setCoupon] = React.useState("");
+  const [discount, setDiscount] = React.useState(0);
   const [owned, setOwned] = React.useState(false);
   const [guest, setGuest] = React.useState(false);
   const [courseTitle, setCourseTitle] = React.useState("");
+  const [coursePrice, setCoursePrice] = React.useState(0);
+  const [courseId, setCourseId] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
 
-  const createOrder = React.useCallback(async () => {
-    if (!slug) return;
+  React.useEffect(() => {
+    setLoading(true);
+    setError("");
+    if (mode === "order") {
+      loadOrder(orderParam);
+    } else if (mode === "course") {
+      loadCourse(slug);
+    } else {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderParam, slug]);
+
+  async function loadOrder(id: string) {
+    try {
+      const o = await api<Order>(`/me/orders/${encodeURIComponent(id)}`);
+      setOrder(o);
+      if (o.status !== "awaiting_payment") setNotice(statusNotice(o.status));
+    } catch (err) {
+      setOrder(null);
+      if (err instanceof ApiError && err.status === 404) setNotice("missing");
+      else setError("خطا در برقراری ارتباط");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function statusNotice(status: string): string {
+    if (status === "paid") return "paid";
+    if (status === "expired") return "expired";
+    return "closed";
+  }
+
+  async function loadCourse(courseSlug: string) {
+    try {
+      const detail = await api<{ course: { id: string; title: string; price_rial: number }; owned_by_viewer: boolean }>(
+        `/courses/${encodeURIComponent(courseSlug)}`,
+      );
+      setCourseTitle(detail.course.title);
+      setCoursePrice(detail.course.price_rial);
+      setCourseId(detail.course.id);
+      if (detail.owned_by_viewer) {
+        setOwned(true); // already bought: never create a second order
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) setGuest(true);
+      else if (err instanceof ApiError && err.status === 404) setNotice("missing");
+      else setError("خطا در برقراری ارتباط");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // validate-only: applying a coupon must not create another order
+  async function applyCoupon() {
+    if (mode !== "course") return;
     setError("");
     setBusy(true);
     try {
-      // single-course lookup (the old page fetched 50 courses to find one)
-      const detail = await api<{ course: { id: string; title: string }; owned_by_viewer: boolean }>(
-        `/courses/${encodeURIComponent(slug)}`,
-      );
-      setCourseTitle(detail.course.title);
-      if (detail.owned_by_viewer) {
-        // already bought: never create a second order
-        setOwned(true);
-        return;
-      }
-      const o = await api<Order>("/checkout", {
+      const preview = await api<{ code: string; discount_rial: number }>("/coupons/validate", {
         method: "POST",
-        body: JSON.stringify({ course_id: detail.course.id, coupon_code: coupon || undefined }),
+        body: JSON.stringify({ course_ids: [courseId], code: coupon.trim() }),
       });
-      setOrder(o);
+      setDiscount(preview.discount_rial);
     } catch (err) {
-      if (err instanceof ApiError && err.code === "ALREADY_OWNED") {
-        setOwned(true);
-        return;
-      }
-      if (err instanceof ApiError && err.status === 401) {
-        setGuest(true);
-        return;
-      }
+      setDiscount(0);
       setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
     } finally {
       setBusy(false);
     }
-  }, [slug, coupon]);
+  }
 
-  React.useEffect(() => {
-    void createOrder();
-    // initial order creation does not depend on the coupon input
-  }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function pay(gateway: "zarinpal" | "mock") {
-    if (!order) return;
+  async function pay(gw: Gateway) {
     setError("");
-    setPaying(gateway);
+    setPaying(gw);
     try {
-      const res = await api<{ redirect_url: string }>(`/checkout/${order.id}/pay`, {
-        method: "POST",
-        body: JSON.stringify({ gateway }),
-      });
-      window.location.href = res.redirect_url;
+      let orderId = order?.id ?? "";
+      if (mode === "course") {
+        const o = await api<{ id: string }>("/checkout", {
+          method: "POST",
+          body: JSON.stringify({ course_id: courseId, coupon_code: coupon.trim() || undefined }),
+        });
+        orderId = o.id;
+      }
+      await startPayment(orderId, gw);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
       setPaying(null);
+      if (err instanceof ApiError && err.code === "ALREADY_OWNED") {
+        setOwned(true);
+        return;
+      }
+      setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
     }
   }
 
-  if (!slug) {
+  if (mode === "none") {
     return (
       <Card className="mx-auto max-w-md p-8 text-center text-muted-foreground">
-        دوره‌ای انتخاب نشده است؛ از صفحهٔ دوره خرید را شروع کن.
+        سفارشی برای پرداخت انتخاب نشده است؛ از سبد خرید یا صفحهٔ دوره شروع کن.
       </Card>
     );
   }
 
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-md space-y-3" aria-label="در حال آماده‌سازی سفارش">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
+  }
+
+  if (notice) {
+    return (
+      <Card className="mx-auto max-w-md p-8 text-center">
+        <h1 className="font-semibold text-2xl text-foreground">
+          {notice === "paid" && "این سفارش پرداخت شده است"}
+          {notice === "expired" && "مهلت پرداخت این سفارش گذشته است"}
+          {notice === "closed" && "این سفارش دیگر قابل پرداخت نیست"}
+          {notice === "missing" && "سفارش پیدا نشد"}
+        </h1>
+        <p className="mt-2 text-sm leading-7 text-muted-foreground">
+          {notice === "paid"
+            ? "دسترسی شما به دوره‌هایش فعال است؛ از داشبورد ادامه بده."
+            : "می‌توانی از سبد خرید یک سفارش تازه بسازی یا از صفحهٔ دوره خرید را شروع کنی."}
+        </p>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <ButtonLink href="/cart" size="lg">سبد خرید</ButtonLink>
+          <ButtonLink href="/dashboard/orders" size="lg" variant="outline">سفارش‌های من</ButtonLink>
+        </div>
+      </Card>
+    );
+  }
+
+  if (guest) {
+    return (
+      <Card className="p-8 text-center">
+        <h2 className="font-semibold text-2xl text-foreground">برای خرید ابتدا وارد شو</h2>
+        <p className="mt-2 text-sm leading-7 text-muted-foreground">
+          پرداخت و دسترسی به درس‌ها به حساب کاربری شما گره خورده است.
+        </p>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <ButtonLink href={`/login?next=${encodeURIComponent(`/checkout?course=${slug}`)}`} size="lg">
+            ورود به حساب
+          </ButtonLink>
+          <ButtonLink href="/courses" size="lg" variant="outline">
+            بازگشت به دوره‌ها
+          </ButtonLink>
+        </div>
+      </Card>
+    );
+  }
+
+  if (owned) {
+    return (
+      <Card className="p-8 text-center">
+        <h2 className="font-semibold text-2xl text-foreground">این دوره را خریده‌اید</h2>
+        <p className="mt-2 text-sm leading-7 text-muted-foreground">
+          {courseTitle
+            ? `«${courseTitle}» در دوره‌های شماست و دسترسی‌تان به همه درس‌ها باز است.`
+            : "این دوره در دوره‌های شماست و دسترسی‌تان به همه درس‌ها باز است."}
+        </p>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <ButtonLink href={`/dashboard/courses/${encodeURIComponent(slug)}`} size="lg">
+            ادامه یادگیری
+          </ButtonLink>
+          <ButtonLink href="/courses" size="lg" variant="outline">
+            بازگشت به دوره‌ها
+          </ButtonLink>
+        </div>
+      </Card>
+    );
+  }
+
+  const items =
+    mode === "order"
+      ? (order?.items ?? []).map((it) => ({ key: it.course_id, title: it.title_snapshot, price: it.unit_price_rial }))
+      : [{ key: courseId, title: courseTitle, price: coursePrice }];
+  const shownDiscount = mode === "order" ? (order?.discount_rial ?? 0) : discount;
+  const total = mode === "order" ? (order?.total_rial ?? 0) : Math.max(0, coursePrice - discount);
+  const minutesLeft = order
+    ? Math.max(0, Math.round((new Date(order.expires_at).getTime() - Date.now()) / 60000))
+    : null;
+
   return (
     <div className="mx-auto max-w-md space-y-5">
       <h1 className="font-semibold text-3xl">تسویه حساب</h1>
-      {guest && (
-        <Card className="p-8 text-center">
-          <h2 className="font-semibold text-2xl text-foreground">برای خرید ابتدا وارد شو</h2>
-          <p className="mt-2 text-sm leading-7 text-muted-foreground">
-            پرداخت و دسترسی به درس‌ها به حساب کاربری شما گره خورده است.
-          </p>
-          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-            <ButtonLink href={`/login?next=${encodeURIComponent(`/checkout?course=${slug}`)}`} size="lg">
-              ورود به حساب
-            </ButtonLink>
-            <ButtonLink href="/courses" size="lg" variant="outline">
-              بازگشت به دوره‌ها
-            </ButtonLink>
-          </div>
-        </Card>
-      )}
 
-      {owned && (
-        <Card className="p-8 text-center">
-          <h2 className="font-semibold text-2xl text-foreground">این دوره را خریده‌اید</h2>
-          <p className="mt-2 text-sm leading-7 text-muted-foreground">
-            {courseTitle
-              ? `«${courseTitle}» در دوره‌های شماست و دسترسی‌تان به همه درس‌ها باز است.`
-              : "این دوره در دوره‌های شماست و دسترسی‌تان به همه درس‌ها باز است."}
-          </p>
-          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-            <ButtonLink href={`/dashboard/courses/${encodeURIComponent(slug)}`} size="lg">
-              ادامه یادگیری
-            </ButtonLink>
-            <ButtonLink href="/courses" size="lg" variant="outline">
-              بازگشت به دوره‌ها
-            </ButtonLink>
-          </div>
-        </Card>
-      )}
-
-      {!owned && !guest && (
       <Card className="p-8">
-        {order ? (
-          <div className="space-y-3 text-sm">
-            {(order.items ?? []).map((it) => (
-              <div key={it.course_id} className="flex items-center justify-between gap-4">
-                <span className="text-foreground">{it.title_snapshot}</span>
-                <span className="shrink-0">{formatTomanFromRial(it.unit_price_rial)}</span>
-              </div>
-            ))}
-            {order.discount_rial > 0 && (
-              <div className="flex items-center justify-between text-success-text">
-                <span>تخفیف</span>
-                <span>{formatTomanFromRial(order.discount_rial)}</span>
-              </div>
-            )}
-            <div className="border-t border-line pt-3">
-              <div className="flex items-baseline justify-between">
-                <span className="font-semibold">قابل پرداخت</span>
-                <span className="font-semibold text-xl">{formatTomanFromRial(order.total_rial)}</span>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                مهلت پرداخت: {fa(Math.max(0, Math.round((new Date(order.expires_at).getTime() - Date.now()) / 60000)))} دقیقه
-              </p>
+        <div className="space-y-3 text-sm">
+          {items.map((it) => (
+            <div key={it.key} className="flex items-center justify-between gap-4">
+              <span className="text-foreground">{it.title}</span>
+              <span className="shrink-0">{formatTomanFromRial(it.price)}</span>
             </div>
+          ))}
+          {shownDiscount > 0 && (
+            <div className="flex items-center justify-between text-success-text">
+              <span>تخفیف</span>
+              <span>{formatTomanFromRial(shownDiscount)}</span>
+            </div>
+          )}
+          <div className="border-t border-line pt-3">
+            <div className="flex items-baseline justify-between">
+              <span className="font-semibold">قابل پرداخت</span>
+              <span className="font-semibold text-xl">{formatTomanFromRial(total)}</span>
+            </div>
+            {minutesLeft !== null && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                مهلت پرداخت: {fa(minutesLeft)} دقیقه
+              </p>
+            )}
           </div>
-        ) : (
-          <div className="space-y-3" aria-label="در حال آماده‌سازی سفارش">
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-5 w-1/2" />
-            <Skeleton className="h-8 w-full" />
+        </div>
+
+        {mode === "course" && (
+          <div className="mt-6 flex gap-2">
+            <Field label="کد تخفیف" htmlFor="coupon" className="flex-1">
+              <Input
+                id="coupon"
+                dir="ltr"
+                placeholder="مثلاً WELCOME"
+                value={coupon}
+                onChange={(e) => setCoupon(e.target.value)}
+              />
+            </Field>
+            <Button variant="outline" className="mt-6" onClick={() => void applyCoupon()} loading={busy}>
+              اعمال
+            </Button>
           </div>
         )}
 
-        <div className="mt-6 flex gap-2">
-          <Field label="کد تخفیف" htmlFor="coupon" className="flex-1">
-            <Input
-              id="coupon"
-              dir="ltr"
-              placeholder="مثلاً WELCOME"
-              value={coupon}
-              onChange={(e) => setCoupon(e.target.value)}
-            />
-          </Field>
-          <Button variant="outline" className="mt-6" onClick={() => void createOrder()} loading={busy}>
-            اعمال
-          </Button>
-        </div>
-
         {error && <Alert className="mt-4">{error}</Alert>}
 
-        <div className="mt-6 space-y-2">
-          <p className="text-sm font-medium">انتخاب درگاه پرداخت</p>
-          <Button className="w-full" onClick={() => void pay("zarinpal")} disabled={busy || !order} loading={paying === "zarinpal"}>
-            پرداخت با زرین‌پال
-          </Button>
-          <Button variant="outline" className="w-full" onClick={() => void pay("mock")} disabled={busy || !order} loading={paying === "mock"}>
-            درگاه آزمایشی
-          </Button>
-          <p className="text-center text-xs text-muted-foreground">درگاه آزمایشی فقط برای تست نصب است.</p>
-        </div>
+        <PayGateways onPay={(gw) => void pay(gw)} busyGateway={paying} disabled={busy} />
       </Card>
-      )}
     </div>
   );
 }

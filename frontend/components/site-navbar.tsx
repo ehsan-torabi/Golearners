@@ -16,6 +16,7 @@ import {
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useSession } from "@/components/use-session";
 import { LogoutButton } from "@/components/logout-button";
+import { CartLink } from "@/components/site/cart-link";
 import { cn } from "@/lib/utils";
 
 export type NavLink = { href: string; label: string };
@@ -55,6 +56,7 @@ export function SiteNavbar({ links }: { links: NavLink[] }) {
         <NavbarSearch />
         <div className="ms-auto flex items-center gap-1.5">
           <ThemeToggle />
+          <CartLink />
           <AuthActions status={status} isAdmin={isAdmin} loggedIn={Boolean(session)} />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger
@@ -86,6 +88,7 @@ export function SiteNavbar({ links }: { links: NavLink[] }) {
                 ))}
               </nav>
               <div className="mt-6 flex flex-col gap-2 px-1">
+                <CartLink stacked />
                 <AuthActions status={status} isAdmin={isAdmin} loggedIn={Boolean(session)} stacked />
               </div>
             </SheetContent>

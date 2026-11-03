@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { ArrowRightIcon, CheckIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatTomanFromRial } from "@/lib/api";
@@ -189,10 +190,15 @@ export default async function MyOrderPage({ params }: { params: Promise<{ id: st
             </ul>
           )}
           {order.status === "awaiting_payment" && (
-            <p className="mt-3 rounded-field bg-warning-bg px-3 py-2 text-xs leading-6 text-warning-text">
-              مهلت پرداخت این سفارش تا {fa(Math.max(0, Math.round((new Date(order.expires_at).getTime() - Date.now()) / 60000)))} دقیقه دیگر باز است؛
-              پس از انقضا سفارش به‌صورت خودکار بسته می‌شود.
-            </p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-field bg-warning-bg px-3 py-2 text-xs leading-6 text-warning-text">
+              <span>
+                مهلت پرداخت این سفارش تا {fa(Math.max(0, Math.round((new Date(order.expires_at).getTime() - Date.now()) / 60000)))} دقیقه دیگر باز است؛
+                پس از انقضا سفارش به‌صورت خودکار بسته می‌شود.
+              </span>
+              <ButtonLink href={`/checkout?order=${encodeURIComponent(order.id)}`} size="sm" className="shrink-0">
+                پرداخت سفارش
+              </ButtonLink>
+            </div>
           )}
         </div>
       </Card>

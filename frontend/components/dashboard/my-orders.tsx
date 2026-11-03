@@ -61,6 +61,9 @@ export function MyOrdersPanel({ orders, total }: { orders: OrderRow[]; total: nu
             <TableHead className="text-start">مبلغ</TableHead>
             <TableHead className="text-start">تاریخ</TableHead>
             <TableHead className="text-start">وضعیت</TableHead>
+            <TableHead className="text-start">
+              <span className="sr-only">اقدام</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -69,7 +72,13 @@ export function MyOrdersPanel({ orders, total }: { orders: OrderRow[]; total: nu
             return (
               <TableRow key={o.id}>
                 <TableCell className="text-start" dir="ltr">
-                  {o.id.slice(0, 8)}…
+                  <ButtonLink
+                    href={`/dashboard/orders/${encodeURIComponent(o.id)}`}
+                    variant="link"
+                    className="h-auto p-0 font-mono text-xs"
+                  >
+                    {o.id.slice(0, 8)}…
+                  </ButtonLink>
                 </TableCell>
                 <TableCell className="text-start">
                   {formatTomanFromRial(o.total_rial)}
@@ -79,6 +88,13 @@ export function MyOrdersPanel({ orders, total }: { orders: OrderRow[]; total: nu
                 </TableCell>
                 <TableCell className="text-start">
                   <Badge tone={meta.tone}>{meta.label}</Badge>
+                </TableCell>
+                <TableCell className="text-start">
+                  {o.status === "awaiting_payment" && (
+                    <ButtonLink href={`/checkout?order=${encodeURIComponent(o.id)}`} size="sm" variant="outline">
+                      پرداخت
+                    </ButtonLink>
+                  )}
                 </TableCell>
               </TableRow>
             );

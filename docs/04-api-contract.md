@@ -43,8 +43,8 @@ The YAML is the source of truth; frontend types are generated from it
 | Method | Path | Notes |
 |--------|------|-------|
 | GET/PATCH | `/me` | profile |
-| POST | `/coupons/validate` | {code, course_id} → discount preview |
-| POST | `/checkout` | {course_id, coupon_code?} → order (30-min TTL) |
+| POST | `/coupons/validate` | {code, course_ids[]} → discount preview over the cart (legacy course_id accepted) |
+| POST | `/checkout` | {course_ids[], coupon_code?} → order with one item per course (30-min TTL; legacy course_id accepted) |
 | POST | `/checkout/{order_id}/pay` | {gateway} → redirect payload `{redirect_url}` |
 | POST | `/payments/callback/{gateway}` | gateway return target (GET-style params accepted); verifies server-side; idempotent |
 | GET | `/me/orders` · `/me/orders/{id}` | order + payments + receipt |

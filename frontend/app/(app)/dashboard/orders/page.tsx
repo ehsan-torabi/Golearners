@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getMe } from "@/lib/me-server";
@@ -55,16 +56,17 @@ export default async function MyOrdersPage() {
           const status = STATUS_FA[o.status] ?? { label: o.status, tone: "neutral" as const };
           return (
             <Card key={o.id} className="p-0 transition-[box-shadow,border-color] duration-(--motion) ease-motion hover:border-primary/35 hover:shadow-raise">
-              <Link
-                href={`/dashboard/orders/${encodeURIComponent(o.id)}`}
-                className="block rounded-surface p-5"
-                aria-label={`جزئیات سفارش ${o.id.slice(0, 8)}`}
-              >
+              <div className="p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium text-foreground" dir="ltr">
+                    <Link
+                      href={`/dashboard/orders/${encodeURIComponent(o.id)}`}
+                      className="text-sm font-medium text-foreground transition-colors hover:text-accent-strong"
+                      aria-label={`جزئیات سفارش ${o.id.slice(0, 8)}`}
+                      dir="ltr"
+                    >
                       {o.id.slice(0, 8)}…
-                    </p>
+                    </Link>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {formatJalali(new Date(o.created_at ?? Date.now()))}
                     </p>
@@ -75,7 +77,9 @@ export default async function MyOrdersPage() {
                     </span>
                     <Badge tone={status.tone}>{status.label}</Badge>
                     {o.status === "awaiting_payment" && (
-                      <span className="text-xs text-warning-text">مهلت پرداخت فعال است</span>
+                      <ButtonLink href={`/checkout?order=${encodeURIComponent(o.id)}`} size="sm">
+                        پرداخت
+                      </ButtonLink>
                     )}
                   </div>
                 </div>
@@ -88,7 +92,7 @@ export default async function MyOrdersPage() {
                     <span key={it.course_id}>{it.title_snapshot}</span>
                   ))}
                 </div>
-              </Link>
+              </div>
             </Card>
           );
         })}
