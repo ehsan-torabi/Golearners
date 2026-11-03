@@ -189,10 +189,11 @@ test.describe("admin console", () => {
     await row.getByRole("button", { name: "انتشار" }).click();
     await expect(row.getByText("منتشرشده").first()).toBeVisible({ timeout: 30000 });
 
-    // it shows up on the public blog with its cover image
+    // it shows up on the public blog with its cover image (the page also
+    // lists related posts with their own covers, so match the post's own image)
     await page.goto(`/blog/${postSlug}`);
     await expect(page.getByRole("heading", { name: postTitle })).toBeVisible();
-    await expect(page.locator("img[src*='/api/v1/media/']")).toBeVisible();
+    await expect(page.getByRole("img", { name: `تصویر مقالهٔ ${postTitle}` })).toBeVisible();
 
     // and can be deleted again
     await page.goto("/admin/posts");
