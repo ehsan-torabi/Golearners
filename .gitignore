@@ -29,3 +29,4 @@ e2e/report/results.json
 e2e/report/state/
 e2e/node_modules/
 frontend/.next-e2e/
+frontend/.next-probe/
