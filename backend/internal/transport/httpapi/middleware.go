@@ -5,7 +5,9 @@ import (
 	"crypto/subtle"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"golearn/backend/internal/apperr"
@@ -75,9 +77,9 @@ func (a *App) requireRoles(roles ...identity.Role) func(http.Handler) http.Handl
 }
 
 // csrf enforces double-submit protection on authenticated mutations: the
-// X-CSRF-Token header must match the readable gl_csrf cookie. Pre-auth
-// endpoints (no gl_at cookie) are exempt — SameSite=Lax already prevents
-// their cross-site abuse.
+// X-CSRF-Token header must match the readable gl_csrf cookie, and the cookie
+// must carry a signature this server produced. Pre-auth endpoints (no gl_at
+// cookie) are exempt — SameSite=Lax already prevents their cross-site abuse.
 func (a *App) csrf(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
@@ -88,15 +90,38 @@ func (a *App) csrf(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r) // not an authenticated mutation
 			return
 		}
+		// A browser attaches Origin to every cross-site state-changing request.
+		// Ours must be the site's own origin; a mismatch means the request did
+		// not come from our pages, whatever the cookies say.
+		if origin := r.Header.Get("Origin"); origin != "" && !a.originAllowed(origin) {
+			a.writeError(w, r, apperr.ErrCSRFInvalid)
+			return
+		}
 		ck, err := r.Cookie(cookieCSRF)
 		hdr := r.Header.Get("X-CSRF-Token")
 		if err != nil || ck.Value == "" || hdr == "" ||
+			!identity.VerifyCSRFToken(ck.Value, a.Cfg.JWTSecret) ||
 			subtle.ConstantTimeCompare([]byte(ck.Value), []byte(hdr)) != 1 {
 			a.writeError(w, r, apperr.ErrCSRFInvalid)
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// originAllowed reports whether an Origin header names this site. The API is
+// reached through the storefront's same-origin proxy, so the browser's origin
+// is the public site origin, not the API's own host.
+func (a *App) originAllowed(origin string) bool {
+	u, err := url.Parse(origin)
+	if err != nil || u.Host == "" {
+		return false
+	}
+	base, err := url.Parse(a.Cfg.BaseURL)
+	if err != nil {
+		return false
+	}
+	return strings.EqualFold(u.Scheme, base.Scheme) && strings.EqualFold(u.Host, base.Host)
 }
 
 // rateLimit throttles by client IP per route class.
@@ -120,12 +145,43 @@ func (a *App) rateLimit(name string, limit int, window time.Duration) func(http.
 	}
 }
 
+// clientIP resolves the caller's address.
+//
+// The API sits behind a reverse proxy that appends the real peer address to
+// X-Forwarded-For, so the LAST entry is the one the trusted hop observed.
+// Reading the first entry instead would trust a value the client chose, which
+// would let anyone mint a fresh rate-limit key per request and forge the
+// address recorded in the audit log.
 func clientIP(r *http.Request) string {
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		if ip := lastForwardedIP(xff); ip != "" {
+			return ip
+		}
+	}
+	if rip := r.Header.Get("X-Real-IP"); rip != "" {
+		if ip := net.ParseIP(strings.TrimSpace(rip)); ip != nil {
+			return ip.String()
+		}
+	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		return r.RemoteAddr
 	}
 	return host
+}
+
+// lastForwardedIP returns the right-most valid address in an
+// X-Forwarded-For list, or "" when the list holds no valid address.
+func lastForwardedIP(xff string) string {
+	parts := strings.Split(xff, ",")
+	for i := len(parts) - 1; i >= 0; i-- {
+		ip := net.ParseIP(strings.TrimSpace(parts[i]))
+		if ip == nil {
+			continue
+		}
+		return ip.String()
+	}
+	return ""
 }
 
 // withActor stores the actor in the request context.
