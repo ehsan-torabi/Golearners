@@ -126,7 +126,7 @@ for (const [name, vars] of Object.entries(themes)) {
       name,
       `${fgToken} on ${bgToken}`,
       `${value.toFixed(2)}:1 (min ${min})`,
-      pass ? `ok — ${note}` : `FAIL — ${note}`,
+      pass ? `ok: ${note}` : `FAIL: ${note}`,
     ]);
   }
 }
