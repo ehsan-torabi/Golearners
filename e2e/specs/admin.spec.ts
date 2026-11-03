@@ -371,8 +371,10 @@ test.describe("admin console", () => {
     await learnerCtx.addCookies(await sessionCookies(playwright, "learner"));
     const learnerPage = await learnerCtx.newPage();
 
+    // the admin console is gated: a learner is bounced back to their dashboard
     await learnerPage.goto("/admin");
-    await expect(learnerPage.getByText("این بخش فقط برای مدیران است.")).toBeVisible();
+    await learnerPage.waitForURL(/\/dashboard/, { timeout: 20000 });
+    await expect(learnerPage.getByText("این بخش فقط برای مدیران است.")).toHaveCount(0);
 
     await learnerCtx.close();
     expectNoClientErrors(diag);
