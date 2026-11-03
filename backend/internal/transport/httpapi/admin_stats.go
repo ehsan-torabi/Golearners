@@ -30,7 +30,10 @@ func (a *App) handleAdminCourseStatsList(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	items := make([]ports.CourseStatsRow, 0, len(list))
-	items = append(items, list...)
+	for _, row := range list {
+		row.CoverURL = mediaRef(row.CoverMediaID)
+		items = append(items, row)
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"data": items,
 		"meta": map[string]any{"page": page, "per_page": perPage, "total": total},
@@ -54,5 +57,6 @@ func (a *App) handleAdminCourseStatsDetail(w http.ResponseWriter, r *http.Reques
 		a.writeError(w, r, err)
 		return
 	}
+	detail.Course.CoverURL = mediaRef(detail.Course.CoverMediaID)
 	writeData(w, detail)
 }

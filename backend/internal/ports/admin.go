@@ -57,6 +57,7 @@ type CourseStatsIdentity struct {
 	Status       string     `json:"status"`
 	PriceRial    int64      `json:"price_rial"`
 	CoverMediaID *uuid.UUID `json:"cover_media_id"`
+	CoverURL     string     `json:"cover_url"`
 	PublishedAt  *time.Time `json:"published_at"`
 }
 
