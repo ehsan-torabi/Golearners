@@ -179,10 +179,10 @@ func (s *Service) validateCouponFor(ctx context.Context, userID uuid.UUID, cours
 	if !coupon.Active(s.now()) {
 		return nil, apperr.ErrCouponInvalid.Wrap(fmt.Errorf("not active"))
 	}
-	base := couponBase(courses, subtotal, coupon)
-	if coupon.CourseScope != nil && base == 0 {
+	if coupon.CourseScope != nil && !hasCourse(courses, *coupon.CourseScope) {
 		return nil, apperr.ErrCouponInvalid.Wrap(fmt.Errorf("course scope mismatch"))
 	}
+	base := couponBase(courses, subtotal, coupon)
 	if coupon.MinAmountRial != nil && base < *coupon.MinAmountRial {
 		return nil, apperr.ErrCouponInvalid.Wrap(fmt.Errorf("below min amount"))
 	}
@@ -219,6 +219,15 @@ func couponBase(courses []*course.Course, subtotal int64, coupon *commerce.Coupo
 		}
 	}
 	return 0
+}
+
+func hasCourse(courses []*course.Course, id uuid.UUID) bool {
+	for _, c := range courses {
+		if c.ID == id {
+			return true
+		}
+	}
+	return false
 }
 
 func dedupeIDs(ids []uuid.UUID) []uuid.UUID {
