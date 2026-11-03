@@ -135,7 +135,7 @@ func (r *UserAdminRepo) List(ctx context.Context, f ports.UserAdminFilter, page,
 		order = "last_login_at DESC NULLS LAST"
 	}
 	rows, err := r.pool.Query(ctx,
-		`SELECT id, mobile, email, full_name, password_hash, status,
+		`SELECT id, mobile, email, full_name, COALESCE(password_hash,''), status,
 			mobile_verified_at, last_login_at, created_at, updated_at
 		 FROM users WHERE `+where+` ORDER BY `+order+` LIMIT $`+
 			fmt.Sprint(len(args)+1)+` OFFSET $`+fmt.Sprint(len(args)+2),

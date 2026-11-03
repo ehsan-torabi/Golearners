@@ -23,7 +23,7 @@ type UserRepo struct{ pool *pgxpool.Pool }
 
 func NewUserRepo(pool *pgxpool.Pool) *UserRepo { return &UserRepo{pool: pool} }
 
-const userColumns = `id, mobile, email, full_name, password_hash, status,
+const userColumns = `id, mobile, email, full_name, COALESCE(password_hash,''), status,
 	mobile_verified_at, last_login_at, created_at, updated_at`
 
 func scanUser(row pgx.Row) (*identity.User, error) {
