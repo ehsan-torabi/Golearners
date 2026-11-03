@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"golearn/backend/internal/domain/commerce"
 	"golearn/backend/internal/ports"
 )
@@ -41,8 +43,11 @@ func (g *Gateway) Initiate(ctx context.Context, req ports.InitiateRequest) (port
 	var out struct {
 		RedirectURL string `json:"redirect_url"`
 	}
+	// one ref per attempt: reusing the order id would make every retry of
+	// the same order resolve its callback to the dead first payment
+	ref := uuid.Must(uuid.NewV7()).String()
 	err := g.postJSON(ctx, "/api/start", map[string]any{
-		"ref":      req.OrderID.String(),
+		"ref":      ref,
 		"amount":   req.AmountRial,
 		"callback": req.CallbackURL,
 	}, &out)
@@ -55,7 +60,7 @@ func (g *Gateway) Initiate(ctx context.Context, req ports.InitiateRequest) (port
 	if redirect != "" && strings.HasPrefix(redirect, "/") {
 		redirect = g.base + redirect
 	}
-	return ports.InitiateResult{RedirectURL: redirect, GatewayRef: req.OrderID.String()}, nil
+	return ports.InitiateResult{RedirectURL: redirect, GatewayRef: ref}, nil
 }
 
 // Verify asks the mock app to confirm ref+amount (server-side, mandatory).

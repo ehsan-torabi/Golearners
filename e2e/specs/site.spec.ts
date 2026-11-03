@@ -50,8 +50,8 @@ test.describe("public site", () => {
 
     await expect(page.getByRole("heading", { name: "آموزش Go از صفر" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "سرفصل‌ها" })).toBeVisible();
-    // a guest never sees the checkout button — only the login prompt
-    await expect(page.getByRole("link", { name: "ورود برای خرید" })).toBeVisible();
+    // guests add to the cart freely; sign-in is asked at pay time
+    await expect(page.getByRole("button", { name: "افزودن به سبد خرید" })).toBeVisible();
 
     expectNoClientErrors(diag);
   });

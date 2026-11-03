@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/section-head";
 import { api, ApiError, formatTomanFromRial, type Order } from "@/lib/api";
 import { fa } from "@/lib/utils";
+import { useSession } from "@/components/use-session";
 import { PayGateways, startPayment, type Gateway } from "@/components/site/pay-gateways";
 
 /* Two entry modes, one pay surface:
@@ -17,6 +18,7 @@ import { PayGateways, startPayment, type Gateway } from "@/components/site/pay-g
               click only, never as a page-load side effect. */
 function CheckoutInner() {
   const params = useSearchParams();
+  const { status: sessionStatus, session } = useSession();
   const orderParam = params.get("order") ?? "";
   const slug = params.get("course") ?? "";
   const mode = orderParam ? "order" : slug ? "course" : "none";
@@ -133,7 +135,7 @@ function CheckoutInner() {
   if (mode === "none") {
     return (
       <Card className="mx-auto max-w-md p-8 text-center text-muted-foreground">
-        سفارشی برای پرداخت انتخاب نشده است؛ از سبد خرید یا صفحهٔ دوره شروع کن.
+        دوره‌ای انتخاب نشده است؛ از سبد خرید یا صفحهٔ دوره شروع کن.
       </Card>
     );
   }
@@ -164,6 +166,25 @@ function CheckoutInner() {
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
           <ButtonLink href="/cart" size="lg">سبد خرید</ButtonLink>
           <ButtonLink href="/dashboard/orders" size="lg" variant="outline">سفارش‌های من</ButtonLink>
+        </div>
+      </Card>
+    );
+  }
+
+  if (sessionStatus === "ready" && !session) {
+    return (
+      <Card className="p-8 text-center">
+        <h2 className="font-semibold text-2xl text-foreground">برای خرید ابتدا وارد شو</h2>
+        <p className="mt-2 text-sm leading-7 text-muted-foreground">
+          پرداخت و دسترسی به درس‌ها به حساب کاربری شما گره خورده است.
+        </p>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <ButtonLink href={`/login?next=${encodeURIComponent(mode === "order" ? `/checkout?order=${orderParam}` : `/checkout?course=${slug}`)}`} size="lg">
+            ورود به حساب
+          </ButtonLink>
+          <ButtonLink href="/courses" size="lg" variant="outline">
+            بازگشت به دوره‌ها
+          </ButtonLink>
         </div>
       </Card>
     );
