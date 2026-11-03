@@ -254,6 +254,34 @@ body {
   background: rgba(67, 83, 238, 0.22);
 }
 
+/* Video.js skin: brand it with the site tokens (one indigo primary, Vazirmatn)
+   and let its corners follow the surface it sits in. */
+.media-player {
+  --media-accent-color: var(--primary);
+  --media-accent-text-color: var(--primary-foreground);
+  --media-font-family: "Vazirmatn", system-ui, sans-serif;
+  --media-border-color: transparent;
+}
+.media-player .media-player__skin:not(:fullscreen) {
+  border-radius: inherit;
+}
+/* The neutral skin pops the volume slider out to the right of the mute
+   button, where it lands on the time readout and the timeline. Lift it above
+   the control bar instead (the narrow layout keeps the side placement: there
+   the timeline sits on its own row and the gap next to the button is free). */
+@container media-root (width >= 42rem) {
+  .media-player .media-volume-popover {
+    top: auto !important;
+    bottom: calc(anchor(top) + 8px) !important;
+    left: anchor(left) !important;
+    translate: 0 0 !important;
+  }
+  /* the slider takes the tooltip's place while it is open */
+  .media-player .media-tooltip:has(~ .media-volume-popover[data-open]) {
+    display: none;
+  }
+}
+
 /* the one brand gradient band: hero and section banners share it (R-01:
    hierarchy function, lavender to page white, never full-page color) */
 .hero-band {

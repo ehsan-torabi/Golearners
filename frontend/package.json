@@ -25,6 +25,8 @@
     "@tiptap/extension-underline": "^3.32.2",
     "@tiptap/react": "^3.32.2",
     "@tiptap/starter-kit": "^3.32.2",
+    "@videojs/hlsjs-video": "10.2.0",
+    "@videojs/react": "10.2.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.1",
     "farsiui": "^0.1.34",
