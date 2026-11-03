@@ -47,51 +47,67 @@ func NewService(d Deps) *Service {
 	return s
 }
 
-// CreateOrderInput is the checkout payload.
+// CreateOrderInput is the checkout payload; CourseIDs is the cart.
 type CreateOrderInput struct {
-	CourseID   uuid.UUID
+	CourseIDs  []uuid.UUID
 	CouponCode string
 }
 
-// CreateOrder snapshots the price, applies the coupon if valid, and stores
-// the order with a 30-minute payment window.
+// CreateOrder snapshots the cart's prices, applies the coupon if valid, and
+// stores the order with a 30-minute payment window.
 func (s *Service) CreateOrder(ctx context.Context, userID uuid.UUID, in CreateOrderInput) (*commerce.Order, error) {
-	c, err := s.d.Courses.ByID(ctx, in.CourseID)
-	if err != nil {
-		if errors.Is(err, ports.ErrNotFound) {
+	ids := dedupeIDs(in.CourseIDs)
+	if len(ids) == 0 {
+		return nil, apperr.ErrValidation
+	}
+	courses := make([]*course.Course, 0, len(ids))
+	for _, id := range ids {
+		c, err := s.d.Courses.ByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, ports.ErrNotFound) {
+				return nil, apperr.ErrNotFound
+			}
+			return nil, err
+		}
+		if c.Status != course.StatusPublished {
 			return nil, apperr.ErrNotFound
 		}
-		return nil, err
+		owned, err := s.d.Entitlements.HasActive(ctx, userID, c.ID)
+		if err != nil {
+			return nil, err
+		}
+		if owned {
+			return nil, apperr.ErrAlreadyOwned
+		}
+		courses = append(courses, c)
 	}
-	if c.Status != course.StatusPublished {
-		return nil, apperr.ErrNotFound
-	}
-	owned, err := s.d.Entitlements.HasActive(ctx, userID, c.ID)
-	if err != nil {
-		return nil, err
-	}
-	if owned {
-		return nil, apperr.ErrAlreadyOwned
+
+	var subtotal int64
+	for _, c := range courses {
+		subtotal += c.PriceRial
 	}
 
 	o := &commerce.Order{
 		ID:           uuid.Must(uuid.NewV7()),
 		UserID:       userID,
 		Status:       commerce.OrderAwaitingPayment,
-		SubtotalRial: c.PriceRial,
+		SubtotalRial: subtotal,
 		ExpiresAt:    s.now().Add(commerce.OrderTTL),
 	}
-	items := []commerce.OrderItem{{
-		ID: uuid.Must(uuid.NewV7()), OrderID: o.ID, CourseID: c.ID,
-		TitleSnapshot: c.Title, UnitPriceRial: c.PriceRial,
-	}}
+	items := make([]commerce.OrderItem, 0, len(courses))
+	for _, c := range courses {
+		items = append(items, commerce.OrderItem{
+			ID: uuid.Must(uuid.NewV7()), OrderID: o.ID, CourseID: c.ID,
+			TitleSnapshot: c.Title, UnitPriceRial: c.PriceRial,
+		})
+	}
 
 	if strings.TrimSpace(in.CouponCode) != "" {
-		coupon, err := s.validateCouponFor(ctx, userID, c, in.CouponCode)
+		coupon, err := s.validateCouponFor(ctx, userID, courses, subtotal, in.CouponCode)
 		if err != nil {
 			return nil, err
 		}
-		discount, err := coupon.DiscountFor(o.SubtotalRial)
+		discount, err := coupon.DiscountFor(couponBase(courses, subtotal, coupon))
 		if err != nil {
 			return nil, apperr.ErrCouponInvalid.Wrap(err)
 		}
@@ -111,35 +127,48 @@ func (s *Service) CreateOrder(ctx context.Context, userID uuid.UUID, in CreateOr
 
 // CouponPreview is the validation response.
 type CouponPreview struct {
-	Code         string
-	DiscountRial int64
-	TotalRial    int64
+	Code         string `json:"code"`
+	DiscountRial int64  `json:"discount_rial"`
+	TotalRial    int64  `json:"total_rial"`
 }
 
-// ValidateCoupon previews a coupon against a course price.
-func (s *Service) ValidateCoupon(ctx context.Context, userID uuid.UUID, courseID uuid.UUID, code string) (*CouponPreview, error) {
-	c, err := s.d.Courses.ByID(ctx, courseID)
-	if err != nil {
-		if errors.Is(err, ports.ErrNotFound) {
-			return nil, apperr.ErrNotFound
+// ValidateCoupon previews a coupon against a cart of courses.
+func (s *Service) ValidateCoupon(ctx context.Context, userID uuid.UUID, courseIDs []uuid.UUID, code string) (*CouponPreview, error) {
+	ids := dedupeIDs(courseIDs)
+	if len(ids) == 0 {
+		return nil, apperr.ErrValidation
+	}
+	var subtotal int64
+	courses := make([]*course.Course, 0, len(ids))
+	for _, id := range ids {
+		c, err := s.d.Courses.ByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, ports.ErrNotFound) {
+				return nil, apperr.ErrNotFound
+			}
+			return nil, err
 		}
-		return nil, err
+		subtotal += c.PriceRial
+		courses = append(courses, c)
 	}
-	coupon, err := s.validateCouponFor(ctx, userID, c, code)
+	coupon, err := s.validateCouponFor(ctx, userID, courses, subtotal, code)
 	if err != nil {
 		return nil, err
 	}
-	discount, err := coupon.DiscountFor(c.PriceRial)
+	base := couponBase(courses, subtotal, coupon)
+	discount, err := coupon.DiscountFor(base)
 	if err != nil {
 		return nil, apperr.ErrCouponInvalid.Wrap(err)
 	}
 	return &CouponPreview{
-		Code: coupon.Code, DiscountRial: discount, TotalRial: c.PriceRial - discount,
+		Code: coupon.Code, DiscountRial: discount, TotalRial: subtotal - discount,
 	}, nil
 }
 
-// validateCouponFor applies every coupon rule (docs/01 US-C2).
-func (s *Service) validateCouponFor(ctx context.Context, userID uuid.UUID, c *course.Course, rawCode string) (*commerce.Coupon, error) {
+// validateCouponFor applies every coupon rule (docs/01 US-C2). subtotal is
+// the cart total; a course-scoped coupon only acts on its scoped course's
+// price, so adding other courses cannot inflate the discount.
+func (s *Service) validateCouponFor(ctx context.Context, userID uuid.UUID, courses []*course.Course, subtotal int64, rawCode string) (*commerce.Coupon, error) {
 	coupon, err := s.d.Coupons.ByCode(ctx, rawCode)
 	if err != nil {
 		if errors.Is(err, ports.ErrNotFound) {
@@ -150,10 +179,11 @@ func (s *Service) validateCouponFor(ctx context.Context, userID uuid.UUID, c *co
 	if !coupon.Active(s.now()) {
 		return nil, apperr.ErrCouponInvalid.Wrap(fmt.Errorf("not active"))
 	}
-	if coupon.CourseScope != nil && *coupon.CourseScope != c.ID {
+	base := couponBase(courses, subtotal, coupon)
+	if coupon.CourseScope != nil && base == 0 {
 		return nil, apperr.ErrCouponInvalid.Wrap(fmt.Errorf("course scope mismatch"))
 	}
-	if coupon.MinAmountRial != nil && c.PriceRial < *coupon.MinAmountRial {
+	if coupon.MinAmountRial != nil && base < *coupon.MinAmountRial {
 		return nil, apperr.ErrCouponInvalid.Wrap(fmt.Errorf("below min amount"))
 	}
 	if coupon.MaxUses != nil {
@@ -175,6 +205,33 @@ func (s *Service) validateCouponFor(ctx context.Context, userID uuid.UUID, c *co
 		}
 	}
 	return coupon, nil
+}
+
+// couponBase picks the amount a coupon acts on: the whole cart, or the
+// scoped course's price (0 when that course is not in the cart).
+func couponBase(courses []*course.Course, subtotal int64, coupon *commerce.Coupon) int64 {
+	if coupon.CourseScope == nil {
+		return subtotal
+	}
+	for _, c := range courses {
+		if c.ID == *coupon.CourseScope {
+			return c.PriceRial
+		}
+	}
+	return 0
+}
+
+func dedupeIDs(ids []uuid.UUID) []uuid.UUID {
+	seen := make(map[uuid.UUID]bool, len(ids))
+	out := make([]uuid.UUID, 0, len(ids))
+	for _, id := range ids {
+		if id == uuid.Nil || seen[id] {
+			continue
+		}
+		seen[id] = true
+		out = append(out, id)
+	}
+	return out
 }
 
 func eventOf(paymentID uuid.UUID, etype string, payload any) *commerce.PaymentEvent {

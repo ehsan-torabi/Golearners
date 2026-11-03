@@ -36,7 +36,9 @@ func newEnv(t *testing.T) *testEnv {
 		Throttle: fakes.NewThrottler(), Hasher: fakes.PlainHasher{}, Signer: fakes.StaticSigner{},
 		Pepper: "pepper",
 	})
-	cfg := config.Config{Env: "development", BaseURL: "http://localhost:3000", HTTPPort: "8080"}
+	// JWTSecret doubles as the CSRF signing pepper (as in cmd/api), so the
+	// middleware verifies what the identity service minted.
+	cfg := config.Config{Env: "development", BaseURL: "http://localhost:3000", HTTPPort: "8080", JWTSecret: "pepper"}
 	app := &httpapi.App{
 		Cfg: cfg, Log: slog.New(slog.NewTextHandler(io.Discard, nil)),
 		Auth: svc, Throttle: fakes.NewThrottler(), Signer: fakes.StaticSigner{},

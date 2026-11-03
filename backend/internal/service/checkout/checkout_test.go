@@ -59,7 +59,7 @@ func (e *env) seedOrder(t *testing.T, userID uuid.UUID) (*commerce.Order, *comme
 	cid := uuid.Must(uuid.NewV7())
 	e.courses.Add(&course.Course{ID: cid, Slug: "c", Title: "Course", Status: course.StatusPublished, PriceRial: 1000000})
 
-	o, err := e.svc.CreateOrder(ctx, userID, checkout.CreateOrderInput{CourseID: cid})
+	o, err := e.svc.CreateOrder(ctx, userID, checkout.CreateOrderInput{CourseIDs: []uuid.UUID{cid}})
 	require.NoError(t, err)
 	p, redirect, err := e.svc.InitiatePayment(ctx, userID, o.ID, commerce.GatewayMock)
 	require.NoError(t, err)
@@ -132,8 +132,64 @@ func TestAlreadyOwnedBlocksCheckout(t *testing.T) {
 	e.courses.Add(&course.Course{ID: cid, Slug: "c", Title: "C", Status: course.StatusPublished, PriceRial: 1})
 	e.ents.Allow(user, cid)
 
-	_, err := e.svc.CreateOrder(context.Background(), user, checkout.CreateOrderInput{CourseID: cid})
+	_, err := e.svc.CreateOrder(context.Background(), user, checkout.CreateOrderInput{CourseIDs: []uuid.UUID{cid}})
 	require.ErrorIs(t, err, apperr.ErrAlreadyOwned)
+}
+
+func TestMultiCourseOrderSumsSubtotalAndGrantsAll(t *testing.T) {
+	e := newEnv()
+	user := uuid.Must(uuid.NewV7())
+	ctx := context.Background()
+	a, b := uuid.Must(uuid.NewV7()), uuid.Must(uuid.NewV7())
+	e.courses.Add(&course.Course{ID: a, Slug: "a", Title: "A", Status: course.StatusPublished, PriceRial: 1000000})
+	e.courses.Add(&course.Course{ID: b, Slug: "b", Title: "B", Status: course.StatusPublished, PriceRial: 2500000})
+
+	// a duplicated id is one item, not two
+	o, err := e.svc.CreateOrder(ctx, user, checkout.CreateOrderInput{CourseIDs: []uuid.UUID{a, b, a}})
+	require.NoError(t, err)
+	require.Equal(t, int64(3500000), o.SubtotalRial)
+
+	items, err := e.orders.ItemsOf(ctx, o.ID)
+	require.NoError(t, err)
+	require.Len(t, items, 2)
+
+	p, _, err := e.svc.InitiatePayment(ctx, user, o.ID, commerce.GatewayMock)
+	require.NoError(t, err)
+	_, err = e.svc.HandleCallback(ctx, commerce.GatewayMock,
+		url.Values{"ref": {*p.GatewayRef}, "Status": {"OK"}})
+	require.NoError(t, err)
+
+	granted := 0
+	for _, cid := range []uuid.UUID{a, b} {
+		if ok, _ := e.ents.HasActive(ctx, user, cid); ok {
+			granted++
+		}
+	}
+	require.Equal(t, 2, granted, "every course in the cart is granted")
+}
+
+func TestScopedCouponDiscountsOnlyItsCourse(t *testing.T) {
+	e := newEnv()
+	user := uuid.Must(uuid.NewV7())
+	ctx := context.Background()
+	a, b := uuid.Must(uuid.NewV7()), uuid.Must(uuid.NewV7())
+	e.courses.Add(&course.Course{ID: a, Slug: "a", Title: "A", Status: course.StatusPublished, PriceRial: 1000000})
+	e.courses.Add(&course.Course{ID: b, Slug: "b", Title: "B", Status: course.StatusPublished, PriceRial: 5000000})
+	e.coupons.Add(&commerce.Coupon{
+		ID: uuid.Must(uuid.NewV7()), Code: "SCOPE", Type: commerce.CouponPercent,
+		Value: 10, Status: "active", CourseScope: &a,
+	})
+
+	// scoped course in the cart: 10% of A only, B stays full price
+	o, err := e.svc.CreateOrder(ctx, user, checkout.CreateOrderInput{CourseIDs: []uuid.UUID{a, b}, CouponCode: "SCOPE"})
+	require.NoError(t, err)
+	require.Equal(t, int64(100000), o.DiscountRial)
+	require.Equal(t, int64(5900000), o.TotalRial)
+
+	// without the scoped course the coupon is refused
+	e.courses.Add(&course.Course{ID: uuid.Must(uuid.NewV7()), Slug: "c", Title: "C", Status: course.StatusPublished, PriceRial: 1})
+	_, err = e.svc.CreateOrder(ctx, user, checkout.CreateOrderInput{CourseIDs: []uuid.UUID{b}, CouponCode: "SCOPE"})
+	require.ErrorIs(t, err, apperr.ErrCouponInvalid)
 }
 
 func TestCouponExhaustedRejected(t *testing.T) {
@@ -148,7 +204,7 @@ func TestCouponExhaustedRejected(t *testing.T) {
 	})
 
 	// first order succeeds; coupon use counts at payment, not order time
-	o1, err := e.svc.CreateOrder(context.Background(), user, checkout.CreateOrderInput{CourseID: cid, CouponCode: "OFF"})
+	o1, err := e.svc.CreateOrder(context.Background(), user, checkout.CreateOrderInput{CourseIDs: []uuid.UUID{cid}, CouponCode: "OFF"})
 	require.NoError(t, err)
 	require.Equal(t, int64(900000), o1.TotalRial)
 
@@ -164,7 +220,7 @@ func TestCouponExhaustedRejected(t *testing.T) {
 	cid2 := uuid.Must(uuid.NewV7())
 	e.courses.Add(&course.Course{ID: cid2, Slug: "c2", Title: "C2", Status: course.StatusPublished, PriceRial: 1000000})
 	// creation-time check already rejects (the redemption counted at payment)
-	_, err = e.svc.CreateOrder(context.Background(), user, checkout.CreateOrderInput{CourseID: cid2, CouponCode: "OFF"})
+	_, err = e.svc.CreateOrder(context.Background(), user, checkout.CreateOrderInput{CourseIDs: []uuid.UUID{cid2}, CouponCode: "OFF"})
 	require.ErrorIs(t, err, apperr.ErrCouponInvalid)
 }
 

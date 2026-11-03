@@ -14,8 +14,21 @@ import (
 )
 
 type checkoutRequest struct {
-	CourseID   uuid.UUID `json:"course_id"`
-	CouponCode string    `json:"coupon_code"`
+	// CourseIDs is the cart; CourseID is the legacy single-course field.
+	CourseIDs  []uuid.UUID `json:"course_ids"`
+	CourseID   uuid.UUID   `json:"course_id"`
+	CouponCode string      `json:"coupon_code"`
+}
+
+// cartIDs merges the legacy single-course field into the id list.
+func (r checkoutRequest) cartIDs() []uuid.UUID {
+	if len(r.CourseIDs) > 0 {
+		return r.CourseIDs
+	}
+	if r.CourseID != uuid.Nil {
+		return []uuid.UUID{r.CourseID}
+	}
+	return nil
 }
 
 // POST /api/v1/checkout
@@ -31,7 +44,7 @@ func (a *App) handleCheckout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	o, err := a.Checkout.CreateOrder(r.Context(), actor.ID, checkout.CreateOrderInput{
-		CourseID: in.CourseID, CouponCode: in.CouponCode,
+		CourseIDs: in.cartIDs(), CouponCode: in.CouponCode,
 	})
 	if err != nil {
 		a.writeError(w, r, err)
@@ -93,17 +106,16 @@ func (a *App) handlePaymentCallback(w http.ResponseWriter, r *http.Request) {
 		a.writeError(w, r, err)
 		return
 	}
-	status := "failed"
-	if outcome.Paid {
-		status = "paid"
-	}
-	target := a.Cfg.BaseURL + "/checkout/result?order=" + outcome.OrderID.String() + "&status=" + status
+	// The redirect carries the order id only: the outcome is decided by the
+	// server when the page reads the order, never by a value in the URL.
+	target := a.Cfg.BaseURL + "/checkout/result?order=" + outcome.OrderID.String()
 	http.Redirect(w, r, target, http.StatusFound)
 }
 
 type couponValidateRequest struct {
-	Code     string    `json:"code"`
-	CourseID uuid.UUID `json:"course_id"`
+	Code      string      `json:"code"`
+	CourseIDs []uuid.UUID `json:"course_ids"`
+	CourseID  uuid.UUID   `json:"course_id"` // legacy single-course field
 }
 
 // POST /api/v1/coupons/validate
@@ -118,7 +130,11 @@ func (a *App) handleCouponValidate(w http.ResponseWriter, r *http.Request) {
 		a.writeError(w, r, err)
 		return
 	}
-	preview, err := a.Checkout.ValidateCoupon(r.Context(), actor.ID, in.CourseID, in.Code)
+	ids := in.CourseIDs
+	if len(ids) == 0 && in.CourseID != uuid.Nil {
+		ids = []uuid.UUID{in.CourseID}
+	}
+	preview, err := a.Checkout.ValidateCoupon(r.Context(), actor.ID, ids, in.Code)
 	if err != nil {
 		a.writeError(w, r, err)
 		return
@@ -158,10 +174,24 @@ func (a *App) handleMyOrders(w http.ResponseWriter, r *http.Request) {
 	}
 	items := make([]map[string]any, 0, len(list))
 	for _, o := range list {
+		// titles let the orders list show what the order is for and offer
+		// payment on the still-awaiting ones
+		its, err := a.Orders.ItemsOf(r.Context(), o.ID)
+		if err != nil {
+			a.writeError(w, r, err)
+			return
+		}
+		outs := make([]map[string]any, 0, len(its))
+		for _, it := range its {
+			outs = append(outs, map[string]any{
+				"course_id": it.CourseID, "title_snapshot": it.TitleSnapshot,
+				"unit_price_rial": it.UnitPriceRial,
+			})
+		}
 		items = append(items, map[string]any{
 			"id": o.ID, "status": o.Status, "total_rial": o.TotalRial,
 			"discount_rial": o.DiscountRial, "expires_at": o.ExpiresAt,
-			"paid_at": o.PaidAt, "created_at": o.CreatedAt,
+			"paid_at": o.PaidAt, "created_at": o.CreatedAt, "items": outs,
 		})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
