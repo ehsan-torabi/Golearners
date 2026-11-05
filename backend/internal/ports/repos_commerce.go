@@ -42,10 +42,15 @@ type CouponRepo interface {
 	Update(ctx context.Context, c *commerce.Coupon) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	List(ctx context.Context, status string, page, perPage int) ([]*commerce.Coupon, int, error)
+	// ListWithUses lists coupons with their redemption count (admin grid).
+	ListWithUses(ctx context.Context, status string, page, perPage int) ([]*commerce.Coupon, int, error)
 	CountUses(ctx context.Context, couponID uuid.UUID) (int, error)
 	CountUsesByUser(ctx context.Context, couponID, userID uuid.UUID) (int, error)
 	// Redeem inserts a redemption row; unique (coupon, order) keeps it idempotent.
 	Redeem(ctx context.Context, couponID, userID, orderID uuid.UUID) error
+	// ReleaseRedemption removes a redemption row when a paid order is refunded,
+	// so the coupon becomes usable again within its limits.
+	ReleaseRedemption(ctx context.Context, couponID, userID, orderID uuid.UUID) error
 }
 
 // PaymentRepo — gateway attempts with idempotent state transitions.

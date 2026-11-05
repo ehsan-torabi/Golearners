@@ -102,10 +102,16 @@ func (s *Service) RefundOrder(ctx context.Context, actor Actor, orderID uuid.UUI
 		if err := s.d.Orders.MarkRefunded(ctx, o.ID); err != nil {
 			return err
 		}
-		if err := s.d.Entitlements.RevokeByOrder(ctx, o.ID); err != nil {
-			return err
-		}
-		entry := &ports.AuditEntry{
+			if err := s.d.Entitlements.RevokeByOrder(ctx, o.ID); err != nil {
+				return err
+			}
+			if o.CouponID != nil {
+				// refund frees the coupon: usable again within its limits
+				if err := s.d.Coupons.ReleaseRedemption(ctx, *o.CouponID, o.UserID, o.ID); err != nil {
+					return err
+				}
+			}
+			entry := &ports.AuditEntry{
 			ID: uuid.Must(uuid.NewV7()), ActorID: &actor.ID,
 			Action: "order.refund", EntityType: "order", EntityID: strPtr(o.ID.String()),
 			IP: actor.IP, UserAgent: actor.UserAgent,

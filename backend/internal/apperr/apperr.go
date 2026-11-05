@@ -70,6 +70,17 @@ var (
 	ErrOrderNotPayable      = New(http.StatusConflict, "ORDER_NOT_PAYABLE", "این سفارش قابل پرداخت نیست.")
 	ErrAlreadyOwned         = New(http.StatusConflict, "ALREADY_OWNED", "شما قبلاً این دوره را خریده‌اید.")
 	ErrCouponInvalid        = New(http.StatusBadRequest, "COUPON_INVALID", "کد تخفیف معتبر نیست یا شرایط آن برقرار نیست.")
+
+	// Granular coupon failure reasons so the client can show a precise hint.
+	ErrCouponNotActive      = New(http.StatusBadRequest, "COUPON_NOT_ACTIVE", "این کد تخفیف غیرفعال است یا خارج از بازه معتبر است.")
+	ErrCouponExpired        = New(http.StatusBadRequest, "COUPON_EXPIRED", "این کد تخفیف منقضی شده است.")
+	ErrCouponExhausted      = New(http.StatusBadRequest, "COUPON_EXHAUSTED", "سقف استفاده از این کد تخفیف تمام شده است.")
+	ErrCouponPerUserLimit   = New(http.StatusBadRequest, "COUPON_PER_USER_LIMIT", "شما قبلاً از این کد تخفیف استفاده کرده‌اید.")
+	ErrCouponMinAmount      = New(http.StatusBadRequest, "COUPON_MIN_AMOUNT", "مبلغ سبد خرید برای اعمال این کد تخفیف کافی نیست.")
+	ErrCouponScopeMismatch  = New(http.StatusBadRequest, "COUPON_SCOPE_MISMATCH", "این کد تخفیف فقط برای یک دوره خاص قابل استفاده است.")
+	ErrCouponFirstPurchase  = New(http.StatusBadRequest, "COUPON_FIRST_PURCHASE", "این کد تخفیف فقط برای خرید اولین دوره قابل استفاده است.")
+	ErrCouponAlreadyUsed    = New(http.StatusBadRequest, "COUPON_ALREADY_USED", "این کد تخفیف قبلاً برای این سفارش اعمال شده است.")
+	ErrCouponValueInvalid   = New(http.StatusBadRequest, "COUPON_VALUE_INVALID", "مقدار کد تخفیف نامعتبر است.")
 	ErrGatewayNotConfigured = New(http.StatusServiceUnavailable, "GATEWAY_NOT_CONFIGURED", "این درگاه پرداخت در دسترس نیست.")
 	ErrRefundFailed         = New(http.StatusConflict, "REFUND_FAILED", "استرداد پرداخت ممکن نشد؛ در پنل درگاه بررسی کنید.")
 

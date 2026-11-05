@@ -106,19 +106,23 @@ const (
 
 // Coupon is a discount code.
 type Coupon struct {
-	ID            uuid.UUID  `json:"id"`
-	Code          string     `json:"code"`
-	Type          CouponType `json:"type"`
-	Value         int64      `json:"value"` // percent (1..100) or fixed Rials
-	MaxUses       *int       `json:"max_uses"`
-	PerUserLimit  *int       `json:"per_user_limit"`
-	MinAmountRial *int64     `json:"min_amount_rial"`
-	StartsAt      *time.Time `json:"starts_at"`
-	EndsAt        *time.Time `json:"ends_at"`
-	CourseScope   *uuid.UUID `json:"course_scope"`
-	Status        string     `json:"status"` // active | disabled
-	CreatedAt     time.Time  `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
+	ID               uuid.UUID  `json:"id"`
+	Code             string     `json:"code"`
+	Type             CouponType `json:"type"`
+	Value            int64      `json:"value"` // percent (1..100) or fixed Rials
+	MaxUses          *int       `json:"max_uses"`
+	PerUserLimit     *int       `json:"per_user_limit"`
+	MinAmountRial    *int64     `json:"min_amount_rial"`
+	DiscountCapRial  *int64     `json:"discount_cap_rial"` // max discount for percent coupons
+	FirstPurchaseOnly bool      `json:"first_purchase_only"`
+	AppliesToSaleItems bool     `json:"applies_to_sale_items"`
+	StartsAt         *time.Time `json:"starts_at"`
+	EndsAt           *time.Time `json:"ends_at"`
+	CourseScope      *uuid.UUID `json:"course_scope"`
+	Status           string     `json:"status"` // active | disabled
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
+	Uses             int        `json:"uses"` // redemptions (populated by ListWithUses)
 }
 
 // Active reports the window + status checks.
@@ -135,20 +139,53 @@ func (c *Coupon) Active(now time.Time) bool {
 	return true
 }
 
-// DiscountFor computes the discount for a subtotal, or an error when the
-// coupon cannot apply (min amount, bad percent value).
-func (c *Coupon) DiscountFor(subtotal int64) (int64, error) {
+// DiscountFor computes the discount for a base amount, never negative.
+// Percent: value% of base, capped at DiscountCapRial when set.
+// Fixed: min(value, base). Percent 100% makes the order free (total 0).
+func (c *Coupon) DiscountFor(base int64) (int64, error) {
+	if base < 0 {
+		return 0, fmt.Errorf("negative base %d", base)
+	}
 	switch c.Type {
 	case CouponPercent:
 		if c.Value <= 0 || c.Value > 100 {
 			return 0, fmt.Errorf("percent value %d out of range", c.Value)
 		}
-		return subtotal * c.Value / 100, nil
+		d := base * c.Value / 100
+		if c.DiscountCapRial != nil && d > *c.DiscountCapRial {
+			d = *c.DiscountCapRial
+		}
+		return d, nil
 	case CouponFixed:
-		if c.Value > subtotal {
-			return subtotal, nil
+		if c.Value < 0 {
+			return 0, fmt.Errorf("fixed value %d out of range", c.Value)
+		}
+		if c.Value > base {
+			return base, nil
 		}
 		return c.Value, nil
 	}
 	return 0, fmt.Errorf("unknown coupon type %q", c.Type)
+}
+
+// TotalAfter reports the payable total after applying the discount; never negative.
+func (c *Coupon) TotalAfter(subtotal int64) (int64, error) {
+	d, err := c.DiscountFor(subtotal)
+	if err != nil {
+		return 0, err
+	}
+	t := subtotal - d
+	if t < 0 {
+		t = 0
+	}
+	return t, nil
+}
+
+// Free reports whether applying this coupon makes the order free (total 0).
+func (c *Coupon) Free(subtotal int64) bool {
+	t, err := c.TotalAfter(subtotal)
+	if err != nil {
+		return false
+	}
+	return t == 0
 }

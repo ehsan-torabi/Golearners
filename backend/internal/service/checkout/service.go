@@ -60,6 +60,7 @@ func (s *Service) CreateOrder(ctx context.Context, userID uuid.UUID, in CreateOr
 	if len(ids) == 0 {
 		return nil, apperr.ErrValidation
 	}
+	now := s.now()
 	courses := make([]*course.Course, 0, len(ids))
 	for _, id := range ids {
 		c, err := s.d.Courses.ByID(ctx, id)
@@ -92,7 +93,7 @@ func (s *Service) CreateOrder(ctx context.Context, userID uuid.UUID, in CreateOr
 		UserID:       userID,
 		Status:       commerce.OrderAwaitingPayment,
 		SubtotalRial: subtotal,
-		ExpiresAt:    s.now().Add(commerce.OrderTTL),
+		ExpiresAt:    now.Add(commerce.OrderTTL),
 	}
 	items := make([]commerce.OrderItem, 0, len(courses))
 	for _, c := range courses {
@@ -116,13 +117,54 @@ func (s *Service) CreateOrder(ctx context.Context, userID uuid.UUID, in CreateOr
 	}
 	o.TotalRial = o.SubtotalRial - o.DiscountRial
 	if o.TotalRial < 0 {
-		return nil, apperr.ErrInternal.Wrap(fmt.Errorf("negative total"))
+		o.TotalRial = 0
 	}
 
 	if err := s.d.Orders.Create(ctx, o, items); err != nil {
 		return nil, err
 	}
+
+	// Free order (100% discount or free cart): paid without a gateway,
+	// entitlements granted immediately, coupon redeemed — one transaction.
+	if o.TotalRial == 0 {
+		if err := s.finalizeFreeOrder(ctx, o, items); err != nil {
+			return nil, err
+		}
+		o.Status = commerce.OrderPaid
+		o.PaidAt = &now
+	}
+
 	return o, nil
+}
+
+// finalizeFreeOrder marks a zero-total order paid, grants entitlements and
+// redeems the coupon in a single transaction (no gateway involved).
+func (s *Service) finalizeFreeOrder(ctx context.Context, o *commerce.Order, items []commerce.OrderItem) error {
+	return s.d.TX.WithinTx(ctx, func(ctx context.Context) error {
+		paid, err := s.d.Orders.MarkPaid(ctx, o.ID)
+		if err != nil {
+			return err
+		}
+		if !paid {
+			return fmt.Errorf("order %s was not awaiting payment", o.ID)
+		}
+		for _, it := range items {
+			e := &ports.Entitlement{}
+			e.ID = uuid.Must(uuid.NewV7())
+			e.UserID = o.UserID
+			e.CourseID = it.CourseID
+			e.Source = course.EntitlementPurchase
+			e.OrderID = &o.ID
+			if err := s.d.Entitlements.Grant(ctx, e); err != nil {
+				return err
+			}
+		}
+		if o.CouponID != nil {
+			// redemption is idempotent (unique coupon+order)
+			_ = s.d.Coupons.Redeem(ctx, *o.CouponID, o.UserID, o.ID)
+		}
+		return nil
+	})
 }
 
 // CouponPreview is the validation response.
@@ -165,9 +207,10 @@ func (s *Service) ValidateCoupon(ctx context.Context, userID uuid.UUID, courseID
 	}, nil
 }
 
-// validateCouponFor applies every coupon rule (docs/01 US-C2). subtotal is
-// the cart total; a course-scoped coupon only acts on its scoped course's
-// price, so adding other courses cannot inflate the discount.
+// validateCouponFor applies every coupon rule and returns a granular reason
+// when the coupon cannot apply (docs/01 US-C2). subtotal is the cart total;
+// a course-scoped coupon only acts on its scoped course's price, so adding
+// other courses cannot inflate the discount.
 func (s *Service) validateCouponFor(ctx context.Context, userID uuid.UUID, courses []*course.Course, subtotal int64, rawCode string) (*commerce.Coupon, error) {
 	coupon, err := s.d.Coupons.ByCode(ctx, rawCode)
 	if err != nil {
@@ -176,15 +219,22 @@ func (s *Service) validateCouponFor(ctx context.Context, userID uuid.UUID, cours
 		}
 		return nil, err
 	}
-	if !coupon.Active(s.now()) {
-		return nil, apperr.ErrCouponInvalid.Wrap(fmt.Errorf("not active"))
+	now := s.now()
+	if coupon.Status != "active" {
+		return nil, apperr.ErrCouponNotActive
+	}
+	if coupon.StartsAt != nil && now.Before(*coupon.StartsAt) {
+		return nil, apperr.ErrCouponNotActive
+	}
+	if coupon.EndsAt != nil && now.After(*coupon.EndsAt) {
+		return nil, apperr.ErrCouponExpired
 	}
 	if coupon.CourseScope != nil && !hasCourse(courses, *coupon.CourseScope) {
-		return nil, apperr.ErrCouponInvalid.Wrap(fmt.Errorf("course scope mismatch"))
+		return nil, apperr.ErrCouponScopeMismatch
 	}
 	base := couponBase(courses, subtotal, coupon)
 	if coupon.MinAmountRial != nil && base < *coupon.MinAmountRial {
-		return nil, apperr.ErrCouponInvalid.Wrap(fmt.Errorf("below min amount"))
+		return nil, apperr.ErrCouponMinAmount
 	}
 	if coupon.MaxUses != nil {
 		uses, err := s.d.Coupons.CountUses(ctx, coupon.ID)
@@ -192,7 +242,7 @@ func (s *Service) validateCouponFor(ctx context.Context, userID uuid.UUID, cours
 			return nil, err
 		}
 		if uses >= *coupon.MaxUses {
-			return nil, apperr.ErrCouponInvalid.Wrap(fmt.Errorf("exhausted"))
+			return nil, apperr.ErrCouponExhausted
 		}
 	}
 	if coupon.PerUserLimit != nil {
@@ -201,7 +251,19 @@ func (s *Service) validateCouponFor(ctx context.Context, userID uuid.UUID, cours
 			return nil, err
 		}
 		if uses >= *coupon.PerUserLimit {
-			return nil, apperr.ErrCouponInvalid.Wrap(fmt.Errorf("per-user limit"))
+			return nil, apperr.ErrCouponPerUserLimit
+		}
+	}
+	if coupon.FirstPurchaseOnly {
+		// first-purchase-only: the user must not already own any cart course
+		for _, c := range courses {
+			owned, err := s.d.Entitlements.HasActive(ctx, userID, c.ID)
+			if err != nil {
+				return nil, err
+			}
+			if owned {
+				return nil, apperr.ErrCouponFirstPurchase
+			}
 		}
 	}
 	return coupon, nil
@@ -287,8 +349,12 @@ func (s *Service) PaymentsOfOrder(ctx context.Context, orderID uuid.UUID) []*com
 
 // checkCouponUsable re-applies usage caps at payment time.
 func (s *Service) checkCouponUsable(ctx context.Context, o *commerce.Order, coupon *commerce.Coupon) error {
-	if !coupon.Active(s.now()) {
-		return apperr.ErrCouponInvalid.Wrap(fmt.Errorf("expired at pay time"))
+	now := s.now()
+	if coupon.Status != "active" {
+		return apperr.ErrCouponNotActive
+	}
+	if coupon.EndsAt != nil && now.After(*coupon.EndsAt) {
+		return apperr.ErrCouponExpired
 	}
 	if coupon.MaxUses != nil {
 		uses, err := s.d.Coupons.CountUses(ctx, coupon.ID)
@@ -296,7 +362,7 @@ func (s *Service) checkCouponUsable(ctx context.Context, o *commerce.Order, coup
 			return err
 		}
 		if uses >= *coupon.MaxUses {
-			return apperr.ErrCouponInvalid.Wrap(fmt.Errorf("exhausted at pay time"))
+			return apperr.ErrCouponExhausted
 		}
 	}
 	if coupon.PerUserLimit != nil {
@@ -305,7 +371,7 @@ func (s *Service) checkCouponUsable(ctx context.Context, o *commerce.Order, coup
 			return err
 		}
 		if uses >= *coupon.PerUserLimit {
-			return apperr.ErrCouponInvalid.Wrap(fmt.Errorf("per-user limit at pay time"))
+			return apperr.ErrCouponPerUserLimit
 		}
 	}
 	return nil
