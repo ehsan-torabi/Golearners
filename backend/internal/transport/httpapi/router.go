@@ -149,6 +149,7 @@ func NewRouter(a *App) http.Handler {
 		r.Get("/blog/tags", a.handleBlogTags)
 		r.Get("/blog/series", a.handleBlogSeries)
 		r.Get("/blog/series/{slug}", a.handleBlogSeriesDetail)
+		r.Get("/blog/authors/{id}", a.handleBlogAuthor)
 		r.Get("/pages/{slug}", a.handlePage)
 		r.Get("/faqs", a.handleFAQs)
 		r.Get("/testimonials", a.handleTestimonials)

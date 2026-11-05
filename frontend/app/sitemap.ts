@@ -12,9 +12,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/contact`, changeFrequency: "monthly", priority: 0.4 },
   ];
   try {
-    const [courses, posts] = await Promise.all([
+    const [courses, posts, series] = await Promise.all([
       fetch(`${API}/api/v1/courses?per_page=100`).then((r) => r.json() as Promise<{ data: { slug: string }[] }>),
       fetch(`${API}/api/v1/blog/posts?per_page=100`).then((r) => r.json() as Promise<{ data: { slug: string; published_at: string | null }[] }>),
+      fetch(`${API}/api/v1/blog/series`).then((r) => r.json() as Promise<{ data: { slug: string }[] }>),
     ]);
     return [
       ...staticPages,
@@ -28,6 +29,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: p.published_at ? new Date(p.published_at) : undefined,
         changeFrequency: "monthly" as const,
         priority: 0.6,
+      }))),
+      ...((series.data ?? []).map((s) => ({
+        url: `${BASE}/blog/series/${encodeURIComponent(s.slug)}`,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
       }))),
     ];
   } catch {

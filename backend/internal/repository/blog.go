@@ -132,7 +132,7 @@ func (r *BlogPostRepo) ListPublic(ctx context.Context, f ports.PublicPostFilter)
 		args = append(args, f.Q)
 	}
 	if f.AuthorID != "" {
-		where = append(where, "p.author_user_id = $"+fmt.Sprint(len(args)+1))
+		where = append(where, "p.author_user_id = $"+fmt.Sprint(len(args)+1)+"::uuid")
 		args = append(args, f.AuthorID)
 	}
 	if f.FeaturedOnly {

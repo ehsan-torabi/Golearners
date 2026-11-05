@@ -272,6 +272,35 @@ func (a *App) handleCommentCreate(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusAccepted, map[string]any{"queued": true})
 }
 
+// GET /api/v1/blog/authors/{id} — author profile + their published posts.
+func (a *App) handleBlogAuthor(w http.ResponseWriter, r *http.Request) {
+	id, err := uuidParam(r, "id")
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	u, err := a.Users.ByID(r.Context(), id)
+	if err != nil {
+		a.writeError(w, r, apperr.ErrNotFound)
+		return
+	}
+	list, _, err := a.Posts.ListPublic(r.Context(), ports.PublicPostFilter{
+		AuthorID: id.String(), Sort: "newest", Page: 1, PerPage: 50,
+	})
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	catMap := a.blogCategoryMap(r)
+	posts := make([]map[string]any, 0, len(list))
+	for _, p := range list {
+		posts = append(posts, postJSON(p, catMap[derefCategoryID(p.CategoryID)]))
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"id": u.ID, "name": u.FullName, "posts": posts,
+	})
+}
+
 // GET /api/v1/pages/{slug}
 func (a *App) handlePage(w http.ResponseWriter, r *http.Request) {
 	p, err := a.Pages.BySlug(r.Context(), chiSlug(r))

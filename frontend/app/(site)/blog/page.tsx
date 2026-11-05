@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { SitePagination } from "@/components/site/pagination";
 import { formatJalali } from "@/lib/jalali";
 import { fa, cn } from "@/lib/utils";
+import { PostCard, FeaturedCard } from "@/components/blog/post-card";
 
 export const metadata: Metadata = {
   title: "وبلاگ",
@@ -19,7 +20,10 @@ interface Post {
   slug: string; title: string; excerpt: string;
   cover_url?: string | null;
   category?: { slug: string; title: string } | null;
-  published_at: string | null; reading_minutes: number;
+  published_at?: string | null;
+  reading_minutes?: number;
+  views?: number;
+  featured?: boolean;
 }
 type BlogCategory = { id: string; slug: string; title: string };
 
@@ -60,7 +64,7 @@ export default async function BlogPage({ searchParams }: Props) {
   const pages = Math.max(1, Math.ceil(total / PER_PAGE));
   const page = Math.min(wanted, pages);
   const filtered = Boolean(category || tag || q);
-  const [featured, ...rest] = posts;
+  const [featuredPost, ...rest] = posts;
 
   const tileHref = (slug?: string) => {
     const sp = new URLSearchParams();
@@ -164,7 +168,7 @@ export default async function BlogPage({ searchParams }: Props) {
       ) : (
         <>
           {/* the newest post is the cover story; the rest are uniform cards */}
-          <FeaturedCard post={featured} />
+          {featuredPost && <FeaturedCard post={featuredPost} />}
           {rest.length > 0 && (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {rest.map((p) => (
@@ -181,90 +185,5 @@ export default async function BlogPage({ searchParams }: Props) {
         </>
       )}
     </div>
-  );
-}
-
-function Cover({ post, priority = false }: { post: Post; priority?: boolean }) {
-  if (post.cover_url) {
-    return (
-      /* eslint-disable-next-line @next/next/no-img-element -- media served from
-         the API origin, next/image would need remotePatterns per deployment */
-      <img
-        src={post.cover_url}
-        alt={`تصویر مقالهٔ ${post.title}`}
-        loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : undefined}
-        className="media-dim aspect-video w-full object-cover transition-transform duration-(--motion-slow) ease-motion group-hover:scale-[1.02]"
-      />
-    );
-  }
-  return (
-    <div className="flex aspect-video w-full items-center justify-center bg-primary-tint">
-      <span aria-hidden className="font-display text-4xl font-semibold text-primary/40">
-        {post.title.slice(0, 2)}
-      </span>
-    </div>
-  );
-}
-
-function FeaturedCard({ post }: { post: Post }) {
-  return (
-    <article className="group overflow-hidden rounded-surface border border-line bg-card transition-[box-shadow,border-color] duration-(--motion) ease-motion hover:border-primary/35 hover:shadow-raise">
-      <Link
-        href={`/blog/${encodeURIComponent(post.slug)}`}
-        className="grid items-stretch sm:grid-cols-[2fr_3fr]"
-        aria-label={post.title}
-      >
-        <div className="overflow-hidden">
-          <Cover post={post} priority />
-        </div>
-        <div className="flex flex-col justify-center gap-3 p-6 md:p-8">
-          {post.category && (
-            <span className="w-fit rounded-full bg-primary-tint px-2.5 py-0.5 text-xs font-medium text-accent-strong">
-              {post.category.title}
-            </span>
-          )}
-          <h2 className="text-xl font-semibold leading-9 text-foreground transition-colors duration-(--motion) ease-motion group-hover:text-accent-strong md:text-2xl">
-            {post.title}
-          </h2>
-          <p className="line-clamp-2 text-sm leading-7 text-muted-foreground">{post.excerpt}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {post.published_at ? formatJalali(new Date(post.published_at)) : ""}
-            {post.reading_minutes > 0 && ` · ${fa(post.reading_minutes)} دقیقه مطالعه`}
-          </p>
-        </div>
-      </Link>
-    </article>
-  );
-}
-
-function PostCard({ post }: { post: Post }) {
-  return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-surface border border-line bg-card transition-[box-shadow,border-color,transform] duration-(--motion) ease-motion hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-raise">
-      <Link
-        href={`/blog/${encodeURIComponent(post.slug)}`}
-        className="flex h-full flex-col"
-        aria-label={post.title}
-      >
-        <div className="overflow-hidden">
-          <Cover post={post} />
-        </div>
-        <div className="flex flex-1 flex-col gap-2.5 p-5">
-          {post.category && (
-            <span className="w-fit rounded-full bg-primary-tint px-2.5 py-0.5 text-xs font-medium text-accent-strong">
-              {post.category.title}
-            </span>
-          )}
-          <h2 className="line-clamp-2 text-[15px] font-medium leading-7 text-foreground transition-colors duration-(--motion) ease-motion group-hover:text-accent-strong">
-            {post.title}
-          </h2>
-          <p className="line-clamp-2 text-xs leading-6 text-muted-foreground">{post.excerpt}</p>
-          <p className="mt-auto border-t border-border-variant pt-3 text-xs text-muted-foreground">
-            {post.published_at ? formatJalali(new Date(post.published_at)) : ""}
-            {post.reading_minutes > 0 && ` · ${fa(post.reading_minutes)} دقیقه مطالعه`}
-          </p>
-        </div>
-      </Link>
-    </article>
   );
 }

@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <link rel="alternate" type="application/rss+xml" href="/rss.xml" />
       </head>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>

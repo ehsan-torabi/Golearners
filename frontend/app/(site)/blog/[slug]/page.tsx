@@ -6,12 +6,19 @@ import { api } from "@/lib/api";
 import { formatJalali } from "@/lib/jalali";
 import { fa } from "@/lib/utils";
 import { SiteBreadcrumb } from "@/components/site-breadcrumb";
-
-export const revalidate = 600;
+import { ShareRail } from "@/components/blog/share";
+import { BlogComments } from "@/components/blog/comments";
+import { PostCard } from "@/components/blog/post-card";
+import { Button } from "@/components/ui/button";
 
 interface Tag {
   slug: string;
   title: string;
+}
+interface SeriesPart {
+  slug: string;
+  title: string;
+  series_part?: number | null;
 }
 interface RelatedPost {
   slug: string;
@@ -19,26 +26,44 @@ interface RelatedPost {
   cover_url?: string | null;
   reading_minutes: number;
 }
+interface Author {
+  id: string;
+  name: string;
+}
+interface SeriesPayload {
+  slug: string;
+  title: string;
+  parts: SeriesPart[];
+  prev: string;
+  next: string;
+}
 interface Post {
-  slug: string; title: string; excerpt: string; body_html: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  body_html: string;
   cover_url?: string | null;
+  og_image_url?: string | null;
   category?: { slug: string; title: string } | null;
   tags?: Tag[];
   related?: RelatedPost[];
-  published_at: string | null; reading_minutes: number;
+  series?: SeriesPayload;
+  author?: Author;
+  views?: number;
+  featured?: boolean;
+  reading_minutes: number;
+  published_at: string | null;
   meta_description?: string | null;
 }
 
 type TocEntry = { id: string; text: string; level: 2 | 3 };
 
-/** gives every h2/h3 a stable id and returns the TOC list; the writer's HTML
-    keeps working when nothing matches (no headings → no TOC block). */
 function withHeadingIds(html: string): { html: string; toc: TocEntry[] } {
   const toc: TocEntry[] = [];
   let i = 0;
   const out = html.replace(
     /<h([23])((?:\s[^>]*)?)>([\s\S]*?)<\/h\1>/g,
-    (_m, lvl: string, attrs: string, inner: string) => {
+    (_m: string, lvl: string, attrs: string, inner: string) => {
       i += 1;
       const id = `sec-${i}`;
       toc.push({ id, text: inner.replace(/<[^>]+>/g, "").trim(), level: Number(lvl) as 2 | 3 });
@@ -56,6 +81,8 @@ async function post(slug: string): Promise<Post | null> {
   }
 }
 
+export const revalidate = 600;
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const p = await post(decodeURIComponent(slug));
@@ -69,8 +96,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: p.meta_description || p.excerpt,
       type: "article",
       locale: "fa_IR",
+      images:
+        p.og_image_url || p.cover_url
+          ? [{ url: String(p.og_image_url || p.cover_url) }]
+          : [],
       ...(p.published_at ? { publishedTime: p.published_at } : {}),
+      ...(p.author ? { authors: [p.author.name] } : {}),
     },
+    twitter: { card: "summary_large_image" },
   };
 }
 
@@ -95,7 +128,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   };
 
   return (
-    <article className="mx-auto max-w-3xl">
+    <article className="mx-auto max-w-3xl space-y-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <SiteBreadcrumb
         items={[
@@ -104,6 +137,41 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           { label: p.title },
         ]}
       />
+
+      {/* series strip — sisoog «شماره» hub with parts + prev/next */}
+      {p.series && (
+        <section className="bg-primary-tint border border-primary/20 rounded-surface p-5 md:p-6">
+          <Link href={`/blog/series/${encodeURIComponent(p.series.slug)}`} className="mb-2 block">
+            <span className="text-xs font-medium text-accent-strong">سری مطالب</span>
+            <span className="text-sm font-semibold text-foreground">{p.series.title}</span>
+          </Link>
+          <div className="flex flex-wrap gap-2 items-baseline">
+            {p.series.parts.map((part) => (
+              <span key={part.slug} className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium leading-none",
+                part.series_part !== null && part.slug === p.slug
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card border border-line text-muted-foreground",
+              )}>
+                {part.series_part != null && <span>{fa(part.series_part)}.</span>}
+                {part.slug === p.slug ? part.title : (
+                  <Link href={`/blog/${encodeURIComponent(part.slug)}`}>{part.title}</Link>
+                )}
+              </span>
+            ))}
+            {p.series.prev && (
+              <Button size="sm" variant="ghost">
+                <Link href={`/blog/${encodeURIComponent(p.series.prev)}`}>قبلی</Link>
+              </Button>
+            )}
+            {p.series.next && (
+              <Button size="sm" variant="ghost">
+                <Link href={`/blog/${encodeURIComponent(p.series.next)}`}>بعدی</Link>
+              </Button>
+            )}
+          </div>
+        </section>
+      )}
 
       <header className="space-y-4 border-b border-line pb-6">
         {p.category && (
@@ -114,10 +182,30 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             {p.category.title}
           </Link>
         )}
-        <h1 className="font-semibold text-3xl leading-[1.4] md:text-4xl">{p.title}</h1>
-        <p className="text-sm leading-7 text-muted-foreground">
-          {p.published_at ? formatJalali(new Date(p.published_at)) : ""}
-          {p.reading_minutes > 0 && ` · ${fa(p.reading_minutes)} دقیقه مطالعه`}
+        <div className="flex items-baseline gap-2">
+          <h1 className="font-semibold text-3xl leading-[1.4] md:text-4xl">{p.title}</h1>
+          {p.featured && <span className="text-xs font-medium text-accent-strong">مقاله ویژه</span>}
+        </div>
+        <p className="text-sm leading-7 text-muted-foreground flex items-center gap-1.5">
+          {p.author && (
+            <>
+              <span className="font-medium text-foreground">{p.author.name}</span>
+              <span className="mx-1 text-[0.8em] opacity-60">·</span>
+            </>
+          )}
+          {p.published_at && <time>{formatJalali(new Date(p.published_at))}</time>}
+          {p.reading_minutes > 0 && (
+            <>
+              <span className="mx-1 text-[0.8em] opacity-60">·</span>
+              <>{fa(p.reading_minutes)} دقیقه مطالعه</>
+            </>
+          )}
+          {p.views != null && p.views > 0 && (
+            <>
+              <span className="mx-1 text-[0.8em] opacity-60">·</span>
+              <>{fa(p.views)} بازدید</>
+            </>
+          )}
         </p>
       </header>
 
@@ -145,9 +233,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </ul>
       )}
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_220px]">
-        <div
-          className="prose-fa min-w-0 text-[0.95rem] leading-9 [&_a]:text-accent-strong [&_a]:underline [&_blockquote]:border-e-2 [&_blockquote]:border-primary/40 [&_blockquote]:bg-muted/60 [&_blockquote]:ps-4 [&_blockquote]:pe-4 [&_blockquote]:py-1 [&_blockquote]:rounded-field [&_blockquote]:text-muted-foreground [&_h2]:mt-10 [&_h2]:scroll-mt-24 [&_h2]:font-semibold [&_h2]:text-2xl [&_h3]:mt-8 [&_h3]:scroll-mt-24 [&_h3]:font-semibold [&_h3]:text-xl [&_hr]:my-8 [&_img]:rounded-field [&_li]:my-1.5 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:ps-6 [&_p]:my-4 [&_pre]:my-5 [&_pre]:overflow-x-auto [&_pre]:rounded-field [&_pre]:bg-invert [&_pre]:p-4 [&_pre]:text-[13px] [&_pre]:leading-7 [&_pre]:text-invert-foreground [&_code]:font-semibold [&_h2_code]:text-2xl [&_h3_code]:text-xl [&_p_code]:rounded-sm [&_p_code]:bg-muted [&_p_code]:px-1.5 [&_p_code]:py-0.5 [&_p_code]:text-[0.85em] [&_p_code]:text-accent-strong [&_li_code]:bg-muted [&_li_code]:rounded-sm [&_li_code]:px-1 [&_li_code]:text-[0.9em] [&_table]:my-4 [&_table]:w-full [&_table]:text-sm [&_th]:border [&_th]:border-line [&_th]:bg-muted [&_th]:px-3 [&_th]:py-2 [&_td]:border [&_td]:border-line [&_td]:px-3 [&_td]:py-2 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:ps-6"
+      <ShareRail url={`/blog/${encodeURIComponent(slug)}`} />
+
+      <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_220px]">
+        <div className="prose-fa min-w-0 text-[0.95rem] leading-9 [&_a]:text-accent-strong [&_a]:underline [&_blockquote]:border-e-2 [&_blockquote]:border-primary/40 [&_blockquote]:bg-muted/60 [&_blockquote]:ps-4 [&_blockquote]:pe-4 [&_blockquote]:py-1 [&_blockquote]:rounded-field [&_blockquote]:text-muted-foreground [&_h2]:mt-10 [&_h2]:scroll-mt-24 [&_h2]:font-semibold [&_h2]:text-2xl [&_h3]:mt-8 [&_h3]:scroll-mt-24 [&_h3]:font-semibold [&_h3]:text-xl [&_hr]:my-8 [&_img]:rounded-field [&_li]:my-1.5 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:ps-6 [&_p]:my-4 [&_pre]:my-5 [&_pre]:overflow-x-auto [&_pre]:rounded-field [&_pre]:bg-invert [&_pre]:p-4 [&_pre]:text-[13px] [&_pre]:leading-7 [&_pre]:text-invert-foreground [&_code]:font-semibold [&_h2_code]:text-2xl [&_h3_code]:text-xl [&_p_code]:rounded-sm [&_p_code]:bg-muted [&_p_code]:px-1.5 [&_p_code]:py-0.5 [&_p_code]:text-[0.85em] [&_p_code]:text-accent-strong [&_li_code]:bg-muted [&_li_code]:rounded-sm [&_li_code]:px-1 [&_li_code]:text-[0.9em] [&_table]:my-4 [&_table]:w-full [&_table]:text-sm [&_th]:border [&_th]:border-line [&_th]:bg-muted [&_th]:px-3 [&_th]:py-2 [&_td]:border [&_td]:border-line [&_td]:px-3 [&_td]:py-2 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:ps-6"
           dangerouslySetInnerHTML={{ __html: body }}
         />
 
@@ -172,38 +261,26 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         )}
       </div>
 
+      <BlogComments postSlug={slug} />
+
       {related.length > 0 && (
         <section aria-labelledby="related-title" className="mt-14 border-t border-line pt-8">
-          <h2 id="related-title" className="mb-5 font-semibold text-xl">
-            مقاله‌های مرتبط
-          </h2>
+          <div className="flex items-baseline justify-between gap-2 mb-5">
+            <h2 id="related-title" className="font-semibold text-xl">مقالات مرتبط</h2>
+            <Link href="/blog" className="text-xs font-medium text-accent-strong hover:underline">مقاله‌های بیشتر</Link>
+          </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {related.map((r) => (
-              <Link
-                key={r.slug}
-                href={`/blog/${encodeURIComponent(r.slug)}`}
-                className="group rounded-surface border border-line bg-card p-3 transition-[box-shadow,border-color] duration-(--motion) ease-motion hover:border-primary/35 hover:shadow-raise"
-              >
+              <Link key={r.slug} href={`/blog/${encodeURIComponent(r.slug)}`} className="group rounded-surface border border-line bg-card p-3 transition-[box-shadow,border-color] duration-300 ease-out hover:border-primary/35 hover:shadow-raise">
                 {r.cover_url ? (
-                  <img
-                    src={r.cover_url}
-                    alt={`تصویر مقالهٔ ${r.title}`}
-                    loading="lazy"
-                    className="media-dim aspect-video w-full rounded-field object-cover"
-                  />
+                  <img src={r.cover_url} alt={`تصویر مقالهٔ ${r.title}`} loading="lazy" className="media-dim aspect-video w-full rounded-field object-cover" />
                 ) : (
                   <div className="flex aspect-video w-full items-center justify-center rounded-field bg-primary-tint">
-                    <span aria-hidden className="font-display text-2xl font-semibold text-primary/40">
-                      {r.title.slice(0, 2)}
-                    </span>
+                    <span aria-hidden className="font-display text-2xl font-semibold text-primary/40">{r.title.slice(0, 2)}</span>
                   </div>
                 )}
-                <p className="mt-2.5 line-clamp-2 text-sm font-medium leading-6 text-foreground transition-colors group-hover:text-accent-strong">
-                  {r.title}
-                </p>
-                {r.reading_minutes > 0 && (
-                  <p className="mt-1 text-xs text-muted-foreground">{fa(r.reading_minutes)} دقیقه مطالعه</p>
-                )}
+                <p className="mt-2.5 line-clamp-2 text-sm font-medium leading-6 text-foreground transition-colors group-hover:text-accent-strong">{r.title}</p>
+                {r.reading_minutes > 0 && <p className="mt-1 text-xs text-muted-foreground">{fa(r.reading_minutes)} دقیقه مطالعه</p>}
               </Link>
             ))}
           </div>
@@ -211,4 +288,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       )}
     </article>
   );
+}
+
+function cn(...classes: (string | boolean | undefined | null)[]): string {
+  return classes.filter(Boolean).join(" ");
 }

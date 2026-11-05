@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { SectionHead } from "@/components/ui/section-head";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CourseCard } from "@/components/course-card";
+import { PostCard } from "@/components/blog/post-card";
 import { CategoryMark } from "@/components/site/category-icon";
 import { api, LEVEL_FA, formatTomanFromRial, type CourseSummary } from "@/lib/api";
 import { fa } from "@/lib/utils";
@@ -22,6 +23,21 @@ async function featured(): Promise<CourseSummary[]> {
   }
 }
 
+type LatestPost = {
+  slug: string; title: string; excerpt: string; cover_url?: string | null;
+  category?: { slug: string; title: string } | null; published_at?: string | null;
+  reading_minutes?: number;
+};
+
+async function latestPosts(): Promise<LatestPost[]> {
+  try {
+    const res = await api<{ data: LatestPost[] }>("/blog/posts?sort=newest&per_page=4");
+    return res.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 async function siteMeta(): Promise<{ faqs: Faq[]; categories: Category[] }> {
   const [q, c] = await Promise.all([
     api<{ data: Faq[] }>("/faqs").catch(() => ({ data: [] as Faq[] })),
@@ -31,7 +47,11 @@ async function siteMeta(): Promise<{ faqs: Faq[]; categories: Category[] }> {
 }
 
 export default async function HomePage() {
-  const [courses, { faqs: questions, categories }] = await Promise.all([featured(), siteMeta()]);
+  const [courses, latestPostsList, { faqs: questions, categories }] = await Promise.all([
+    featured(),
+    latestPosts(),
+    siteMeta(),
+  ]);
   const [flagship, ...rest] = courses;
 
   return (
@@ -127,6 +147,18 @@ export default async function HomePage() {
             )}
           </div>
         )}
+      </section>
+
+      {/* تازه‌های مجله — پربازدیدترین نوشته‌های وبلاگ */}
+      <section aria-labelledby="blog-title">
+        <SectionHead id="blog-title" title="تازه‌های مجله" href="/blog" />
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {latestPostsList.map((p) => (
+              <PostCard key={p.slug} post={p} />
+            ))}
+          </div>
+        </div>
       </section>
 
       <section aria-labelledby="process-title">
