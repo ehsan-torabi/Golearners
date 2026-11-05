@@ -10,11 +10,14 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { MediaField } from "@/components/admin/media-field";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   adminCreatePost,
   adminGetPost,
+  adminListSeries,
   adminUpdatePost,
   fetchBlogTaxonomy,
+  type AdminSeries,
   type PostPayload,
   type TaxonomyItem,
 } from "@/lib/admin";
@@ -25,6 +28,10 @@ interface PostForm {
   excerpt: string;
   body_html: string;
   category_id: string | null;
+  series_id: string | null;
+  series_part: string;
+  featured: boolean;
+  og_image_media_id: string | null;
   tag_titles: string[];
   reading_minutes: string;
   cover_media_id: string | null;
@@ -38,6 +45,10 @@ const EMPTY: PostForm = {
   excerpt: "",
   body_html: "",
   category_id: null,
+  series_id: null,
+  series_part: "",
+  featured: false,
+  og_image_media_id: null,
   tag_titles: [],
   reading_minutes: "",
   cover_media_id: null,
@@ -52,6 +63,7 @@ const EMPTY: PostForm = {
 export function PostEditor({ postId }: { postId: string | null }) {
   const [form, setForm] = React.useState<PostForm>(EMPTY);
   const [categories, setCategories] = React.useState<TaxonomyItem[]>([]);
+  const [series, setSeries] = React.useState<AdminSeries[]>([]);
   const [tagDraft, setTagDraft] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -69,6 +81,9 @@ export function PostEditor({ postId }: { postId: string | null }) {
     fetchBlogTaxonomy()
       .then((res) => setCategories(res.categories))
       .catch(() => setCategories([]));
+    adminListSeries()
+      .then((res) => setSeries(res.data ?? []))
+      .catch(() => setSeries([]));
     if (!postId) return;
     setLoading(true);
     adminGetPost(postId)
@@ -80,6 +95,10 @@ export function PostEditor({ postId }: { postId: string | null }) {
           excerpt: p.excerpt,
           body_html: p.body_html,
           category_id: p.category_id,
+          series_id: p.series_id ?? null,
+          series_part: p.series_part != null ? String(p.series_part) : "",
+          featured: p.featured ?? false,
+          og_image_media_id: p.og_image_media_id ?? null,
           tag_titles: p.tag_titles ?? [],
           reading_minutes: p.reading_minutes ? String(p.reading_minutes) : "",
           cover_media_id: p.cover_media_id,
@@ -112,6 +131,10 @@ export function PostEditor({ postId }: { postId: string | null }) {
       body_html: form.body_html,
       cover_media_id: form.cover_media_id,
       category_id: form.category_id,
+      series_id: form.series_id,
+      series_part: form.series_id && form.series_part.trim() ? Number(form.series_part) : null,
+      featured: form.featured,
+      og_image_media_id: form.og_image_media_id,
       meta_title: form.meta_title.trim() || null,
       meta_description: form.meta_description.trim() || null,
       tag_titles: form.tag_titles,
@@ -193,7 +216,40 @@ export function PostEditor({ postId }: { postId: string | null }) {
                     onChange={(e) => set("reading_minutes", e.target.value)}
                   />
                 </Field>
+                <Field label="سری مطالب" htmlFor="p-series" hint="برای مجموعه‌های چندقسمتی.">
+                  <Select
+                    id="p-series"
+                    value={form.series_id ?? ""}
+                    onChange={(e) => set("series_id", e.target.value || null)}
+                  >
+                    <option value="">بدون سری</option>
+                    {series.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.title}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                {form.series_id && (
+                  <Field label="شمارهٔ قسمت" htmlFor="p-series-part" hint="مثلاً ۰ برای مقدمه.">
+                    <Input
+                      id="p-series-part"
+                      dir="ltr"
+                      inputMode="numeric"
+                      value={form.series_part}
+                      onChange={(e) => set("series_part", e.target.value)}
+                    />
+                  </Field>
+                )}
               </div>
+              <label className="flex items-center gap-2 text-sm text-foreground">
+                <Checkbox
+                  checked={form.featured}
+                  onCheckedChange={(v) => set("featured", v === true)}
+                  aria-label="نمایش به‌عنوان مقالهٔ ویژه"
+                />
+                مقالهٔ ویژه (نمایش در صفحهٔ اصلی)
+              </label>
               <Field label="خلاصه" htmlFor="p-excerpt" hint="در فهرست وبلاگ و نتایج جست‌وجو نمایش داده می‌شود.">
                 <Textarea
                   id="p-excerpt"
@@ -267,6 +323,15 @@ export function PostEditor({ postId }: { postId: string | null }) {
                 value={form.cover_media_id}
                 onChange={(v) => set("cover_media_id", v)}
                 uploaderLabel="بارگذاری تصویر کاور"
+              />
+              <MediaField
+                id="p-og"
+                label="تصویر اشتراک‌گذاری (og:image)"
+                kind="image"
+                value={form.og_image_media_id}
+                onChange={(v) => set("og_image_media_id", v)}
+                uploaderLabel="بارگذاری تصویر اشتراک‌گذاری"
+                hint="در لینک ارسالی به تلگرام و شبکه‌های اجتماعی نمایش داده می‌شود؛ خالی = تصویر کاور."
               />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="عنوان سئو" htmlFor="p-meta-title" hint="خالی = عنوان نوشته.">

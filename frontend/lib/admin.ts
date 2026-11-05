@@ -174,6 +174,11 @@ export interface AdminPost {
   status: string;
   cover_media_id: string | null;
   category_id: string | null;
+  series_id: string | null;
+  series_part: number | null;
+  featured: boolean;
+  og_image_media_id: string | null;
+  views: number;
   reading_minutes: number;
   meta_title: string | null;
   meta_description: string | null;
@@ -191,6 +196,10 @@ export interface PostPayload {
   body_html: string;
   cover_media_id: string | null;
   category_id: string | null;
+  series_id: string | null;
+  series_part: number | null;
+  featured: boolean;
+  og_image_media_id: string | null;
   meta_title: string | null;
   meta_description: string | null;
   tag_titles: string[];
@@ -215,6 +224,75 @@ export async function adminDeletePost(id: string) {
 
 export async function adminPublishPost(id: string, publish: boolean) {
   return api(`/admin/posts/${id}/${publish ? "publish" : "unpublish"}`, { method: "POST" });
+}
+
+// ---------- blog series ----------
+
+export interface AdminSeries {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  created_at: string;
+  posts_count: number;
+}
+
+export function adminListSeries() {
+  return fetchAdmin<{ data: AdminSeries[] }>("/admin/series");
+}
+
+export interface SeriesPayload {
+  title: string;
+  slug: string;
+  description: string;
+}
+
+export async function adminCreateSeries(input: SeriesPayload) {
+  return api("/admin/series", { method: "POST", body: JSON.stringify(input) });
+}
+
+export async function adminUpdateSeries(id: string, input: SeriesPayload) {
+  return api(`/admin/series/${id}`, { method: "PUT", body: JSON.stringify(input) });
+}
+
+export async function adminDeleteSeries(id: string) {
+  return api(`/admin/series/${id}`, { method: "DELETE" });
+}
+
+// ---------- blog comments ----------
+
+export interface AdminComment {
+  id: string;
+  post_id: string;
+  post_slug: string;
+  post_title: string;
+  parent_id: string | null;
+  author_name: string;
+  author_email: string;
+  body: string;
+  status: string;
+  created_at: string;
+}
+
+export function adminListComments(params: { status?: string; q?: string; page?: number; per_page?: number }) {
+  const search = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== "") search.set(k, String(v));
+  }
+  const qs = search.toString();
+  return fetchAdmin<{
+    data: AdminComment[];
+    counts: Record<string, number>;
+    meta: { page: number; per_page: number; total: number };
+  }>(`/admin/comments${qs ? `?${qs}` : ""}`);
+}
+
+export async function adminCommentAction(id: string, action: "approve" | "unapprove" | "spam") {
+  return api(`/admin/comments/${id}/${action}`, { method: "POST" });
+}
+
+export async function adminDeleteComment(id: string) {
+  return api(`/admin/comments/${id}`, { method: "DELETE" });
 }
 
 // ---------- categories ----------

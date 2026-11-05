@@ -169,6 +169,8 @@ export default async function AdminPage({
             { href: "/admin/courses", label: "دوره‌ها" },
             { href: "/admin/categories", label: "دسته‌بندی‌ها" },
             { href: "/admin/posts", label: "نوشته‌های وبلاگ" },
+            { href: "/admin/series", label: "سری‌های مطالب" },
+            { href: "/admin/comments", label: "دیدگاه‌ها" },
             { href: "/admin/media", label: "رسانه‌ها" },
             { href: "/admin/orders", label: "سفارش‌ها" },
             { href: "/admin/coupons", label: "کدهای تخفیف" },

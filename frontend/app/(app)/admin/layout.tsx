@@ -21,6 +21,8 @@ const groups = [
       { href: "/admin/categories", label: "دسته‌بندی‌ها" },
       { href: "/admin/reviews", label: "نظرهای دانشجوها" },
       { href: "/admin/posts", label: "نوشته‌های وبلاگ" },
+      { href: "/admin/series", label: "سری‌های مطالب" },
+      { href: "/admin/comments", label: "دیدگاه‌ها" },
       { href: "/admin/media", label: "رسانه‌ها" },
       { href: "/admin/instructor", label: "پروفایل مدرس" },
     ],
