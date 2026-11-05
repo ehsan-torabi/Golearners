@@ -48,6 +48,18 @@ type PostFilter struct {
 	PerPage    int
 }
 
+// PublicPostFilter shapes the public blog list (widgets included).
+type PublicPostFilter struct {
+	CategorySlug string
+	TagSlug      string
+	Q            string
+	AuthorID     string // author user id
+	FeaturedOnly bool
+	Sort         string // "" newest | popular | random
+	Page         int
+	PerPage      int
+}
+
 // BlogPostRepo — blog article persistence.
 type BlogPostRepo interface {
 	Create(ctx context.Context, p *content.BlogPost) error
@@ -55,8 +67,12 @@ type BlogPostRepo interface {
 	BySlug(ctx context.Context, slug string) (*content.BlogPost, error)
 	Update(ctx context.Context, p *content.BlogPost) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	ListPublished(ctx context.Context, categorySlug, tagSlug, q string, page, perPage int) ([]*content.BlogPost, int, error)
+	ListPublic(ctx context.Context, f PublicPostFilter) ([]*content.BlogPost, int, error)
 	ListAdmin(ctx context.Context, f PostFilter) ([]*content.BlogPost, int, error)
+	// BySeries lists published parts of a series, ordered by part then date.
+	BySeries(ctx context.Context, seriesID uuid.UUID) ([]*content.BlogPost, error)
+	// IncrViews bumps the view counter once (public beacon).
+	IncrViews(ctx context.Context, postID uuid.UUID) error
 	// SlugExists checks slug uniqueness excluding excludeID.
 	SlugExists(ctx context.Context, slug string, excludeID uuid.UUID) (bool, error)
 	Publish(ctx context.Context, postID uuid.UUID) error
@@ -64,6 +80,41 @@ type BlogPostRepo interface {
 	SetTags(ctx context.Context, postID uuid.UUID, tagIDs []uuid.UUID) error
 	TagsOf(ctx context.Context, postID uuid.UUID) ([]*content.BlogTag, error)
 	Related(ctx context.Context, postID uuid.UUID, limit int) ([]*content.BlogPost, error)
+}
+
+// SeriesRepo — multi-part blog series.
+type SeriesRepo interface {
+	Create(ctx context.Context, s *content.BlogSeries) error
+	Update(ctx context.Context, s *content.BlogSeries) error
+	Delete(ctx context.Context, id uuid.UUID) error
+	ByID(ctx context.Context, id uuid.UUID) (*content.BlogSeries, error)
+	BySlug(ctx context.Context, slug string) (*content.BlogSeries, error)
+	List(ctx context.Context) ([]*content.BlogSeries, error)
+	SlugExists(ctx context.Context, slug string, excludeID uuid.UUID) (bool, error)
+	// PostsCount reports how many posts (any status) use the series.
+	PostsCount(ctx context.Context, id uuid.UUID) (int, error)
+}
+
+// CommentFilter shapes the admin moderation list.
+type CommentFilter struct {
+	Status  string
+	PostID  string
+	Q       string
+	Page    int
+	PerPage int
+}
+
+// CommentRepo — guest comment persistence and moderation.
+type CommentRepo interface {
+	Create(ctx context.Context, c *content.BlogComment) error
+	ByID(ctx context.Context, id uuid.UUID) (*content.BlogComment, error)
+	ListApprovedByPost(ctx context.Context, postID uuid.UUID) ([]*content.BlogComment, error)
+	ListAdmin(ctx context.Context, f CommentFilter) ([]*content.CommentRow, int, error)
+	// CountByStatus returns pending/approved/spam totals for badges.
+	CountByStatus(ctx context.Context) (map[string]int, error)
+	Approve(ctx context.Context, id uuid.UUID, actorID uuid.UUID) error
+	SetStatus(ctx context.Context, id uuid.UUID, s content.CommentStatus) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 // TaxonomyRepo is shared by blog categories and tags (same table shape).

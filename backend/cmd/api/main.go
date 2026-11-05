@@ -88,10 +88,13 @@ func run() error {
 		return err
 	}
 
-	throttler := ratelimit.New(rdb)
+	seriesRepo := repository.NewSeriesRepo(pool)
+	commentsRepo := repository.NewCommentRepo(pool)
+	usersRepo := repository.NewUserRepo(pool)
+throttler := ratelimit.New(rdb)
 	signer := jwt.New(cfg.JWTSecret, 15*time.Minute)
 	authSvc := idsvc.NewService(idsvc.Deps{
-		Users:    repository.NewUserRepo(pool),
+		Users:    usersRepo,
 		OTPs:     repository.NewOTPRepo(pool),
 		Tokens:   repository.NewTokenRepo(pool),
 		SMS:      buildSMS(cfg, log),
@@ -183,7 +186,8 @@ func run() error {
 		TX: txr, Sanitize: cleanHTML,
 	})
 	contentAdminSvc := contentadmin.NewService(contentadmin.Deps{
-		Posts: posts, Taxonomy: taxonomy, Pages: pages, FAQs: faqs,
+		Posts: posts, Series: seriesRepo, Comments: commentsRepo,
+		Taxonomy: taxonomy, Pages: pages, FAQs: faqs,
 		Testimonials: testimonials, Contact: contacts, Audit: audit,
 		TX: txr, Sanitize: cleanHTML,
 	})
@@ -204,7 +208,8 @@ func run() error {
 		Attachments: repository.NewAttachmentRepo(pool), Entitlements: entitlements,
 		Instructors: instructors, Media: repository.NewMediaRepo(pool), Audit: audit,
 		CoursesRepo: courses, Sections: sections, Lessons: lessons, Categories: categories,
-		Posts: posts, Taxonomy: taxonomy, Pages: pages, FAQs: faqs,
+		Posts: posts, Series: seriesRepo, Comments: commentsRepo, Users: usersRepo,
+		Taxonomy: taxonomy, Pages: pages, FAQs: faqs,
 		Testimonials: testimonials, Contacts: contacts,
 		Coupons: repository.NewCouponRepo(pool),
 	}

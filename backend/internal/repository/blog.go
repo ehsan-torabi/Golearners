@@ -20,14 +20,16 @@ type BlogPostRepo struct{ pool *pgxpool.Pool }
 func NewBlogPostRepo(pool *pgxpool.Pool) *BlogPostRepo { return &BlogPostRepo{pool: pool} }
 
 const postColumns = `p.id, p.slug, p.author_user_id, p.title, p.excerpt, p.body_html,
-	p.cover_media_id, p.category_id, p.status, p.published_at, p.reading_minutes,
+	p.cover_media_id, p.category_id, p.series_id, p.series_part, p.featured, p.views,
+	p.status, p.published_at, p.reading_minutes,
 	p.meta_title, p.meta_description, p.og_image_media_id, p.created_at, p.updated_at`
 
 func scanPost(row pgx.Row) (*content.BlogPost, error) {
 	p := &content.BlogPost{}
 	var status string
 	err := row.Scan(&p.ID, &p.Slug, &p.AuthorID, &p.Title, &p.Excerpt, &p.BodyHTML,
-		&p.CoverMediaID, &p.CategoryID, &status, &p.PublishedAt, &p.ReadingMinutes,
+		&p.CoverMediaID, &p.CategoryID, &p.SeriesID, &p.SeriesPart, &p.Featured, &p.Views,
+		&status, &p.PublishedAt, &p.ReadingMinutes,
 		&p.MetaTitle, &p.MetaDescription, &p.OGImageMediaID, &p.CreatedAt, &p.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ports.ErrNotFound
@@ -42,12 +44,12 @@ func scanPost(row pgx.Row) (*content.BlogPost, error) {
 func (r *BlogPostRepo) Create(ctx context.Context, p *content.BlogPost) error {
 	_, err := querierOf(ctx, r.pool).Exec(ctx,
 		`INSERT INTO blog_posts (id, slug, author_user_id, title, excerpt, body_html,
-		 cover_media_id, category_id, status, published_at, reading_minutes,
-		 meta_title, meta_description, og_image_media_id)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+		 cover_media_id, category_id, series_id, series_part, featured, status,
+		 published_at, reading_minutes, meta_title, meta_description, og_image_media_id)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
 		p.ID, p.Slug, p.AuthorID, p.Title, p.Excerpt, p.BodyHTML, p.CoverMediaID,
-		p.CategoryID, string(p.Status), p.PublishedAt, p.ReadingMinutes,
-		p.MetaTitle, p.MetaDescription, p.OGImageMediaID)
+		p.CategoryID, p.SeriesID, p.SeriesPart, p.Featured, string(p.Status),
+		p.PublishedAt, p.ReadingMinutes, p.MetaTitle, p.MetaDescription, p.OGImageMediaID)
 	if err != nil {
 		return fmt.Errorf("insert post: %w", err)
 	}
@@ -67,11 +69,13 @@ func (r *BlogPostRepo) BySlug(ctx context.Context, slug string) (*content.BlogPo
 func (r *BlogPostRepo) Update(ctx context.Context, p *content.BlogPost) error {
 	_, err := querierOf(ctx, r.pool).Exec(ctx,
 		`UPDATE blog_posts SET slug=$2, title=$3, excerpt=$4, body_html=$5,
-		 cover_media_id=$6, category_id=$7, reading_minutes=$8,
-		 meta_title=$9, meta_description=$10, og_image_media_id=$11, updated_at=now()
+		 cover_media_id=$6, category_id=$7, series_id=$8, series_part=$9, featured=$10,
+		 reading_minutes=$11, meta_title=$12, meta_description=$13,
+		 og_image_media_id=$14, updated_at=now()
 		 WHERE id=$1`,
 		p.ID, p.Slug, p.Title, p.Excerpt, p.BodyHTML, p.CoverMediaID, p.CategoryID,
-		p.ReadingMinutes, p.MetaTitle, p.MetaDescription, p.OGImageMediaID)
+		p.SeriesID, p.SeriesPart, p.Featured, p.ReadingMinutes, p.MetaTitle,
+		p.MetaDescription, p.OGImageMediaID)
 	if err != nil {
 		return fmt.Errorf("update post: %w", err)
 	}
@@ -112,28 +116,44 @@ func (r *BlogPostRepo) SlugExists(ctx context.Context, slug string, excludeID uu
 	return exists, err
 }
 
-func (r *BlogPostRepo) ListPublished(ctx context.Context, categorySlug, tagSlug, q string, page, perPage int) ([]*content.BlogPost, int, error) {
+func (r *BlogPostRepo) ListPublic(ctx context.Context, f ports.PublicPostFilter) ([]*content.BlogPost, int, error) {
 	where := []string{"p.status = 'published'"}
 	args := []any{}
-	if categorySlug != "" {
+	if f.CategorySlug != "" {
 		where = append(where, "EXISTS(SELECT 1 FROM blog_categories bc WHERE bc.id = p.category_id AND bc.slug = $"+fmt.Sprint(len(args)+1)+")")
-		args = append(args, categorySlug)
+		args = append(args, f.CategorySlug)
 	}
-	if tagSlug != "" {
+	if f.TagSlug != "" {
 		where = append(where, "EXISTS(SELECT 1 FROM blog_post_tags pt JOIN blog_tags t ON t.id = pt.tag_id WHERE pt.post_id = p.id AND t.slug = $"+fmt.Sprint(len(args)+1)+")")
-		args = append(args, tagSlug)
+		args = append(args, f.TagSlug)
 	}
-	if q != "" {
+	if f.Q != "" {
 		where = append(where, "(p.title ILIKE '%'||$"+fmt.Sprint(len(args)+1)+"||'%' OR p.excerpt ILIKE '%'||$"+fmt.Sprint(len(args)+1)+"||'%')")
-		args = append(args, q)
+		args = append(args, f.Q)
+	}
+	if f.AuthorID != "" {
+		where = append(where, "p.author_user_id = $"+fmt.Sprint(len(args)+1))
+		args = append(args, f.AuthorID)
+	}
+	if f.FeaturedOnly {
+		where = append(where, "p.featured")
 	}
 	whereSQL := joinAND(where)
+	order := "p.published_at DESC"
+	switch f.Sort {
+	case "featured":
+		order = "p.featured DESC, p.published_at DESC"
+	case "popular":
+		order = "p.views DESC, p.published_at DESC"
+	case "random":
+		order = "random()"
+	}
 	limit := "$" + fmt.Sprint(len(args)+1)
 	offset := "$" + fmt.Sprint(len(args)+2)
-	args = append(args, perPage, (page-1)*perPage)
+	args = append(args, f.PerPage, (f.Page-1)*f.PerPage)
 	rows, err := querierOf(ctx, r.pool).Query(ctx,
 		`SELECT `+postColumns+` FROM blog_posts p WHERE `+whereSQL+
-			` ORDER BY p.published_at DESC LIMIT `+limit+` OFFSET `+offset, args...)
+			` ORDER BY `+order+` LIMIT `+limit+` OFFSET `+offset, args...)
 	list, err := collectPosts(rows, err)
 	if err != nil {
 		return nil, 0, err
@@ -142,6 +162,24 @@ func (r *BlogPostRepo) ListPublished(ctx context.Context, categorySlug, tagSlug,
 	err = querierOf(ctx, r.pool).QueryRow(ctx,
 		`SELECT count(*) FROM blog_posts p WHERE `+whereSQL, args[:len(args)-2]...).Scan(&total)
 	return list, total, err
+}
+
+// BySeries lists published series parts, part-number first then date.
+func (r *BlogPostRepo) BySeries(ctx context.Context, seriesID uuid.UUID) ([]*content.BlogPost, error) {
+	rows, err := querierOf(ctx, r.pool).Query(ctx,
+		`SELECT `+postColumns+` FROM blog_posts p
+		 WHERE p.status='published' AND p.series_id = $1
+		 ORDER BY p.series_part NULLS LAST, p.published_at ASC`, seriesID)
+	return collectPosts(rows, err)
+}
+
+// IncrViews bumps the view counter once (public beacon).
+func (r *BlogPostRepo) IncrViews(ctx context.Context, postID uuid.UUID) error {
+	_, err := querierOf(ctx, r.pool).Exec(ctx, `UPDATE blog_posts SET views = views + 1 WHERE id=$1`, postID)
+	if err != nil {
+		return fmt.Errorf("incr post views: %w", err)
+	}
+	return nil
 }
 
 func joinAND(parts []string) string {

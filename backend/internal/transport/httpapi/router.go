@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	goredis "github.com/redis/go-redis/v9"
 
+	"golearn/backend/internal/domain/content"
 	"golearn/backend/internal/domain/identity"
 	"golearn/backend/internal/platform/config"
 	"golearn/backend/internal/platform/storage"
@@ -63,6 +64,9 @@ type App struct {
 	Entitlements ports.EntitlementRepo
 	StoragePort  ports.Storage
 	Posts        ports.BlogPostRepo
+	Series       ports.SeriesRepo
+	Comments     ports.CommentRepo
+	Users        ports.UserRepo
 	Taxonomy     ports.TaxonomyRepo
 	Pages        ports.PageRepo
 	FAQs         ports.FAQRepo
@@ -138,8 +142,13 @@ func NewRouter(a *App) http.Handler {
 		r.Get("/instructor", a.handleInstructor)
 		r.Get("/blog/posts", a.handleBlogList)
 		r.Get("/blog/posts/{slug}", a.handleBlogDetail)
+		r.With(a.rateLimit("post-view", 120, time.Minute)).Post("/blog/posts/{slug}/view", a.handleBlogView)
+		r.Get("/blog/posts/{slug}/comments", a.handleCommentList)
+		r.With(a.rateLimit("comment", 5, time.Hour)).Post("/blog/posts/{slug}/comments", a.handleCommentCreate)
 		r.Get("/blog/categories", a.handleBlogCategories)
 		r.Get("/blog/tags", a.handleBlogTags)
+		r.Get("/blog/series", a.handleBlogSeries)
+		r.Get("/blog/series/{slug}", a.handleBlogSeriesDetail)
 		r.Get("/pages/{slug}", a.handlePage)
 		r.Get("/faqs", a.handleFAQs)
 		r.Get("/testimonials", a.handleTestimonials)
@@ -193,6 +202,17 @@ func NewRouter(a *App) http.Handler {
 			r.Delete("/admin/posts/{id}", a.handleAdminPostDelete)
 			r.Post("/admin/posts/{id}/publish", a.handleAdminPostPublish(true))
 			r.Post("/admin/posts/{id}/unpublish", a.handleAdminPostPublish(false))
+
+			r.Get("/admin/series", a.handleAdminSeriesList)
+			r.Post("/admin/series", a.handleAdminSeriesCreate)
+			r.Put("/admin/series/{id}", a.handleAdminSeriesUpdate)
+			r.Delete("/admin/series/{id}", a.handleAdminSeriesDelete)
+
+			r.Get("/admin/comments", a.handleAdminCommentList)
+			r.Post("/admin/comments/{id}/approve", a.handleAdminCommentAction(content.CommentApproved))
+			r.Post("/admin/comments/{id}/unapprove", a.handleAdminCommentAction(content.CommentPending))
+			r.Post("/admin/comments/{id}/spam", a.handleAdminCommentAction(content.CommentSpam))
+			r.Delete("/admin/comments/{id}", a.handleAdminCommentDelete)
 
 			r.Post("/admin/pages", a.handleAdminPageUpsert)
 			r.Post("/admin/faqs", a.handleAdminFAQUpsert)

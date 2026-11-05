@@ -47,6 +47,10 @@ type BlogPost struct {
 	BodyHTML        string
 	CoverMediaID    *uuid.UUID
 	CategoryID      *uuid.UUID
+	SeriesID        *uuid.UUID
+	SeriesPart      *int
+	Featured        bool
+	Views           int
 	Status          PostStatus
 	PublishedAt     *time.Time
 	ReadingMinutes  int
@@ -55,6 +59,48 @@ type BlogPost struct {
 	OGImageMediaID  *uuid.UUID
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
+}
+
+// BlogSeries is an ordered multi-part article series (sisoog «شماره» model).
+type BlogSeries struct {
+	ID          uuid.UUID `json:"id"`
+	Slug        string    `json:"slug"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+// CommentStatus is the guest-comment moderation lifecycle.
+type CommentStatus string
+
+// Comment moderation statuses.
+const (
+	CommentPending  CommentStatus = "pending"
+	CommentApproved CommentStatus = "approved"
+	CommentSpam     CommentStatus = "spam"
+)
+
+// ValidCommentStatus reports whether a status is part of the moderation lifecycle.
+func ValidCommentStatus(s CommentStatus) bool {
+	switch s {
+	case CommentPending, CommentApproved, CommentSpam:
+		return true
+	}
+	return false
+}
+
+// BlogComment is a guest comment awaiting/approved for display. Email is
+// stored for the admin only and never serialized to the public API.
+type BlogComment struct {
+	ID          uuid.UUID
+	PostID      uuid.UUID
+	ParentID    *uuid.UUID
+	AuthorName  string
+	AuthorEmail string
+	Body        string
+	Status      CommentStatus
+	ApprovedBy  *uuid.UUID
+	CreatedAt   time.Time
 }
 
 // Taxonomy is a shared shape for blog categories and tags.
@@ -78,6 +124,13 @@ type BlogTag struct {
 	ID    uuid.UUID `json:"id"`
 	Slug  string    `json:"slug"`
 	Title string    `json:"title"`
+}
+
+// CommentRow is an admin moderation row: comment + its post labels.
+type CommentRow struct {
+	BlogComment
+	PostSlug  string
+	PostTitle string
 }
 
 // Page is an editable static page (about, privacy, ...).

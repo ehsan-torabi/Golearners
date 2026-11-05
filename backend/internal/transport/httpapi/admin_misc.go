@@ -147,7 +147,147 @@ func (a *App) handleAdminPostDetail(w http.ResponseWriter, r *http.Request) {
 		titles = append(titles, t.Title)
 	}
 	out["tag_titles"] = titles
+	out["og_image_media_id"] = p.OGImageMediaID
 	writeData(w, out)
+}
+
+// --- Admin: blog series ----------------------------------------------------
+
+// GET /api/v1/admin/series — with per-series post counts.
+func (a *App) handleAdminSeriesList(w http.ResponseWriter, r *http.Request) {
+	list, err := a.Series.List(r.Context())
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	items := make([]map[string]any, 0, len(list))
+	for _, s := range list {
+		n, _ := a.Series.PostsCount(r.Context(), s.ID)
+		items = append(items, map[string]any{
+			"id": s.ID, "slug": s.Slug, "title": s.Title,
+			"description": s.Description, "created_at": s.CreatedAt, "posts_count": n,
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": items})
+}
+
+// POST /api/v1/admin/series
+func (a *App) handleAdminSeriesCreate(w http.ResponseWriter, r *http.Request) {
+	var in contentadmin.SeriesInput
+	if err := decodeJSON(w, r, &in); err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	ser, err := a.Content.CreateSeries(r.Context(), contentActor(r), in)
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]any{"id": ser.ID, "slug": ser.Slug,
+		"title": ser.Title, "description": ser.Description, "created_at": ser.CreatedAt})
+}
+
+// PUT /api/v1/admin/series/{id}
+func (a *App) handleAdminSeriesUpdate(w http.ResponseWriter, r *http.Request) {
+	id, err := uuidParam(r, "id")
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	var in contentadmin.SeriesInput
+	if err := decodeJSON(w, r, &in); err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	ser, err := a.Content.UpdateSeries(r.Context(), contentActor(r), id, in)
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	writeData(w, map[string]any{"id": ser.ID, "slug": ser.Slug,
+		"title": ser.Title, "description": ser.Description})
+}
+
+// DELETE /api/v1/admin/series/{id}
+func (a *App) handleAdminSeriesDelete(w http.ResponseWriter, r *http.Request) {
+	id, err := uuidParam(r, "id")
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	if err := a.Content.DeleteSeries(r.Context(), contentActor(r), id); err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// --- Admin: comment moderation ----------------------------------------------
+
+// GET /api/v1/admin/comments — status/post/q filters + status counts for badges.
+func (a *App) handleAdminCommentList(w http.ResponseWriter, r *http.Request) {
+	page, perPage := pageParams(r)
+	list, total, err := a.Comments.ListAdmin(r.Context(), ports.CommentFilter{
+		Status: r.URL.Query().Get("status"), PostID: r.URL.Query().Get("post_id"),
+		Q: r.URL.Query().Get("q"), Page: page, PerPage: perPage,
+	})
+	if err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	items := make([]map[string]any, 0, len(list))
+	for _, row := range list {
+		items = append(items, map[string]any{
+			"id": row.ID, "post_id": row.PostID, "post_slug": row.PostSlug,
+			"post_title": row.PostTitle, "parent_id": row.ParentID,
+			"author_name": row.AuthorName, "author_email": row.AuthorEmail,
+			"body": row.Body, "status": row.Status, "created_at": row.CreatedAt,
+		})
+	}
+	counts, _ := a.Comments.CountByStatus(r.Context())
+	writeJSON(w, http.StatusOK, map[string]any{
+		"data": items, "counts": counts,
+		"meta": map[string]any{"page": page, "per_page": perPage, "total": total},
+	})
+}
+
+// POST /api/v1/admin/comments/{id}/approve | /unapprove | /spam
+func (a *App) handleAdminCommentAction(action content.CommentStatus) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := uuidParam(r, "id")
+		if err != nil {
+			a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+			return
+		}
+		actor := contentActor(r)
+		switch action {
+		case content.CommentApproved:
+			err = a.Content.ApproveComment(r.Context(), actor, id)
+		case content.CommentPending:
+			err = a.Content.UnapproveComment(r.Context(), actor, id)
+		case content.CommentSpam:
+			err = a.Content.MarkCommentSpam(r.Context(), actor, id)
+		}
+		if err != nil {
+			a.writeError(w, r, err)
+			return
+		}
+		writeData(w, map[string]any{"ok": true})
+	}
+}
+
+// DELETE /api/v1/admin/comments/{id}
+func (a *App) handleAdminCommentDelete(w http.ResponseWriter, r *http.Request) {
+	id, err := uuidParam(r, "id")
+	if err != nil {
+		a.writeError(w, r, apperr.ErrValidation.Wrap(err))
+		return
+	}
+	if err := a.Content.DeleteComment(r.Context(), contentActor(r), id); err != nil {
+		a.writeError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // POST /api/v1/admin/pages — upsert by slug
