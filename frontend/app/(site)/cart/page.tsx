@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/section-head";
 import { TrashIcon } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useSession } from "@/components/use-session";
+import { useRouter } from "next/navigation";
 import { ApiError, api, formatTomanFromRial } from "@/lib/api";
 import { PayGateways, startPayment, type Gateway } from "@/components/site/pay-gateways";
 
@@ -26,6 +27,7 @@ interface CartRow {
 export default function CartPage() {
   const { items, hydrated, remove, clear } = useCart();
   const { status, session } = useSession();
+  const router = useRouter();
   const [rows, setRows] = React.useState<CartRow[]>([]);
   const [refreshing, setRefreshing] = React.useState(true);
   const [coupon, setCoupon] = React.useState("");
@@ -63,6 +65,8 @@ export default function CartPage() {
   const payable = rows.filter((r) => !r.owned && !r.missing);
   const payableIds = payable.map((r) => r.course_id).join(",");
   const subtotal = payable.reduce((sum, r) => sum + r.price_rial, 0);
+  // a 100% coupon (or free cart) means no gateway: claim the course for free
+  const isFree = payable.length > 0 && subtotal - discount <= 0;
 
   // a stale preview must not survive a cart change
   React.useEffect(() => {
@@ -85,7 +89,20 @@ export default function CartPage() {
     } catch (err) {
       setDiscount(0);
       setAppliedCode("");
-      setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
+      const apiErr = err instanceof ApiError ? err : null;
+      // map backend coupon codes to precise Persian hints
+      const hints: Record<string, string> = {
+        COUPON_NOT_ACTIVE: "این کد تخفیف غیرفعال است یا خارج از بازه معتبر است.",
+        COUPON_EXPIRED: "این کد تخفیف منقضی شده است.",
+        COUPON_EXHAUSTED: "سقف استفاده از این کد تخفیف تمام شده است.",
+        COUPON_PER_USER_LIMIT: "شما قبلاً از این کد تخفیف استفاده کرده‌اید.",
+        COUPON_MIN_AMOUNT: "مبلغ سبد خرید برای اعمال این کد تخفیف کافی نیست.",
+        COUPON_SCOPE_MISMATCH: "این کد تخفیف فقط برای یک دوره خاص قابل استفاده است.",
+        COUPON_FIRST_PURCHASE: "این کد تخفیف فقط برای خرید اولین دوره قابل استفاده است.",
+        COUPON_ALREADY_USED: "این کد تخفیف قبلاً برای این سفارش اعمال شده است.",
+        COUPON_VALUE_INVALID: "مقدار کد تخفیف نامعتبر است.",
+      };
+      setError(apiErr ? (hints[apiErr.code] ?? apiErr.message) : "خطا در برقراری ارتباط");
     } finally {
       setBusy(false);
     }
@@ -93,6 +110,10 @@ export default function CartPage() {
 
   async function pay(gw: Gateway) {
     if (payable.length === 0) return;
+    if (isFree) {
+      await getFree();
+      return;
+    }
     setError("");
     setPaying(gw);
     try {
@@ -114,6 +135,30 @@ export default function CartPage() {
         return;
       }
       setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
+    }
+  }
+
+  // claim a free order (100% coupon): backend marks it paid, no gateway
+  async function getFree() {
+    if (payable.length === 0) return;
+    setError("");
+    setBusy(true);
+    try {
+      const o = await api<{ id: string; status: string }>("/checkout", {
+        method: "POST",
+        body: JSON.stringify({
+          course_ids: payable.map((r) => r.course_id),
+          coupon_code: appliedCode || undefined,
+        }),
+      });
+      clear();
+      setBusy(false);
+      // order is already paid server-side; go to dashboard
+      void router.push("/dashboard");
+    } catch (err) {
+      setBusy(false);
+      const apiErr = err instanceof ApiError ? err : null;
+      setError(apiErr ? apiErr.message : "خطا در برقراری ارتباط");
     }
   }
 
@@ -192,7 +237,7 @@ export default function CartPage() {
           )}
           <div className="flex items-baseline justify-between border-t border-line pt-3">
             <span className="font-semibold">قابل پرداخت</span>
-            <span className="font-semibold text-xl">{formatTomanFromRial(Math.max(0, subtotal - discount))}</span>
+            <span className="font-semibold text-xl">{isFree ? "رایگان" : formatTomanFromRial(Math.max(0, subtotal - discount))}</span>
           </div>
         </div>
 
@@ -219,6 +264,26 @@ export default function CartPage() {
           <p className="mt-5 rounded-field bg-muted px-4 py-3 text-sm leading-7 text-muted-foreground">
             همهٔ دوره‌های سبد خریده شده یا در دسترس نیستند؛ برای خرید دوره‌ای جدید سراغ «دوره‌ها» برو.
           </p>
+        ) : isFree ? (
+          <div className="mt-6 rounded-field bg-success-bg p-5 text-center">
+            <p className="text-sm leading-7 text-success-text">
+             discount ۱۰۰٪ اعمال شد؛ این دوره را به‌صورت رایگان دریافت می‌کنید.
+            </p>
+            <Button
+              className="mt-4"
+              size="lg"
+              onClick={() => void getFree()}
+              loading={busy}
+              disabled={status !== "ready" || !session}
+            >
+              دریافت دوره رایگان
+            </Button>
+            {status !== "ready" || !session ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                برای دریافت ابتدا وارد حساب شوید.
+              </p>
+            ) : null}
+          </div>
         ) : status === "ready" && !session ? (
           <div className="mt-6 rounded-field bg-muted p-5 text-center">
             <p className="text-sm leading-7 text-muted-foreground">

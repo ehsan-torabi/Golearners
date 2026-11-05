@@ -61,6 +61,12 @@ interface CouponRow {
   value: number;
   max_uses: number | null;
   per_user_limit: number | null;
+  min_amount_rial: number | null;
+  discount_cap_rial: number | null;
+  first_purchase_only: boolean | null;
+  applies_to_sale_items: boolean | null;
+  uses: number | null;
+  course_scope: string | null;
   status: string;
   starts_at: string | null;
   ends_at: string | null;
@@ -82,6 +88,13 @@ export default function AdminCouponsPage() {
     value: "",
     max_uses: "",
     per_user_limit: "1",
+    min_amount_rial: "",
+    discount_cap_rial: "",
+    first_purchase_only: false,
+    applies_to_sale_items: false,
+    starts_at: "",
+    ends_at: "",
+    course_scope: "",
   });
 
   const list = useAdminList<CouponRow>({
@@ -107,10 +120,21 @@ export default function AdminCouponsPage() {
           value: Number(form.value),
           max_uses: form.max_uses ? Number(form.max_uses) : null,
           per_user_limit: form.per_user_limit ? Number(form.per_user_limit) : null,
-          status: "active", // the coupons table check constraint knows active | disabled
+          min_amount_rial: form.min_amount_rial ? Number(form.min_amount_rial) : null,
+          discount_cap_rial: form.discount_cap_rial ? Number(form.discount_cap_rial) : null,
+          first_purchase_only: form.first_purchase_only,
+          applies_to_sale_items: form.applies_to_sale_items,
+          starts_at: form.starts_at || null,
+          ends_at: form.ends_at || null,
+          course_scope: form.course_scope || null,
+          status: "active",
         }),
       });
-      setForm({ code: "", type: "percent", value: "", max_uses: "", per_user_limit: "1" });
+      setForm({
+        code: "", type: "percent", value: "", max_uses: "", per_user_limit: "1",
+        min_amount_rial: "", discount_cap_rial: "", first_purchase_only: false,
+        applies_to_sale_items: false, starts_at: "", ends_at: "", course_scope: "",
+      });
       setShowForm(false);
       await list.reload();
     } catch (err) {
@@ -124,17 +148,24 @@ export default function AdminCouponsPage() {
     setError("");
     setBusy(coupon.id);
     try {
-      await api(`/admin/coupons/${coupon.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          code: coupon.code,
-          type: coupon.type,
-          value: coupon.value,
-          max_uses: coupon.max_uses,
-          per_user_limit: coupon.per_user_limit,
-          status: coupon.status === "active" ? "disabled" : "active",
-        }),
-      });
+          await api(`/admin/coupons/${coupon.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({
+              code: coupon.code,
+              type: coupon.type,
+              value: coupon.value,
+              max_uses: coupon.max_uses,
+              per_user_limit: coupon.per_user_limit,
+              min_amount_rial: coupon.min_amount_rial,
+              discount_cap_rial: coupon.discount_cap_rial,
+              first_purchase_only: coupon.first_purchase_only,
+              applies_to_sale_items: coupon.applies_to_sale_items,
+              starts_at: coupon.starts_at,
+              ends_at: coupon.ends_at,
+              course_scope: coupon.course_scope,
+              status: coupon.status === "active" ? "disabled" : "active",
+            }),
+          });
       await list.reload();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "تغییر وضعیت کد ناموفق بود");
@@ -235,6 +266,80 @@ export default function AdminCouponsPage() {
                 onChange={(e) => setForm({ ...form, max_uses: e.target.value })}
               />
             </Field>
+            <Field label="سقف هر کاربر" htmlFor="c-per-user">
+              <Input
+                id="c-per-user"
+                dir="ltr"
+                inputMode="numeric"
+                placeholder="نامحدود"
+                value={form.per_user_limit}
+                onChange={(e) => setForm({ ...form, per_user_limit: e.target.value })}
+              />
+            </Field>
+            <Field label="حداقل مبلغ سبد (ریال)" htmlFor="c-min" hint="کد فقط وقتی اعمال شود که سبد به این مقدار برسد.">
+              <Input
+                id="c-min"
+                dir="ltr"
+                inputMode="numeric"
+                placeholder="بدون سقف"
+                value={form.min_amount_rial}
+                onChange={(e) => setForm({ ...form, min_amount_rial: e.target.value })}
+              />
+            </Field>
+            <Field label="سقف تخفیف (ریال، فقط درصدی)" htmlFor="c-cap" hint="بیشترین مبلغی که کد درصدی می‌تواند بکند.">
+              <Input
+                id="c-cap"
+                dir="ltr"
+                inputMode="numeric"
+                placeholder="بدون سقف"
+                value={form.discount_cap_rial}
+                onChange={(e) => setForm({ ...form, discount_cap_rial: e.target.value })}
+              />
+            </Field>
+            <Field label="از تاریخ" htmlFor="c-starts">
+              <Input
+                id="c-starts"
+                type="date"
+                value={form.starts_at}
+                onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
+                placeholder="شروع معتبری از..."
+              />
+            </Field>
+            <Field label="تا تاریخ" htmlFor="c-ends">
+              <Input
+                id="c-ends"
+                type="date"
+                value={form.ends_at}
+                onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
+                placeholder="انقضا..."
+              />
+            </Field>
+            <div className="sm:col-span-2 grid grid-cols-2 gap-4">
+              <Field label="فقط برای خرید اولین دوره" className="flex items-center gap-2 p-0">
+                <input
+                  type="checkbox"
+                  checked={form.first_purchase_only}
+                  onChange={(e) =>
+                    setForm({ ...form, first_purchase_only: e.target.checked })
+                  }
+                />
+                <span className="text-sm text-muted-foreground">
+                  کاربر نمی‌تواند اگر قبلاً هرکدام از دوره‌های سبد را داشته باشد.
+                </span>
+              </Field>
+              <Field label="اعتبار روی دوره‌های تخفیف‌یافته" className="flex items-center gap-2 p-0">
+                <input
+                  type="checkbox"
+                  checked={form.applies_to_sale_items}
+                  onChange={(e) =>
+                    setForm({ ...form, applies_to_sale_items: e.target.checked })
+                  }
+                />
+                <span className="text-sm text-muted-foreground">
+                  کد روی دوره‌هایی که قیمت انگیزه دارند هم قابل اعمال است.
+                </span>
+              </Field>
+            </div>
             <div className="sm:col-span-2">
               <Button type="submit" loading={saving}>
                 ساخت کد تخفیف
@@ -283,6 +388,7 @@ export default function AdminCouponsPage() {
                 <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">کد</TableHead>
                 <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">مقدار</TableHead>
                 <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">سقف استفاده</TableHead>
+                <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">استفاده شده</TableHead>
                 <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">بازه</TableHead>
                 <TableHead className="text-start text-[11px] font-medium tracking-wide text-muted-foreground">وضعیت</TableHead>
                 <TableHead className="w-20" />
@@ -315,6 +421,9 @@ export default function AdminCouponsPage() {
                       </TableCell>
                       <TableCell className="text-start text-muted-foreground">
                         {c.max_uses ?? "نامحدود"}
+                      </TableCell>
+                      <TableCell className="text-start text-muted-foreground">
+                        {c.uses ?? "—"}
                       </TableCell>
                       <TableCell className="text-start text-muted-foreground">
                         {c.ends_at ? formatJalali(new Date(c.ends_at)) : "بدون انقضا"}
@@ -354,7 +463,7 @@ export default function AdminCouponsPage() {
                       </TableCell>
                     </TableRow>
                     {open && (
-                      <ListDetailRow colSpan={6}>
+                      <ListDetailRow colSpan={7}>
                         <DetailGrid>
                           <DetailItem label="نوع">
                             {c.type === "percent" ? "درصدی" : "مبلغ ثابت"}
@@ -364,6 +473,7 @@ export default function AdminCouponsPage() {
                           </DetailItem>
                           <DetailItem label="سقف کل">{c.max_uses ?? "نامحدود"}</DetailItem>
                           <DetailItem label="سقف هر کاربر">{c.per_user_limit ?? "نامحدود"}</DetailItem>
+                          <DetailItem label="استفاده شده">{c.uses ?? 0}</DetailItem>
                           <DetailItem label="شروع">
                             {c.starts_at ? formatJalali(new Date(c.starts_at)) : "—"}
                           </DetailItem>

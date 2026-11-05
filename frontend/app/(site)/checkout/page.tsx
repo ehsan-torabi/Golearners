@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
@@ -36,6 +36,25 @@ function CheckoutInner() {
   const [coursePrice, setCoursePrice] = React.useState(0);
   const [courseId, setCourseId] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+  const router = useRouter();
+
+  // precise Persian hints per backend coupon code
+  const COUPON_HINTS: Record<string, string> = {
+    COUPON_NOT_ACTIVE: "این کد تخفیف غیرفعال است یا خارج از بازه معتبر است.",
+    COUPON_EXPIRED: "این کد تخفیف منقضی شده است.",
+    COUPON_EXHAUSTED: "سقف استفاده از این کد تخفیف تمام شده است.",
+    COUPON_PER_USER_LIMIT: "شما قبلاً از این کد تخفیف استفاده کرده‌اید.",
+    COUPON_MIN_AMOUNT: "مبلغ سبد خرید برای اعمال این کد تخفیف کافی نیست.",
+    COUPON_SCOPE_MISMATCH: "این کد تخفیف فقط برای یک دوره خاص قابل استفاده است.",
+    COUPON_FIRST_PURCHASE: "این کد تخفیف فقط برای خرید اولین دوره قابل استفاده است.",
+    COUPON_ALREADY_USED: "این کد تخفیف قبلاً برای این سفارش اعمال شده است.",
+    COUPON_VALUE_INVALID: "مقدار کد تخفیف نامعتبر است.",
+  };
+
+  function couponError(err: unknown): string {
+    const apiErr = err instanceof ApiError ? err : null;
+    return apiErr ? (COUPON_HINTS[apiErr.code] ?? apiErr.message) : "خطا در برقراری ارتباط";
+  }
 
   React.useEffect(() => {
     setLoading(true);
@@ -103,7 +122,7 @@ function CheckoutInner() {
       setDiscount(preview.discount_rial);
     } catch (err) {
       setDiscount(0);
-      setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
+      setError(couponError(err));
     } finally {
       setBusy(false);
     }
@@ -115,6 +134,17 @@ function CheckoutInner() {
     try {
       let orderId = order?.id ?? "";
       if (mode === "course") {
+        const isFree = coursePrice - discount <= 0;
+        if (isFree) {
+          // 100% coupon: backend marks the order paid, no gateway redirect
+          const o = await api<{ id: string; status: string }>("/checkout", {
+            method: "POST",
+            body: JSON.stringify({ course_id: courseId, coupon_code: coupon.trim() || undefined }),
+          });
+          setPaying(null);
+          await router.push("/dashboard");
+          return;
+        }
         const o = await api<{ id: string }>("/checkout", {
           method: "POST",
           body: JSON.stringify({ course_id: courseId, coupon_code: coupon.trim() || undefined }),
@@ -128,7 +158,7 @@ function CheckoutInner() {
         setOwned(true);
         return;
       }
-      setError(err instanceof ApiError ? err.message : "خطا در برقراری ارتباط");
+      setError(couponError(err));
     }
   }
 

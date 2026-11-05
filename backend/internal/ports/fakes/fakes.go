@@ -825,6 +825,20 @@ func (f *CouponRepo) Redeem(_ context.Context, couponID, userID, _ uuid.UUID) er
 	return nil
 }
 
+func (f *CouponRepo) ReleaseRedemption(_ context.Context, couponID, userID, _ uuid.UUID) error {
+	f.mu.Lock()
+	delete(f.perUsr, [2]uuid.UUID{couponID, userID})
+	if f.uses[couponID] > 0 {
+		f.uses[couponID]--
+	}
+	f.mu.Unlock()
+	return nil
+}
+
+func (f *CouponRepo) ListWithUses(context.Context, string, int, int) ([]*commerce.Coupon, int, error) {
+	return nil, 0, nil
+}
+
 type PaymentRepo struct {
 	mu       sync.Mutex
 	byRef    map[string]*commerce.Payment
