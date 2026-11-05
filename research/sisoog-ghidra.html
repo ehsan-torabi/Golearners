@@ -1,0 +1,627 @@
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>سری مهندسی معکوس گیدرا — سیسوگ (ذخیره‌شده برای تحلیل)</title></head><body><article data-id="55433"><h1>مهندسی معکوس، یادگیری گیدرا + دانلود آخرین نسخه Ghidra</h1><p>تاریخ: 2021-10-13T13:11:02 | آخرین ویرایش: 2026-11-04T16:55:38 | لینک: https://sisoog.com/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87%d9%94-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra/</p><h2 style="text-align: justify;">مهندسی معکوس، یادگیری گیدرا و ساختار اون (عملی-تئوری)</h2>
+<p style="text-align: justify;">هدف این بخش آشنایی شما با گیدرا و تاریخچهٔ اون، ساختار پروژهٔ گیدرا، توسعه ی افزونه ها و اسکریپت های اون و مشارکت به عنوان یک نرم‌افزار متن بازه.</p>
+<h2 style="text-align: justify;">چه چیزهایی رو توی این بخش قراره یاد بگیریم؟</h2>
+<ol style="text-align: justify;">
+<li>تاریخچه و مقایسه</li>
+<li>اتوماسیون مهندسی معکوس با گیدرا</li>
+<li>دیباگ کردن با گیدرا</li>
+<li>افزونه های گیدرا</li>
+</ol>
+<p style="text-align: justify;">بسیار خوب. بریم که قسمت اول رو شروع کنیم&#8230;</p>
+<p style="text-align: justify;"><div class="su-note"  style="border-color:#e4e0d2;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;"><div class="su-note-inner su-u-clearfix su-u-trim" style="background-color:#fefaec;border-color:#ffffff;color:#000000;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;">
+<p style="text-align: justify;">در قسمت قبل، منابع و ابزار های مهم در رابطه با این آموزش ها معرفی شد. اگر اولین بار است که این مقاله را می بینید، بهتر است از <a href="https://sisoog.com/2021/10/04/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87-%db%8c-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra/" target="_blank" rel="noopener">قسمت صفر</a> شروع کنید!</p>
+<p style="text-align: justify;"></div></div>
+<h3 style="text-align: justify;">فصل 1 &#8211; آشنایی با گیدرا</h3>
+<p style="text-align: justify;">توی این فصل هدفمون صرفاً آشناییه، قبل اینکه شروع به استفاده از گیدرا کنیم با تاریخچهٔ مختصرش آشنا میشیم و نصبش می‌کنیم. احتمالاً برای همهٔ شمایی که این مطلب رو میخونید نصب یه نسخهٔ عرضه‌شدهٔ نرم‌افزار اصلاً پیچیده نباشه ولی گفتیم شاید بخواید بیشتر با گیدرا آشنا بشید و ارتباطتون رو باهاش عمیق‌تر کنید. البته میتونید خودتون گیدرا رو از سورسش دانلود کنید و کامپایل کنید.</p>
+<p style="text-align: justify;">از اونجایی که سورس کد گیدرا در دسترسه و قابل بهبود و توسعست، احتمالاً دوست دارید بدونید که ساختارش چطوریه و هر بخش کد چیکار میکنه و &#8230; . خیلی عالیه که میشه کشف کرد که چه کارای زیاد و عجیب‌وغریبی میشه با گیدرا انجام داد.</p>
+<p style="text-align: justify;">ضمناً اینکه بتونیم کاربردهای اصلی گیدرا رو از دید یه مهندس معکوس ببینیم هم خیلی جالبه. ویژگی‌های گیدرا انقدر جالب و زیادن که وقتی بشناسینشون و یادشون بگیرید عاشق گیدرا میشید.</p>
+<p style="text-align: justify;">توی این فصل موارد زیر رو پوشش میدیم:</p>
+<p style="text-align: justify;"><div class="su-list" style="margin-right:10px">
+<ul style="text-align: justify;">
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> صندوق 7 ویکی‌لیکس</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> گیدرا در مقابل رقبا</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> مرور گیدرا</li>
+</ul>
+<p style="text-align: justify;"></div>
+<h3 style="text-align: justify;">منابع تکنیکال موردنیاز</h3>
+<p style="text-align: justify;">توی این فصل مثال عملی نداریم ولی میتونید <a href="https://www.youtube.com/watch?v=6SSX32BmMgI" target="_blank" rel="noopener">این ویدیو</a> رو توی یوتیوب ببینید و بد نیست اگر سعی کنید تکرارش کنید (البته بهتره ادامهٔ این پست رو اول بخونید و بعد ببینیدش و سعی کنید تکرارش کنید).</p>
+<h3 style="text-align: justify;">صندوق 7 ویکی‌لیکس</h3>
+<p style="text-align: justify;">در تاریخ 7 مارچ 2017، ویکی‌لیکس شروع به نشر صندوق 7 (Vault 7) کرد؛ این نشر اطلاعات تبدیل به بزرگ‌ترین افشای اسناد محرمانهٔ سازمان اطلاعات مرکزی (CIA) آمریکا شد. این افشای اسناد شامل اسرار سلاح‌های سایبری و تکنیک‌های جاسوسی بود که در 24 قسمت با نام‌های زیر قرار داشتند:</p>
+<p style="text-align: justify;"><div class="su-note"  style="border-color:#e4e0d2;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;"><div class="su-note-inner su-u-clearfix su-u-trim" style="background-color:#fefaec;border-color:#ffffff;color:#000000;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;">
+<p style="text-align: justify;"><strong>Year Zero</strong>, Dark Matter<br />
+, Marble, Grasshopper, HIVE, Weeping Angel,<br />
+Scribbles, Archimedes, AfterMidnight and Assassin,<br />
+Athena, Pandemic, Cherry Blossom, Brutal Kangaroo,<br />
+Elsa, OutlawCountry, BothanSpy, Highrise,<br />
+UCL/Raytheon, Imperial, Dumbo, CouchPotato,<br />
+ExpressLane, Angelfire, and Protego.</p>
+<p style="text-align: justify;"></div></div>
+<p style="text-align: justify;"> </p>
+<blockquote>
+<p>یک چیزی که خیلی آزار دهندست این وسط اینه که Year Zero شامل معرفی ابزار و اکسپلویت های Zero-Day بود و این نشون میده اون برهه CIA چقدر ابزار مختلفی برای حملات روز صفر داشته و چقدر از حفره‌های امنیتی روز صفر آگاه بوده!</p>
+</blockquote>
+<p style="text-align: justify;"><a href="https://fa.wikipedia.org/wiki/%D8%AD%D9%85%D9%84%D9%87_%D8%B1%D9%88%D8%B2_%D8%B5%D9%81%D8%B1" target="_blank" rel="noopener"><strong>روز صفر اصطلاحا به چه معناست؟</strong></a></p>
+<p style="text-align: justify;">حملهٔ صفر روزه یا حملهٔ روز صفر (به انگلیسی: Zero-day attack) یک حمله یا تهدید رایانه‌ای است که از یک آسیب‌پذیری در یک نرم‌افزار کاربردی که تا پیش از آن ناشناخته بوده‌است بهره‌جویی می‌کند.</p>
+<p style="text-align: justify;"><strong>این بدان معناست که توسعه‌دهندگان برای رفع آسیب‌پذیری صفر روز فرصت داشته‌اند.</strong></p>
+<p style="text-align: justify;">پیش از آنکه توسعه‌دهندهٔ نرم‌افزار هدف از آسیب‌پذیری آگاهی یابد، اکسپلویت صفرروزه (نرم‌افزاری که از یک حفرهٔ امنیتی برای اعمال یک حمله استفاده می‌کند) توسط حمله‌کنندگان استفاده یا به اشتراک گذاشته می‌شود.</p>
+<p style="text-align: justify;">در همین حال مایکل وینسنت هایدن که مدیر CIA در سال‌های 2006 تا 2009 و مدیر NSA در سال‌های 1999 تا 2005 بود، به‌عنوان سخنگوی سازمان‌های امنیت اطلاعات، نه اعتبار این افشای بزرگ را تأیید و نه رد کرد، این اطلاعات توسط مقامات ارشد NSA به‌صورت ناشناس افشا شده بود.</p>
+<p style="text-align: justify;">وجود گیدرا در بخش اول صندوق 7: سال صفر افشا شد. این بخش اول شامل افشای بزرگی از داکیومنت‌ها و فایل‌های دزدیده شده از مرکز اطلاعات سایبری CIA در لنگلی &#8211; ویرجینیا بود. محتوای افشا شده در این بخش دربارهٔ راه‌حل بدافزاری CIA بود که هدف آن‌ها توسعه و استفاده از حملات zero-day بود و اینکه چطور آیفون‌های اپل، سیسام عامل اندروید و ویندوز و حتی تلویزیون‌های سامسونگ، چگونه پنهانی به میکروفن تبدیل می‌شوند.</p>
+<p style="text-align: justify;">در این بخش 3 بار نام گیدرا وجود داشت (لینکش) که چیزای مختلفی رو نشون می‌داد؛ مثلاً چطوری نصبش کنید، راهنمای استفادهٔ مرحله‌به‌مرحله (با اسکرین شات ها) اینکه چطور میشه کش یه کرنل 64-بیتی رو به صورت دستی آنالیز کرد و آخرین نسخه ی گیدرا اون موقع سخهٔ <strong>7.0.2</strong> بود!</p>
+<h3 style="text-align: justify;">انتشار توسط NSA</h3>
+<p style="text-align: justify;">در کنفرانس RSA در سال 2019 در سانفرانسیسکو، راب جویس، مشاور ارشد امنیت سایبری NSA، در بخش &#8220;<strong>مدرک رایگان ابزار مهندسی معکوس</strong><strong> NSA </strong><strong>رو بگیر</strong>&#8220;، ویژگی‌های منحصر بفرد و توانایی‌های گیدرا رو توضیح داد و همچنین برنامهٔ گیدرا منتشر شد.</p>
+<p style="text-align: justify;">در این جلسه (Get your free NSA reverse engineering)، یک سری از ویژگی‌ها توضیح داده شدند:</p>
+<p style="text-align: justify;"><div class="su-list" style="margin-right:10px">
+<ul style="text-align: justify;">
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> همکاری تیمی روی یک پروژه</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> توانایی توسعه و گسترش استفاده از گیدرا</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> مدل <strong><a href="https://sisoog.com/cpu-%DA%86%DB%8C%D8%B3%D8%AA-%D9%88-%DA%86%D9%87-%DA%A9%D8%A7%D8%B1%DB%8C-%D8%A7%D9%86%D8%AC%D8%A7%D9%85-%D9%85%DB%8C%D8%AF%D9%87%D8%AF/">پردازنده عمومی</a></strong>(به نام <strong>SLEIGH</strong>)</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> دو مد کاری: تعاملی و بدون رابط کاربری</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> ابزار قدرتمند آنالیز ویژگی گیدرا</li>
+</ul>
+<p style="text-align: justify;"></div>
+<p style="text-align: justify;">نهایتا در 4 آپریل 2019، NSA سورس کد گیدرا رو روی گیت هاب منتشر کرد. همینطور وبسایت گیدرا هم راه افتاد و میتونید از اونجا هم نسخهٔ منتشر شدهٔ گیدرا که آمادهٔ استفادست رو هم دریافت کنید. اولین ورژن منتشر شدهٔ گیدرا روی وب‌سایت ورژن 9.0 بود. ممکنه نیاز به فیلترشکن برای دانلود گیدرا از وب‌سایت داشته باشید.</p>
+<p style="text-align: justify;">متأسفانه بعد از انتشار نسخهٔ عمومی گیدرا، چند ساعت بعد، اولین حفرهٔ امنیتی گیدرا توسط Matthew Hickey منتشر شد. ایشون این رو توییت کرد:</p>
+<blockquote>
+<p style="text-align: center;">Ghidra opens up JDWP in debug mode listening on<br />
+port 18001, you can use it to execute code remotely<br />
+(Man facepalming). to fix change line 150 of<br />
+support/launch.sh from * to 127.0.0.1<br />
+https://github.com/hackerhouseopensource/<br />
+exploits/blob/master/jdwp-exploit.txt.</p>
+</blockquote>
+<p style="text-align: justify;">بعدازاین اتفاق همه به NSA و گیدرا مشکوک شدن؛ البته بعد از یادآوری تجربهٔ صندوق 7 و توانایی NSA برای خرابکاری‌های سایبری همه متوجه شدن که NSA واقعاً به نرم‌افزار خودش (گیدرا) برای هک کردن کاربراش به‌اضافه کردن در پشتی (backdoor) نیاز نداره. شما میتونید با خیال راحت از گیدرا استفاده کنید و احتمالاً NSA فقط این حفره رو ایجاد کرد که آمادگی همکاریش در یک پروژهٔ متن‌باز و قدرت زیادش رو به همه یادآوری کنه، به‌خصوص که افشای اطلاعاتی ویکی‌لیکس و  ادوارد اسنودن حسابی به اعتبارش خدشه وارد کرده بود.</p>
+<h3 style="text-align: justify;">گیدرا در مقابل دیگر رقبا و IDA</h3>
+<p style="text-align: justify;">حتی اگر استاد ابزار دیگه ی مهندسی معکوس هستید (مثل IDA،Binary Ninja یا اونی که موردعلاقهٔ ماست Radare2) دلایل زیادی هست که بهتره گیدرا رو یاد بگیرید. هیچ کدوم از ابزار مهندسی معکوس بهترین گزینه نیستن و هرکدوم یه نقاط ضعف و قوتی دارن. گاهاً حتی این ابزار باهم قابل‌مقایسه نیستن ولی می‌بینیم که توسعه‌دهنده هاشون از همدیگه یاد میگیرن و ویژگی‌های مختلفی به برنامهٔ خودشون اضافه میکنن. مثلاً گیدرا از اولین نسخهٔ عمومیش undo داشت و واقعاً کارآمد بود، رقیب گیدرا هم که IDA Pro بود توی نسخهٔ 7.3 خودش این ویژگی رو اضافه کرد. توی اسکرین‌شات پایین می‌بینیم که حساب رسمی گیدرا چطوری با این ویژگی IDA Pro شوخی میکنه.</p>
+<p><img loading="lazy" decoding="async" class="wp-image-55507 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00001-1024x863.jpg" alt="" width="521" height="439" title=""></p>
+<p style="text-align: justify;"> </p>
+<p style="text-align: justify;">همونطور که گفتیم به‌خاطر رقابت و کارکرد مختلفشون، این ابزار باهم قابل‌مقایسه نیستن. پس فقط یک سری از نقاط قوت گیدرا رو باهم بررسی می‌کنیم:</p>
+<p style="text-align: justify;"><div class="su-list" style="margin-right:10px">
+<ul style="text-align: justify;">
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> متن‌باز و رایگانه (همینطور دیکامپایلرش)</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> خیلی از معماری ها رو پشتیبانی میکنه(یعنی ممکنه بعضی از فریمورک ها پشتیبانی نشن)</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> میتونه باینری های زیادی رو هم زمان توی یک پروژه بارگذاری کنه. این ویژگی باعث میشه که بتونه عملیات رو بین فایل ها ی باینری مختلف و کتاب خونه هاشون ببینه.</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> امکان مهندسی معکوس تیمی رو فراهم میکنه.</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> میتونه بدون مشکل ایمیج های بزرگ فریمور رو بخونه.</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> کلی اطلاعات و مثال و دوره های کامل و عالی داره.</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> کنترل نسخه ی مشابه گیت داره و میتونه تغییرات رو توی باینری ها رصد کنه.</li>
+</ul>
+<p style="text-align: justify;"></div>
+<p style="text-align: justify;">اگر بخوایم نتیجه بگیریم، وقتی که به‌عنوان نفوذگر یا مهندس معکوس فعالیت دارید باید هرچی میتونید رو یاد بگیرید و از مزایای همهٔ فریم‌ورک‌ها بهره‌مند بشید. به همین علت گیدرا به‌عنوان یک فریم‌ورک خیلی خوب و قوی ارزش یادگیری زیادی داره.</p>
+<h3 style="text-align: justify;">مرور گیدرا</h3>
+<p style="text-align: justify;">در این بخش در مورد نصب گیدرا صحبت می‌کنیم و توانایی هاش رو نشونتون میدیم. در ادامه متوجه میشیم که چرا گیدرا انقدر قدرتمنده و فقط یه فریم‌ورک سادهٔ متن‌باز مهندسی معکوس دیگه نیست.</p>
+<p style="text-align: justify;">در زمان نوشتار این بخش آخرین ورژن عرضه‌شدهٔ گیدرا ورژن 10.0.4 است. برای دانلود گیدرا به وب‌سایت گیدرا بروید و از لینک مربوطه آخرین نسخهٔ گیدرا را دانلود کنید.</p>
+<h2 style="text-align: justify;">نصب گیدرا</h2>
+<p style="text-align: justify;">در مورد گیدرا همیشه توصیه میشه که آخرین نسخه رو دانلود کنید.</p>
+<h2>لینک‌های دانلود گیدرا (آخرین نسخه)</h2>
+<div class="su-note"  style="border-color:#b8dec0;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;"><div class="su-note-inner su-u-clearfix su-u-trim" style="background-color:#d2f8da;border-color:#ffffff;color:#333333;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;">
+<ul>
+<li><a href="https://dl.sisoog.com/ghidra_11.3.1_PUBLIC_20250219.zip">دانلود گیدرا نسخه 11.3.1</a></div></div></li>
+</ul>
+<p><img loading="lazy" decoding="async" class="wp-image-55508 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00002-1024x416.jpg" alt="" width="527" height="214" title=""></p>
+<p style="text-align: justify;">بعد از دانلود نسخه ی zip و خارج کردنش از حالت فشرده شما ساختار زیر رو میبینید:</p>
+<p><img loading="lazy" decoding="async" class="wp-image-55509 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00003-700x1024.jpg" alt="" width="192" height="281" title=""></p>
+<p style="text-align: justify;">برای اینکه با گیدرا آشنا بشیم باید بدونیم هرکدوم از این فایل ها و فولدرها چه چیزی رو شامل میشن(<a href="https://ghidra-sre.org/InstallationGuide.html" target="_blank" rel="noopener">منبع</a>):</p>
+<p style="text-align: justify;"><div class="su-list" style="margin-right:10px">
+<ul style="list-style-type: circle; text-align: justify;">
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> docs: داکیومنتیشن ها و منابع خیلی خیلی کاربردی گیدرا، مثلا  دوره هایی آموزشی کامل برای هر سطحی از آشنایی که با گیدرا دارید و راهنمای نصب مرحله به مرحله.</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> Extensions: افزونه های انتخابی گیدرا که به شما اجازه میدهند تا کارکرد گیدرا را به نفع خود بهبود دهید و ابزار جدیدی به آن اضافه کنید.</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> Ghidra: خود برنامه ی گیدرا</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> GPL: فایل هایی که کمک میکنند گیدرا از GPL پشتیبانی کند.</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> licenses: لایسنس هایی که گیدرا از آنها استفاده کرده.</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> server: شامل فایل های مربوط به نصب گیدرا روی سرور و مدیریت آن</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> support: به شما اجازه میدهد تا گیدرا را در حالت پیشرفته اجرا کنید و حداکثر بهره را از آن ببرید.</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> ghidraRun: اسکریپت اجرای گیدرا روی لینوکس و IOS</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> ghidraRun.bat: اسکریپت بچ برای اجرای گیدرا روی ویندوز</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> LICENCE: فابل لایسنس گیدرا</li>
+</ul>
+<p style="text-align: justify;"></div>
+<p style="text-align: justify;">علاوه بر اینکه بدون دردسر میشه نسخهٔ منتشر شدهٔ گیدرا رو تقریباً بدون دردسر اجرا کرد میتونید خودتونم سورس کد رو دانلود کنید و build کنید.</p>
+<h2 style="text-align: justify;">کمی فراتر &#8211; خودتان گیدار را کامپایل کنید!</h2>
+<p style="text-align: justify;">ابتدا سورس گیدرا را دانلود کنید و گرادل (Gradle) را روی سیستم خود فعال کنید.</p>
+<p style="text-align: justify;">سپس دستور زیر را اجرا کنید:</p>
+<pre class="lang:sh decode:true">gradle --init-script
+gradle/support/fetchDep
+endencies.gradle init
+gradle buildGhidra
+gradle eclipse
+gradle buildNatives_win64
+gradle buildNatives_linux64
+gradle buildNatives_osx64
+gradle sleighCompile
+gradle eclipse -PeclipsePDE
+gradle prepDev</pre>
+<p style="text-align: justify;">بعدازاین کار شما یک فایل zip دارید که گیدرای کامپایل شده در آن قرار دارد.</p>
+<p style="text-align: justify;">قبل از اجرای گیدرا از موارد زیر اطمینان حاصل کنید:</p>
+<p style="text-align: justify;"><div class="su-list" style="margin-right:10px">
+<ul style="text-align: justify;">
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> داشتن حداقل 4 گیگابایت رم</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> داشتن 1 گیگابایت فضای خالی(برای نصب باینری های گیدرا)</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> داشتن بیش از یک مانیتور اکیدا توصیه می شود</li>
+</ul>
+<p style="text-align: justify;"></div>
+<p style="text-align: justify;">ضمناً ازآنجایی‌که گیدرا به جاوا نوشته شده، برای اجرای آن نیاز به دو ابزار Java runtime و JDK را دارید و باید حداقل نسخه ی 64-بیتی و ورژن 11 به بعد را نصب داشته باشید.</p>
+<p style="text-align: justify;">اگر JR روی سیستم شما نصب نباشد با این پیغام مواجه می شوید:&#8221;Java runtime not found&#8221;</p>
+<p style="text-align: justify;">و اگر JDK توسط سیستم پیدا نشود با پیغام زیر:(در این مورد باید آدرس دایرکتوری JDK را به برنامه بدهید)</p>
+<p><img loading="lazy" decoding="async" class="size-large wp-image-55510 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00004-1024x163.jpg" alt="" width="1024" height="163" title=""></p>
+<h3 style="text-align: justify;">رفع مشکلات نصب شناخته شده</h3>
+<p style="text-align: justify;">در این مواقع می توانید به 3 جا سر بزنید:</p>
+<ol style="text-align: justify;">
+<li>فولدر docs فایل InstallationGuide.html</li>
+<li>سایت گیدرا در بخش راهنمای نصب</li>
+<li>ریپازیتوری گیتهاب گیدرا در بخش مشکلات شناخته شده</li>
+</ol>
+<p style="text-align: justify;">بعد از نصب اگر روی Mac یا Linux هستید ghidraRun رو اجرا کنید و اگر هم توی ویندوز هستید فایل bat.</p>
+<h3 style="text-align: justify;">مرور ویژگی های گیدرا</h3>
+<p style="text-align: justify;">در بخش آخر این پست هم نگاهی میندازیم به یک سری ویژگی های پایه ای گیدرا و سعی میکنیم عملکرد گیدرا رو ببینیم. نقطه ی شروع دقیقا همین جاست. بریم شروع کنیم.</p>
+<h2 style="text-align: justify;">ایجاد پروژه ی جدید در گیدرا</h2>
+<p style="text-align: justify;">برخلاف باقی ابزار مهندسی معکوس، گیدرا مستقیما با فایل ها سر و کار نداره، بلکه با پروژه ها کار میکنه. بیاید یه پروژه ی جدید ایجاد کنیم. از منوی File روی گزینه ی New Project کلیک کنید.(Ctrl+N)</p>
+<p><img loading="lazy" decoding="async" class="wp-image-55511 size-medium aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00005-300x168.jpg" alt="" width="300" height="168" title=""></p>
+<p style="text-align: justify;"> </p>
+<p style="text-align: justify;">پروژه ها میتونن غیر اشتراک گذاری شده باشن یا اشتراک گذاری شده. از اونجایی که ما میخوایم یه برنامه ی <strong>hello world </strong>ساده رو آنالیز کنیم و هیچ کس دیگه هم قرار نیست روی پروژه باهامون کار کنه گزینه ی <strong>Non-Shared Project</strong> رو انتخاب کنید و بعد روی <strong>Next</strong> کلیک کنید. بعدش برنامه ازمون میخواد جایی که پروژه قرار میگیره و اسم پروژه رو مشخص کنیم. اسمش رو بگذارید &#8220;<strong>hello world</strong>&#8220;:</p>
+<p><img loading="lazy" decoding="async" class="wp-image-55512 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00006.jpg" alt="" width="593" height="259" title="" srcset="https://sisoog.com/wp-content/uploads/2021/10/01pics_00006.jpg 1751w, https://sisoog.com/wp-content/uploads/2021/10/01pics_00006-600x262.jpg 600w" sizes="auto, (max-width: 593px) 100vw, 593px" /></p>
+<p style="text-align: justify;"> </p>
+<p style="text-align: justify;">بعدش پروژه ایجاد میشه. این پروژه شامل 2 قسمت اصلی میشه: <strong>hello world.gpr</strong> و <strong>hello world.rep:</strong></p>
+<p><img loading="lazy" decoding="async" class="wp-image-55513 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00007-1024x351.jpg" alt="" width="484" height="166" title=""></p>
+<p style="text-align: justify;"> </p>
+<p style="text-align: justify;">با توجه به اینکه پروژه ای که ایجاد شده( فایل .gpr) قابل اشتراک گذاری نیست، تنها یک کاربر اجازه ی دسترسی به آنرا دارد. اگر تلاش کنید که فایل باز شده را دوباره باز کنید، قفل هم زمانی تعبیه شده با استفاده از فایل های .lock و .lock~ جلوی دسترسی مجدد شما را به پروژه میگیرد و با پیغامی مبنی بر قفل بودن پروژه مواجه می شوید:</p>
+<p><img loading="lazy" decoding="async" class="wp-image-55514 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00008-1024x350.jpg" alt="" width="606" height="207" title=""></p>
+<p style="text-align: justify;">در بخش بعدی در این مورد صحبت می‌کنیم که چطور می‌شود فایل‌های باینری را به پروژهٔ خود اضافه کنیم.</p>
+<h2 style="text-align: justify;">اضافه کردن فایل ها به پروژه ی گیدرا</h2>
+<p style="text-align: justify;">برای آنالیز فایل‌های مختلف، ابتدا باید آنها را به پروژهٔ گیدرای خود اضافه کنیم. برای شروع برنامهٔ hello world را کامپایل می‌کنیم. برنامه‌ای به اسم&#8221;hello_world.c&#8221; به زبان C می‌نویسیم:</p>
+<pre class="lang:c decode:true">#include &lt;stdio.h&gt;
+int main(){
+printf("Hello world.");
+}</pre>
+<p style="text-align: justify;">و با استفاده از دستورات زیر فایل را کامپایل می‌کنیم:</p>
+<pre class="lang:sh decode:true">C:\Users\kayoosh\Desktop\hello_world&gt; <a href="https://sisoog.com/%d8%a2%d9%85%d9%88%d8%b2%d8%b4-rtos-%d8%a8%d8%a7-stm32-%d9%82%d8%b3%d9%85%d8%aa-1%da%a9%d8%a7%d9%85%d9%be%d8%a7%db%8c%d9%84%d8%b1-gcc/" title="کامپایلر GCC چیست؟ + بررسی نحوه عملکرد">gcc</a>.exe
+    hello_world.c
+C:\Users\kayoosh\&gt;\</pre>
+<p style="text-align: justify;">توجه کنید که برنامه در کامپیوتر ما در دسکتاپ قرار دارد و آدرس دسترسی شما به برنامهٔ شما متفاوت است.</p>
+<p style="text-align: justify;">بعدازاین اتفاق یک فایل قابل‌اجرای پرتابل مایکروسافت ویندوز (همون exe خودمون) ایجاد میشه به اسم: hello_world.exe</p>
+<p style="text-align: justify;">بریم که آنالیزش کنیم. اول باید این فایل رو به پروژمون اضافه کنیم. برای این کار از زبانه ی File به بخش Import file برید و فایلتون رو به برنامه اضافه کنید:</p>
+<p><img loading="lazy" decoding="async" class="wp-image-55515 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00009-1024x398.jpg" alt="" width="677" height="263" title=""></p>
+<p style="text-align: justify;">گیدرا به صورت اتوماتیک نوع فایل و ویژگی هاش رو تشخیص میده و وقتی که دیدید تشخیصش درسته، روی OK کلیک کنید تا صفحه ی خلاصه باز بشه:</p>
+<p><img loading="lazy" decoding="async" class="wp-image-55516 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00010-1024x407.jpg" alt="" width="702" height="279" title=""></p>
+<p style="text-align: justify;">حالا با دوبار کلیک روی hello_wolrd.exe یا با انتخابش و بعد کلیک روی علامت اژدها برنامه باز و توسط گیدرا بارگذاری میشه:</p>
+<p><img loading="lazy" decoding="async" class="wp-image-55517 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00011-1024x838.jpg" alt="" width="312" height="255" title=""></p>
+<p style="text-align: justify;">بعد از اضافه کردن فایلها به پروژتون، میتونید مهندسی معکوسشون رو شروع کنید. این ویژگی گیدرا باعث میشه که بتونید بیشتر از یک فایل رو توی یک پروژه وارد کنید و بررسیشون کنید. همینطور میتونید روی فایل هایی که اضافه کردید کارای مختلف انجام بدید</p>
+<p style="text-align: justify;">توی قسمت بعدی میبینیم که چطوری میتونیم فایل هامون رو با گیدرا آنالیز کنیم.</p>
+<h2 style="text-align: justify;">تنظیم و انجام آنالیز با گیدرا</h2>
+<p style="text-align: justify;">در ادامهٔ بخش قبل و بعد از بارگذاری فایل توی پروژه، گیدرا ازتون میپرسه که آیا میخواین آنالیز فایل رو شروع کنید. اینجا معمولاً همه میگن بله &#8230; ولی این آنالیز دقیقاً شامل چی میشه؟ شامل شناخت توابع، پارامترها و رشته‌ها و &#8230; میشه. معمولاً شما به گیدرا اجازه میدید که خودش این اطلاعات رو براتون استخراج کنه. کلی گزینهٔ مختلف هم برای تنظیمات آنالیزتون دارید. میتونید توضیحات هرکدوم از این تنظیمات رو با کلیک کردن روشون مشاهده کنید. این توضیحات توی بخش بالایی و سمت راست قابل رویت هستن:</p>
+<p><img loading="lazy" decoding="async" class="wp-image-55518 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00012-1024x460.jpg" alt="" width="743" height="334" title=""></p>
+<p style="text-align: justify;">بعد از انتخاب ابزار آنالیزتون، روی Analyze کلیک کنید و بگذارید آنالیز فایل شروع بشه.</p>
+<p style="text-align: justify;">در ادامه کد browser گیدرا که توی قسمت بعدی کامل در موردش صحبت می کنیم رو میبینید. اگر چیزی رو آنالیز نکردید هم نگران نباشید، دوباره میتونید آنالیزش کنید.</p>
+<h2 style="text-align: justify;">خلاصه</h2>
+<p style="text-align: justify;">در این فصل تاریخ مختصر و هیجان‌انگیز گیدرا رو باهم مرور کردیم. بعدش دیدیم که چطوری دانلود، نصب و از سورس کد کامپایلش کنیم. همچنین یاد گرفتیم که چطوری مشکلات نصب رو حل کنیم و مشکلات جدید رو به پروژهٔ متن‌باز گیدرا گزارش بدیم.</p>
+<p style="text-align: justify;">نهایتاً ساختار گیدرا و کارکردهای اصلیش رو یاد گرفتیم (هنوز کل کارکردها رو نگفتیم البته). حالا توی موقعیتی هستید که میتونید به‌تنهایی گیدرا رو بررسی و آزمایش کنید.</p>
+<p style="text-align: justify;">این فصل کمکتون کرد که بتونید تصویر بزرگ‌تر پشت گیدرا رو ببینید و در ادامه برای استفاده از گیدرا آماده باشید.</p>
+<p style="text-align: justify;">در فصل بعدی اول یکم دیگه نرم‌افزار رو بررسی می‌کنیم. در مرحلهٔ بعدی این موضوع رو بررسی می‌کنیم که چطوری میشه کارای مهندسی معکوس رو به طور خودکار با گیدرا انجام داد و از پلاگین‌های گیدرا استفاده می‌کنیم، بهبودشون میدیم و یاد می‌گیریم چطوری خودمون پلاگین توسعه بدیم.</p>
+<h2 style="text-align: justify;">سؤال‌ها</h2>
+<p style="text-align: justify;">همیشه سعی کنید جواب سوالا رو یک جا یادداشت کنید و با جوابی که اول قسمت بعدی میگذاریم مقایسش کنید تا بتونید ارزیابی بهتری از کیفیت یادگیری خودتون داشته باشید.</p>
+<p style="text-align: justify;"><div class="su-list" style="margin-right:10px">
+<ul style="text-align: justify;">
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> کدوم فریمورک مهندسی معکوس از همه ی ابزار دیگه بهتره؟</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> گیدرا چه مشکلاتی رو بهتر از بقیه ی رقباش رفع میکنه؟</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> نقاط ضعف و قدرت گیدرا چین؟</li>
+</ul>
+<p style="text-align: justify;"></div>
+</article><article data-id="55446"><h1>مهندسی معکوس: لبهٔ تکنولوژی با گیدرا (Ghidra) &amp;#8211; شماره 00</h1><p>تاریخ: 2021-10-04T14:51:47 | آخرین ویرایش: 2023-11-08T14:26:56 | لینک: https://sisoog.com/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87-%db%8c-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra/</p><h2>مقدمه</h2>
+<p>این رشته پست ها یک راهنمای جامع کاربردی برای ابزار مهندسی معکوس گیدرا هستند. توی این مجموعه پست در حداقل 50 قسمت که به صورت هفتگی، آخر هفته ها در سیسوگ قرار میگیرن، از صفر کار با گیدرا رو یاد میگیریم و از گیدرا برای کارای مختلف(آنالیز بدافزار و بررسی باینری و &#8230;) استفاده میکنیم. جلوتر که بریم هم میبینید که چطوری میشه با استفاده از اسکریپت های گیدرا کارای پیچیده و زمان بر رو اتوماتیک انجام داد. در ادامه هم مباحث عملی رو رها میکنیم و فقط به تئوری های سطح بالای مهندسی معکوس و گیدرا میپردازیم.</p>
+<p>بعد از خوندن کامل و انجام نمونه کارهایی که تا 20 قسمت اول انجام میدیم شما به یه متخصص گیدرا تبدیل میشید و میتونید توی اکثر کارهای مهندسی معکوس از این ابزار استفاده کنید و ابزار خودتون رو برای گیدرا توسعه بدید. ضمنا در مورد جامعه ی کاربری گیدرا هم صحبت میکنیم و اینکه چطور میتونید توی توسعه ی گیدرا مشارکت داشته باشید و نمونه کدهاتون، باگ هایی که پیدا کردید و هرچیز دیگه رو به پروژه ی گیدرا که متعلق به سازمان ملی امنیت آمریکاست(NSA) ارائه بدید و با باقیه جامعه ی کاربری در ارتباط باشید.</p>
+<p>این مجموعه ی آموزشی کامل ترین آموزش ممکن رو ارائه میده و اگر برای مطالعش وقت بگذارید، توی زمینه های زیادی میتونه بهتون کمک کنه و راهگشا باشه.</p>
+<p>&nbsp;</p>
+<h2>کیا باید این مجموعه پست رو دنبال کنن؟</h2>
+<p>بایدی در کار نیست؛ اما این مجموعه پست برای علاقه‌مندان به مهندسی معکوس، آنالیز بدافزار، تشخیص باگ، تست نفوذ، توسعهٔ اکسپلویت، بررسی نرم‌افزار، مسائل امنیت و امنیت اطلاعات در نظر گرفته شده ولی تقریباً هر توسعه‌دهنده‌ای میتونه برای خیلی کارا ازش استفاده کنه.<br />
+برای اینکه بتونین حداکثر بهره رو از این مجموعه پست ببرید هم بهتره موارد زیر رو کامل بلد باشید:</p>
+<div class="su-list" style="margin-right:10px">
+<ul>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> زبان های برنامه نویسی و ماشین شامل: Assembly, C, Python, Java</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> آشنایی با بخش های درونی سیستم</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> دیباگر ها</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> دیس اسمبلر ها</li>
+</ul>
+</div>
+<p>هرچند اگر بلد نباشید هم مشکلی ایجاد نمیشه، ولی کارتون ممکنه یکم سخت بشه و حداقل بهتره یک زبان برنامه‌نویسی رو بلد باشید.</p>
+<p>&nbsp;</p>
+<h2>منابع</h2>
+<p>بخش اول این مجموعه پست از کتاب زیر هست که نکات تئوری رو مختصر شرح داده و کد بیس خوبی هم به این منظور توسعه داده و ما هم مرحله‌به‌مرحله روند کتاب رو دنبال می‌کنیم و مسائل رو با هم حل می‌کنیم.</p>
+<p style="text-align: left;">Ghidra Software Reverse Engineering for Beginners_ Analyze, identify, and avoid malicious code and potential threats in your networks and systems</p>
+<p>در بخش انتهایی هم مباحث سطح بالای مهندسی معکوس رو از کتاب‌های مختلف جناب Chris Eagle باهم بررسی می‌کنیم و یاد می‌گیریم.</p>
+<p>&nbsp;</p>
+<h2>ابزار ها</h2>
+<p>ابزاری که ازشون استفاده می‌کنیم:</p>
+<table style="width: 100%; border-collapse: collapse; border-style: solid;">
+<tbody>
+<tr>
+<td style="width: 686px; text-align: center;"><strong>سیستم عامل هایی که قابلیت اجرا دارند</strong></td>
+<td style="width: 686px; text-align: center;"><strong>نرم افزار های مورد استفاده</strong></td>
+</tr>
+<tr>
+<td style="width: 686px; text-align: center;">Windows, MacOS,Linux</td>
+<td style="width: 686px; text-align: center;">Ghidra</td>
+</tr>
+<tr>
+<td style="width: 686px; text-align: center;">Windows, MacOS,Linux</td>
+<td style="width: 686px; text-align: center;">Git</td>
+</tr>
+<tr>
+<td style="width: 686px; text-align: center;">Windows, MacOS,Linux</td>
+<td style="width: 686px; text-align: center;">Java JDK 11</td>
+</tr>
+<tr>
+<td style="width: 686px; text-align: center;">Windows, MacOS,Linux</td>
+<td style="width: 686px; text-align: center;">Eclipcse <a href="https://sisoog.com/sata-%DA%86%DB%8C%D8%B3%D8%AA%D8%9F-%D9%85%D8%B9%D8%B1%D9%81%DB%8C-%D9%BE%D9%88%D8%B1%D8%AA-%D9%87%D8%A7%DB%8C-pata-%D9%88-ide/" title="SATA و IDE چیست">IDE</a> for Java developers</td>
+</tr>
+<tr>
+<td style="width: 686px; text-align: center;">Windows, MacOS,Linux</td>
+<td style="width: 686px; text-align: center;">Gradle 5.0 یا جدید تر</td>
+</tr>
+<tr>
+<td style="width: 686px; text-align: center;">Windows, MacOS,Linux</td>
+<td style="width: 686px; text-align: center;">VirtualBox</td>
+</tr>
+<tr>
+<td style="width: 686px; text-align: center;">Windows</td>
+<td style="width: 686px; text-align: center;">MinGW64</td>
+</tr>
+<tr>
+<td style="width: 686px; text-align: center;">Windows</td>
+<td style="width: 686px; text-align: center;">Olly Debugger</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<p>اگر عجله دارید برای دانلود گیدرا به این <a href="https://ghidra-sre.org/" target="_blank" rel="noopener">لینک</a> سری بزنید.</p>
+<p>هر چیزی نیاز باشه رو هم توی همین مجموعه پست ارائه میدیم و نیاز به چیز دیگه ای ندارید. اما بازم تکرار می‌کنیم برای اینکه حداکثر استفاده رو از این پست‌ها داشته باشین 4 تا زبان پایتون، سی، جاوا و اسمبلی ضروریه. هرچند ما خودمونم جاوا بلد نیستم و مشکلی برامون پیش نیومده.</p>
+<p>&nbsp;</p>
+<h2>چه چیزایی رو قراره یاد بگیریم:</h2>
+<ol>
+<li>یادگیری گیدرا و ساختار اون(عملی-تئوری)</li>
+<li>مهندسی معکوس(عملی-تئوری)</li>
+<li>توسعه و استفاده ی پیشرفته از گیدرا(عملی-تئوری)</li>
+<li>بررسی عملکرد دیس اسمبلر(تئوری)</li>
+<li>ساختار و نمایش سطح بالای گیدرا(تئوری)</li>
+<li>تغییر گیدرا متناسب با نیاز شما(تئوری)</li>
+<li>بررسی کامل گیدرا از سطح ماشین تا سطح بالا(تئوری)</li>
+<li>کاربردهای بیشتر گیدرا(تئوری)</li>
+</ol>
+<p>&nbsp;</p>
+<p>تاریخ قرار گرفتن قسمت بعدی:</p>
+<p>21 مهر 1400</p>
+</article><article data-id="55748"><h1>مهندسی معکوس: لبهٔ تکنولوژی با گیدرا (Ghidra) – شماره 02</h1><p>تاریخ: 2021-10-20T15:21:27 | آخرین ویرایش: 2023-12-12T12:24:36 | لینک: https://sisoog.com/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87%d9%94-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra-2/</p><p>در <a href="https://sisoog.com/2021/10/13/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87%d9%94-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra/" target="_blank" rel="noopener">قسمت قبل</a> تاریخ مختصر و هیجان‌انگیز گیدرا رو باهم مرور کردیم. بعدش دیدیم که چطوری دانلود، نصب و از سورس کد کامپایلش کنیم و به‌طور کلی باید حالا توی موقعیتی باشید که بتونید به‌تنهایی گیدرا رو بررسی و آزمایش کنید! توی این قسمت بازهم بیشتر با گیدرا آشنا میشیم و اون رو باهم سفارشی‌سازی می‌کنیم.</p>
+<div class="su-note"  style="border-color:#e4e0d2;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;"><div class="su-note-inner su-u-clearfix su-u-trim" style="background-color:#fefaec;border-color:#ffffff;color:#000000;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;">
+<p>در قسمت‌های قبل، منابع و ابزارهای مهم، آشنایی اولیه و نکات مهم دررابطه‌با این آموزش‌ها معرفی شد. اگر اولین‌بار است که این مقاله را می‌بینید، برای استفاده هر چه بیشتر و بهتر از <a href="https://sisoog.com/2021/10/04/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87-%db%8c-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra/" target="_blank" rel="noopener">قسمت صفر</a> شروع کنید!</p>
+</div></div>
+<p>&nbsp;</p>
+<h2>پاسخ سؤالات قسمت قبل</h2>
+<p>اگه یادتون باشه، قرار بود آخر هر قسمت قبل سؤالاتی رو به عنوان تمرین مطرح کنم و شما جوابش رو جایی یادداشت کنید تا با جواب‌های درستی که قسمت بعد قرار میدم مقایسشون کنید.</p>
+<p>هیچ‌کدام از فریم‌ورک‌های مهندسی معکوس کامل‌ترین ابزار نیستن. هر فریم‌ورک نقاط ضعف و قدرت خودشو داره.</p>
+<p>بریم نقاط مثبت گیدرا رو یک‌بار دیگه باهم بررسی کنیم:</p>
+<div class="su-list" style="margin-right:10px">
+<ul>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> متن‌باز و رایگان بودن (شامل دی کامپایلر هم میشه)</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> پشتیبانی از معماری‌های زیاد</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> امکان بارگذاری تعداد زیادی فایل باینری توی یک پروژه</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> امکان مهندسی معکوس گروهی</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> پشتیبانی از فریم ورهای بزرگ (بیشتر از یک گیگابایت)</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> داکیومنتیشن عالی به همراه مثال و آموزش</li>
+<li><i class="sui sui-check-square-o" style="color:#7eff23"></i> کنترل نسخهٔ مناسب برای کنترل کار</li>
+</ul>
+</div>
+<p>حالا بریم سراغ نقاط ضعف گیدرا:</p>
+<div class="su-list" style="margin-right:10px">
+<ul>
+<li><i class="sui sui-times-circle-o" style="color:#ff2340"></i> به علت وابسته بودن به <a href="https://www.jython.org/" target="_blank" rel="noopener">Jython</a> باید پشتیبانی از اسکریپت‌های پایتون 3 رو فراموش کنید و از پایتون 2 استفاده کنید.</li>
+<li><i class="sui sui-times-circle-o" style="color:#ff2340"></i> مسئلهٔ بالا شاید ساده باشه ولی بسیار بزرگه و اینکه هنوز رفع نشده و ربطی هم به توسعه‌دهنده‌های گیدرا نداره که رفعش کنن، باعث شده کسی در مورد باقی نقاط منفی گیدرا صحبت نکنه.</li>
+</ul>
+</div>
+<p>&nbsp;</p>
+<h2>فصل 1 – آشنایی با گیدرا (ادامه)</h2>
+<p>در ادامه مرورگر کد گیدرا و نحوه سفارشی‌سازی اون رو با هم بررسی می‌کنیم.</p>
+<h3>بررسی CODEBROWSER گیدرا</h3>
+<p>مرورگر کد گیدرا، با تنظیمات پیش‌فرض خودش خیلی زیبا و کاربردی طراحی شده و مهندسی NSA رو به‌وضوح میشه توش دید:</p>
+<p><img loading="lazy" decoding="async" class="size-large wp-image-55519 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00013-1024x560.jpg" alt="" width="1024" height="560" title=""></p>
+<p>بریم ببینیم که بخش‌های مختلف این مرورگر چی هستن و چه وظیفه‌ای به عهده دارن:</p>
+<ol>
+<li>مثل همهٔ فریم‌ورک‌های مهندسی معکوس، وسط صفحه و با ابعاد خیلی بزرگ، نمایش دیس اسمبلی فایل رو داریم.</li>
+<li>از اونجایی که دیس اسمبلی خیلی‌خیلی به زبان ماشین نزدیکه (low-level)، گیدرا دیکامپایلر خودش رو برامون سمت راست دیس اسمبلی قرارداد. اگر کارایی که در قسمت قبل گفتیم رو دنبال کرده باشید، می‌بینید که تابع main برنامه توسط گیدرا شناسایی شده و پارامترها به طور خودکار تولید شدن. همین‌طور گیدرا بهتون اجازه میده که کلی بلا سر کد دی کامپایل شده بیارید. همین‌طور میتونید نمایش هگزادسیمال برنامه رو هم توی این بخش از صفحه ببینید. همچنین اگر چیزی رو تغییر بدید، هگزا دسیمال، دی کامپایل شده و اسمبلی برنامه به‌صورت هم‌زمان تغییر میکنن.</li>
+<li>درخت‌های برنامه که سمت چپ قرار دارن، کمک میکنن که به هر بخش از فایل‌ها که نیاز دارید سریعاً سر بزنید.</li>
+<li>درخت‌های سمبل‌ها زیربخش 3 قرار دارن: اینجا سمبل‌های برنامه قرار دارن (اسم متغیرها، کلاس‌ها و توابع و&#8230;) از اینجا میتونید به هرکدوم از سمبل هاتون سر بزنید.</li>
+<li>اگر میخواین با انواع داده‌ها سروکله بزنید هم مدیریت نوع داده اینجا قرار داره.</li>
+<li>اینجا نتایج اجرای اسکریپت‌های مهندسی معکوستون رو می‌بینید. همچنین توی صفحهٔ bookmarks میتونید بوک مارک هاتون رو داکیومنت، مرتب و مدیریت کنید و به هر بخشی از حافظه که خواستین سر بزنید.</li>
+<li>نوارابزار دسترسی سریع</li>
+<li>مشخص‌کنندهٔ آدرس فعلی</li>
+<li>عملگر وابسته به آدرس فعلی</li>
+<li>خط مربوطه در دیس اسمبلی به آدرس فعلی</li>
+<li>نوارابزار اصلی</li>
+</ol>
+<p>&nbsp;</p>
+<h4>سفارشی سازی گیدرا</h4>
+<p>تا محیطی که ازش استفاده می‌کنیم رو تغییر ندیم، توسعه‌دهنده نشدیم! میتونیم توی منوی Window ابزاری که بهش نیاز داریم رو انتخاب کنیم تا به محیط گیدرا اضافه بشه:</p>
+<p><img loading="lazy" decoding="async" class="aligncenter wp-image-55520" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00014-962x1024.jpg" alt="سفارشی سازی گیدرا" width="236" height="251" title=""></p>
+<p>ضمناً گیدرا خیلی کارکردهای جالب دیگه ای هم داره؛ برای مثال، توی نوارابزار بالای صفحهٔ دیس اسمبلی میتونید صفحهٔ دیس اسمبلر رو تغییر بدید و کلی کار مختلف انجام بدید:</p>
+<p><img loading="lazy" decoding="async" class="aligncenter wp-image-55521" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00015-1024x409.jpg" alt="دیس اسمبلر گیدرا" width="480" height="192" title=""></p>
+<p>مثلاً اگر روی گزینه‌ای که توی تصویر بالا نشون دادیم کلیک کنید کلی تنظیمات رو برای دیس اسمبلر می‌بینید. یکی از ویژگی‌های خیلی عالی گیدرا همینجا قرار داره. این ویژگی بهتون اجازه میده که بتونید یه چیزی به اسم PCode رو ببینید. پی کد یه نمایش سطح متوسط یا یه زبان سطح متوسطه که بهتون اجازه میده که بتونید ابزار مهندسی معکوس خودتون رو برای بررسی کد اسمبلی، با یه زبان واسط و یکم قابل‌فهم‌تر توسعه بدید. برای فعال‌سازی مطابق تصویر زیر عمل کنید:</p>
+<p><img loading="lazy" decoding="async" class="aligncenter wp-image-55522" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00016-1024x408.jpg" alt="تنظیمات دیس اسمبلر" width="791" height="315" title=""></p>
+<p>&nbsp;</p>
+<p>وقتی که فعالش کردید، سریعاً متوجه میشید که PCode اصلا خوانا نیست ولی مطمئن باشید ترجیح میدید که اسکریپت های اسمبلیتون رو با PCode بنویسید به جای زبان اسمبلی. توی تصویر زیر خروجی دیس اسمبلر رو با PCode میبینید:</p>
+<p><img loading="lazy" decoding="async" class="aligncenter wp-image-55523" src="https://sisoog.com/wp-content/uploads/2021/10/01pics_00017-1024x600.jpg" alt="خروجی دیس اسمبلر با PCode" width="788" height="462" title=""></p>
+<p>&nbsp;</p>
+<h2>سؤال‌ها</h2>
+<div class="su-list" style="margin-right:10px">
+<ul>
+<li><i class="sui sui-question-circle-o" style="color:#f3a902"></i> چطوری میشه نمایش دیس اسمبلی رو تنظیم کرد که PCode فعال بشه؟</li>
+<li><i class="sui sui-question-circle-o" style="color:#f3a902"></i> تفاوت بین نمایش دیس اسمبلی و نمایش دی کامپایلر چیه؟</li>
+</ul>
+</div>
+<p>&nbsp;</p>
+<p>تاریخ انتشار قسمت بعدی:</p>
+<p>1400/08/08</p>
+</article><article data-id="56180"><h1>مهندسی معکوس: لبهٔ تکنولوژی با گیدرا (Ghidra) – شماره 03 &amp;#8211; اتوماسیون مهندسی معکوس</h1><p>تاریخ: 2021-11-20T16:05:21 | آخرین ویرایش: 2023-12-12T12:42:37 | لینک: https://sisoog.com/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87%d9%94-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra-3/</p><h3>پاسخ سؤالات قسمت قبل</h3>
+<ol>
+<li>نوار ابزاری که در بخش بالا-سمت راست صفحه‌ی دیس اسمبلی قرار دارد به شما اجازه می‌دهد که نمایش دیس اسمبلی را سفارشی‌سازی کنید: با کلیک راست روی گزینه‌ی PCode، می‌توانید PCode را در لیست دیس اسمبلی ببینید. برای هر دستور اسمبلی حداقل یک PCode تولید می‌شود.</li>
+<li> نمایش دیس اسمبلی، نمایش دستورات برنامه است که به زبان <a href="https://sisoog.com/cpu-%da%86%db%8c%d8%b3%d8%aa-%d9%88-%da%86%d9%87-%da%a9%d8%a7%d8%b1%db%8c-%d8%a7%d9%86%d8%ac%d8%a7%d9%85-%d9%85%db%8c%d8%af%d9%87%d8%af/" title="CPU یا پردازنده چیست؟">پردازنده</a> نوشته شده‌اند. نمایش دیکامپایلر اما کد دیکامپایل شده به زبان C را نمایش می‌دهد.</li>
+</ol>
+<p>&nbsp;</p>
+<div class="su-note"  style="border-color:#e4e0d2;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;"><div class="su-note-inner su-u-clearfix su-u-trim" style="background-color:#fefaec;border-color:#ffffff;color:#000000;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;">
+<p>در قسمت‌های قبل، منابع و ابزارهای مهم، آشنایی اولیه و نکات مهم دررابطه‌با این آموزش‌ها معرفی شد. اگر اولین‌بار است که این مقاله را می‌بینید، برای استفاده هر چه بیشتر و بهتر از <a href="https://sisoog.com/2021/10/04/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87-%db%8c-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra/" target="_blank" rel="noopener">قسمت صفر</a> شروع کنید! قسمت قبل را نیز از <a href="https://sisoog.com/2021/10/20/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87%d9%94-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra-2/" target="_blank" rel="noopener">اینجا</a> میتوانید مشاهده کنید.</p>
+</div></div>
+<p>&nbsp;</p>
+<h2>فصل 2- اتوماسیون مهندسی معکوس با گیدرا</h2>
+<p>در این فصل در مورد اتوماسیون مهندسی معکوس با گیدرا و نوشتن اسکریپت‌های گیدرا صحبت می‌کنیم. ابتدا باهم بررسی می‌کنیم که چه ویژگی‌های خوب، خلاقانه و بسیار متمرکزی به عنوان اسکریپت‌ها در گیدرا قرار گرفته است. چند صد اسکریپت پیش فرض گیدرا معمولاً برای بیشتر نیازهای اتوماسیون مهندسی معکوس کافی هستند.</p>
+<p>پس از اینکه با این اسکریپت‌ها آشنا شدیم، بررسی می‌کنیم که چطور عمل می‌کنند. سپس کلاس اسکریپت‌های گیدرا را بررسی می‌کنیم تا درک بهتری نسبت به پارامترهای داخلی آنها پیدا کنید و در بخش آخر این فصل از این آموخته‌ها استفاده می‌کنیم.</p>
+<p>در انتها شما یاد می‌گیرید که چطور اسکریپت‌های گیدرای خود را توسعه دهید. برای این کار نیاز به آشنایی کلی با API های گیدرا دارید و خوشبختانه می‌توانید به دو زبان جاوا و پایتون برنامه‌ی خود را بنویسید چرا که API های گیدرا برای دو زبان مشابه هم هستند.<br />
+به‌صورت خلاصه در این فصل موارد زیر بررسی می‌شوند:</p>
+<div class="su-list" style="margin-right:10px">
+<ul>
+<li><i class="sui sui-check-square-o" style="color:#68ff00"></i> اسکریپت های داخلی گیدرا</li>
+<li><i class="sui sui-check-square-o" style="color:#68ff00"></i> تحلیل کلاس اسکریپت گیدرا و API گیدرا</li>
+<li><i class="sui sui-check-square-o" style="color:#68ff00"></i> نوشتن اسکریپت خودتان</li>
+</ul>
+</div>
+<p>&nbsp;</p>
+<h3>منابع تکنیکال و دانلود کتاب مهندسی معکوس</h3>
+<p>برای چند قسمت آینده از کدهای کتاب Ghidra Software Reverse Engineering for Beginners استفاده می‌کنیم که ریپازیتوری های گیت‌هاب آن <a href="https://github.com/PacktPublishing/Ghidra-Software-Reverse-Engineering-for-Beginners" target="_blank" rel="noopener">اینجا</a> قرار دارند.</p>
+<p>ویدیوی مربوط به این فصل نیز از <a href="https://www.youtube.com/watch?v=DbByFvTGF7I" target="_blank" rel="noopener">اینجا</a> قابل مشاهده هستند.</p>
+<p>&nbsp;</p>
+<h3>استفاده و به‌کارگیری اسکریپت‌های موجود</h3>
+<p>اسکریپت‌های گیدرا به شما این امکان را می‌دهند تا وظایف مهندسی معکوس خود را زمانی که با تحلیل باینری سر و کار دارید به اتوماسیون بسپارید. بیایید بررسی کنیم که چطور می‌توان از این اسکریپت‌ها در CodeBrowser برای برنامه‌ی hello world استفاده کرد. نقطه‌ی شروع ما برنامه‌ی hello world است که در محیط گیدرا بارگذاری کرده‌ایم، همان‌طور که در فصل اول در مورد ویژگی‌های گیدرا توضیح دادیم و برنامه را بارگذاری کردیم.</p>
+<p>در فصل اول (02) به این مسئله اشاره کردیم که استفاده از گیدرا شامل استفاده از اسکریپت‌های مختلفی نیز می‌شود. برای دسترسی به این اسکریپت‌ها وارد بخش Window شوید و روی Script Manager کلیک کنید. همچنین می‌توانید روی گزینه‌ای که در نوار دسترسی سریع گیدرا در تصویر زیر برای شما مشخص شده است کلیک کنید.</p>
+<p>&nbsp;</p>
+<p><img loading="lazy" decoding="async" class=" wp-image-56190 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00001-1024x65.jpg" alt="run script" width="756" height="48" title=""></p>
+<p>&nbsp;</p>
+<p>همان‌طور که در بخش folder browser در سمت چپ مشاهده می‌کنید، تمام اسکریپت‌های از پیش نصب‌شده در پوشه‌های مشخص و متفاوتی دسته‌بندی شده‌اند که با کلیک روی هرکدام، اسکریپت‌های موجود در آن پوشه نمایش داده می‌شوند:</p>
+<p>&nbsp;</p>
+<p><img loading="lazy" decoding="async" class="size-large wp-image-56194 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00002-1024x518.jpg" alt="script manager" width="1024" height="518" title=""></p>
+<p>&nbsp;</p>
+<p>در تصویر بالا یک بخش با مربع قرمز مشخص شده است. اگر روی آن کلیک کنید می‌توانید مسیر پوشه‌های اسکریپت را در سیستم خود ببینید و به آن اضافه و از آنها کم کنید: (ولی فعلاً به چیزی دست نزنید)</p>
+<p>&nbsp;</p>
+<p><img loading="lazy" decoding="async" class=" wp-image-56195 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00003-1024x711.jpg" alt="script directories" width="576" height="400" title=""></p>
+<p>&nbsp;</p>
+<p>اینجا نقطه‌ی شروع کار ما با اسکریپت‌هاست. شما می‌توانید تمام اسکریپت‌های موجود در گیدرا رو تحلیل کنید و در محیط خود گیدرا آنها را تغییر بدید و متناسب با نیاز خود آنها را اصلاح کنید. تحلیل اسکریپت‌ها به شما کمک می‌کند که بفهمید اسکریپت‌ها چطوری کار می‌کنند و چط��ر می‌توانید متناسب با نیاز خود آنها را بهینه کنید. با کلیک بر روی گزینه‌های edit script می‌توانید اسکریپت‌های موجود در محیط گیدرا را تغییر دهید و با کلیک بر روی creat a new script، اسکریپت جدید خود را ایجاد کنید:</p>
+<p>&nbsp;</p>
+<p><img loading="lazy" decoding="async" class=" wp-image-56191 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00004-1024x87.jpg" alt="edit &amp; new" width="706" height="60" title=""></p>
+<p>&nbsp;</p>
+<p>برنامه‌ی hello world جمله‌ی hello world را در خروجی نمایش می‌دهد. این خروجی یک string است. ما می‌توانیم از اسکریپت‌های مرتبط با string در گیدرا استفاده کنیم و ببینیم که چطور استفاده از اسکریپت‌ها تحلیل ما را سرعت می‌بخشد. همان‌طور که در تصویر زیر می‌بینید اسکریپت‌های پایتون و جاوا هردو در یک پوشه قرار دارند:</p>
+<p>&nbsp;</p>
+<p><img loading="lazy" decoding="async" class=" wp-image-56192 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00005-1024x276.jpg" alt="string scripts" width="572" height="154" title=""></p>
+<p>&nbsp;</p>
+<p>برای مثال بیایید اسکریپت RecursiveStringFinder.py را بررسی کنیم. این اسکریپت می‌تواند سرعت آنالیز شما را افزایش دهد و تمام توابع و string ها مرتبط با آنها را مشخص کند. این اتفاق می‌تواند به شما کمک کند تا وظیفه‌ی یک تابع را بدون خواندن حتی یک خط کد بفهمید.</p>
+<p>بیایید اسکریپت را اجرا کنیم. تابع ‎_mainCRTStartup()‎ را در برنامه hello world به عنوان ورودی (با استفاده از قرار دادن موس روی تابع) به اسکریپت میدیم و خروجی را در script console مشاهده می‌کنیم.</p>
+<p>در تصویر پایین می‌بینید که RecursiveStringFinder.py لیست توابع برنامه را به همراه رفرنس string های آنها باز گردانده است. برای مثال تابع ‎_mainCRTStartup()‎ اولین تابعی است که اجرا می‌شود(با توجه به نشانه گذاری و اینکه کاملاً سمت چپ قرار دارد مشابه کد پایتون) و پس از آن تابع ‎__pei386_runtime_relocator()‎ که توسط کامپایلر برای ساخت برنامه ایجاد شده است اجرا می‌شود و دارای یک string با محتوای &#8221; Unknown pseudo relocation bit size%d. \n&#8221; است. نشانگر ds به ما می‌فهماند که متنی که جلوی آن قرار گرفته یک رشته (string) است. همان‌طور که می‌بینید بالاخره بعد از چند تابع و رشته که توسط کامپایلر به برنامه معرفی شده بودند بالاخره به تابع main()‎ می‌رسیم که دارای رشته‌ی &#8220;Hello world.&#8221; ماست:</p>
+<p><img loading="lazy" decoding="async" class=" wp-image-56193 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00006-1024x549.jpg" alt="" width="768" height="412" title=""></p>
+<p>&nbsp;</p>
+<div class="jspPane">
+<p>اسکریپت قبلی به زبان <span id="res-21" class="spell-err hl">پایتون</span> <span id="res-28" class="style-err hl">توسعه</span><span id="res-33" class="hl style-err"> </span><span id="res-34" class="hl style-err">یافته</span> بود و از تابع getStringRefrences()‎ (خط <span id="res-79" class="num-err hl">04</span>) استفاده <span id="res-91" class="hl refined">می‌کرد</span> تا operand های دستورات را دریافت <span id="res-130" class="hl refined">کند (</span><span id="res-134" class="hl"> </span>خط <span id="res-138" class="num-err hl">07</span>) که به چیزی اشاره <span id="res-159" class="hl refined">دارند (</span>خط <span id="res-168" class="num-err hl">10</span>). <span id="res-173" class="style-err hl">وقتی</span><span id="res-177" class="hl style-err"> </span><span id="res-178" class="hl style-err">که</span> چیزهایی <span id="res-189" class="style-err hl">در</span><span id="res-191" class="hl style-err"> </span><span id="res-192" class="hl refined">داده‌ها</span> <span id="res-200" class="style-err hl">مشخص</span><span id="res-204" class="hl style-err"> </span><span id="res-205" class="hl refined">شده‌اند</span> و رشته <span id="res-220" class="hl refined">هستند (</span>خط <span id="res-229" class="num-err hl">12</span> تا <span id="res-235" class="num-err hl">14</span>) به لیست خروجی برنامه اضافه <span id="res-266" class="hl refined">می‌شوند</span> و <span id="res-276" class="hl refined">نهایتاً</span> آنها را در <span id="res-294" class="puri-err hl">console</span> <span id="res-302" class="hl refined">می‌بینیم</span>. بیاید برنامه را بهتر کنیم. این برنامه <span id="res-349" class="style-err hl">اصلاح</span><span id="res-354" class="hl style-err"> </span><span id="res-355" class="hl style-err">شده</span> تا تنها <span id="res-367" class="hl refined">اسکریپت‌هایی</span> که برای ما جذاب هستند در خروجی نمایش داده <span id="res-422" class="hl refined">می‌شوند</span>. تابع isAnInterestingString()‎ (خط <span id="res-464" class="num-err hl">15</span>) تصمیم <span id="res-474" class="hl refined">می‌گیرد</span> که آیا باید رشته را به لیست نهایی اضافه کرد یا <span id="res-528" class="hl refined">نه (</span><span id="res-531" class="hl refined">خط‌های</span> <span id="res-538" class="num-err hl">16</span> تا <span id="res-544" class="num-err hl">20</span>).</p>
+<p>فرض کنید دنبال URL <span id="res-575" class="spell-err hl">ها</span> در <span id="res-581" class="num-err hl">یک</span> برنامه <span id="res-591" class="hl refined">می‌گردید</span>، <span id="res-600" class="hl refined">مثلاً</span> در <span id="res-608" class="num-err hl">یک</span> بدافزار سرور <span id="res-624" class="hl refined">هکرها</span> <span id="res-631" class="hl">اینگونه</span> مشخص <span id="res-644" class="hl refined">می‌شود</span> یا در محصولات <a href="https://sisoog.com/what-is-internet-of-things-in-simple-words/" title="اینترنت اشیاء" target="_blank" rel="noopener">اینترنت اشیا</a> <span id="res-677" class="hl refined">پروتکل‌های</span> ارتباطی و سروری که <span id="res-707" class="puri-err hl">سنسورها</span> و عملگرهای مختلف با آن در ارتباط هستند مشخص <span id="res-759" class="hl refined">می‌شود</span>. برای این کار اسکریپتی که <span id="res-792" class="hl refined">پیش‌تر</span> از آن استفاده کردیم را باز <span id="res-825" class="hl refined">می‌کنیم</span> و تابع isAnInterestingString()‎ (خطوط <span id="res-869" class="num-err hl">0</span> تا <span id="res-874" class="num-err hl">2</span>) را به آن اضافه <span id="res-892" class="hl refined">می‌کنیم</span>. <span id="res-900" class="hl refined">ضمناً</span> قبل از نوشتن هر اسکریپتی ابتدا <span id="res-936" class="style-err hl">جست</span><span id="res-939" class="hl style-err"> </span><span id="res-940" class="hl style-err">و</span><span id="res-941" class="hl style-err"> </span><span id="res-942" class="hl style-err">جو</span> کنید که از قبل وجود نداشته باشد.</p>
+</div>
+<pre class="lang:c++ decode:true ">def isAnInterestingString(string):
+        """Returns True if the string is interesting for us"""
+        return string.startswith("http")
+def getStringReferences(insn):
+        """Get strings referenced in any/all operands of an
+        instruction, if present"""
+        numOperands = insn.getNumOperands()
+        found=[]
+        for i in range(numOperands):
+                opRefs = insn.getNumOperandReferenc(i)
+                for o in opRefs:
+                        if o.getReferenceType() .is Data():
+                                 string = getStringAtAddr(o.getToAddress())
+                                 if string is not None and \
+                        isAnInterestingString(string):
+                                         found.append(StringNode(
+                                  insn.getMinAddress(),
+                                  o.getToAddress(),
+                                  (string)
+        return found</pre>
+<p>&nbsp;</p>
+<p>اسکریپت بالا به‌سادگی می‌تواند بهبود یابد تا URL های دقیق‌تری را در کد پیدا کند و این در زمان مهندسی معکوس بدافزارها بسیار مهم است. حتی می‌توانید فقط با تغییر محتوای تابع اول برنامه آن را متناسب با نیاز خود تغییر دهید.</p>
+<p>تابع TranslateStringsScript.java را به اختصار بررسی می‌کنیم تا چیزی از قلم نیفتد. این تابع پیشوند و پسوند TODO به شکل یک رشته را به رشته‌های دیگر برنامه اضافه می‌کند. این مسئله زمانی کاربرد دارد که نیاز است رشته‌های رمز گذاری شده را علامت گذاری کنید تا بعداً آنها را رمزگشایی کنید.</p>
+<p>&nbsp;</p>
+<p><img loading="lazy" decoding="async" class=" wp-image-56184 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00007-1024x450.jpg" alt="TODO" width="726" height="319" title=""></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2>خلاصه</h2>
+<p>در این قسمت یاد گرفتیم که چگونه از اسکریپت های گیدرا استفاده کنیم و آنها را متناسب با نیاز خود تغییر دهیم. در قسمت بعدی اسکریپت های ساده ی خودمان را مینویسیم و API های داخلی گیدرا برای جاوا را تحلیل میکنیم.</p>
+<p>&nbsp;</p>
+<h2>سوال ها</h2>
+<ol>
+<li>چرا اسکریپت های گیدرا کاربردی هستند؟ چه کارهایی میتوان با آنها انجام داد؟</li>
+<li>اسکریپت ها در گیدرا چگونه مرتب شده اند؟ آیا این مرتب سازی به محتوای سورس کد وابسته است یا به محل اسکریپت روی سیستم شما؟</li>
+</ol>
+</article><article data-id="56249"><h1>مهندسی معکوس: لبهٔ تکنولوژی با گیدرا (Ghidra) – شماره 04</h1><p>تاریخ: 2021-11-30T10:19:29 | آخرین ویرایش: 2023-12-12T12:11:24 | لینک: https://sisoog.com/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87%d9%94-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra-4/</p><h3>پاسخ سوالات قسمت قبل</h3>
+<ol>
+<li> اسکریپت‌های گیدرا به این علت کاربردی هستند که می‌توانند وظایف مهندسی معکوس را به‌صورت اتوماتیک انجام دهند. بعضی از این وظایف عبارت‌اند از: جستجو برای رشته‌ها و الگوهای تکراری کد، رفع ابهام خودکار کد و افزودن کامنت ها و توضیحات برای بهبود دیس اسمبلی</li>
+<li style="text-align: right;"><span id="res-8" class="hl refined">اسکریپت‌ها</span> بر اساس کارکرد آنها <span id="res-39" class="style-err hl">مرتب</span><span id="res-43" class="hl style-err"> </span><span id="res-44" class="hl refined">شده‌اند</span>. در ظاهر <span id="res-61" class="hl refined">اسکریپت‌ها</span> با توجه به محل آنها روی سیستم شما <span id="res-106" class="style-err hl">مرتب</span><span id="res-110" class="hl style-err"> </span><span id="res-111" class="hl refined">شده‌اند</span> اما در حقیقت در ابتدای هر اسکریپت  در بخش ‎@category برچسب مربوط به کارکرد هر اسکریپت تعیین <span id="res-215" class="hl refined">می‌شود</span>.</li>
+</ol>
+<p>&nbsp;</p>
+<div class="su-note"  style="border-color:#e4e0d2;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;"><div class="su-note-inner su-u-clearfix su-u-trim" style="background-color:#fefaec;border-color:#ffffff;color:#000000;border-radius:3px;-moz-border-radius:3px;-webkit-border-radius:3px;">
+<p>در قسمت‌های قبل، منابع و ابزارهای مهم، آشنایی اولیه و نکات مهم دررابطه‌با این آموزش‌ها معرفی شد. اگر اولین‌بار است که این مقاله را می‌بینید، برای استفاده هر چه بیشتر و بهتر از <a href="https://sisoog.com/2021/10/04/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87-%db%8c-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra/" target="_blank" rel="noopener">قسمت صفر</a> شروع کنید! قسمت قبل را نیز <a href="https://sisoog.com/2021/11/20/%d9%85%d9%87%d9%86%d8%af%d8%b3%db%8c-%d9%85%d8%b9%da%a9%d9%88%d8%b3-%d9%84%d8%a8%d9%87%d9%94-%d8%aa%da%a9%d9%86%d9%88%d9%84%d9%88%da%98%db%8c-%d8%a8%d8%a7-%da%af%db%8c%d8%af%d8%b1%d8%a7-ghidra-3/" target="_blank" rel="noopener">از اینجا</a> میتوانید مشاهده کنید.</p>
+</div></div>
+<p>&nbsp;</p>
+<h2>فصل 2- اتوماسیون مهندسی معکوس با گیدرا (ادامه)</h2>
+<p>بریم که اولین اسکریپت‌های خودمون رو بنویسیم و ببینیم که چطوری میشه یک اسکریپت رو از صفر نوشت.</p>
+<p>&nbsp;</p>
+<h3>کلاس اسکریپت</h3>
+<p>برای توسعه‌ی یک اسکریپت جدید در گیدرا ابتدا روی Create New Script در منوی Script Manager کلیک کنید. بعد از آن باید مشخص کنید که از چه زبانی استفاده خواهید کرد:</p>
+<p><img loading="lazy" decoding="async" class=" wp-image-56185 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00008-1024x684.jpg" alt="script type selector" width="351" height="235" title=""></p>
+<p>ابتدا ساختار اسکریپت‌ها به زبان جاوا را بررسی می‌کنیم:</p>
+<p>اگر از جاوا برای توسعه‌ی اسکریپت‌های خود استفاده کنید، اسکریپت شما 3 بخش اصلی خواهد داشت. اولین بخش اسکریپت کامنت ها هستند:</p>
+<pre class="lang:java decode:true">//TODO write a description for this script
+
+//@author
+
+//@category Strings
+
+//@keybinding
+
+//@menupath
+
+//@toolbar</pre>
+<p>اینکه چه چیزی را باید در ادامه‌ی کامنت ها بنویسید واضح است و فقط ‎@menupath را توضیح می‌دهیم. این کامنت به شما این امکان را می‌دهد تا بتوانید اسکریپت‌های خود را در منوی گیدرا قرار دهید:</p>
+<p><img loading="lazy" decoding="async" class="size-large wp-image-56186 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00009-1024x124.jpg" alt="" width="1024" height="124" title=""></p>
+<p>دسته‌بندی اسکریپت در ‎@category انجام شده است اما با استفاده از ‎@menupath می‌توان به شکل دیگری اسکریپت را انتخاب کرد. مثلاً اگر بنویسیم:</p>
+<pre class="lang:java decode:true">//@menupath Tools.Packt.Learn Ghidra Scripts</pre>
+<p>دقت کنید که مسیر با کاراکتر. مشخص می‌شود؛ می‌توانید از منوی گیدرا اسکریپت را انتخاب کنید:</p>
+<p><img loading="lazy" decoding="async" class=" wp-image-56187 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00010-1024x553.jpg" alt="" width="539" height="291" title=""></p>
+<p>بخش بعدی یک اسکپریت جاوا import ها هستند. ترجیحاً به این بخش دست نزنید و اولین ماژول اضافه شده به برنامه به هیچ وجه نباید دست‌کاری شود. تمام اسکریپت‌های گیدرا باید GhidraScript و متد ‎run()‎ را به ارث ببرند:</p>
+<pre class="lang:java decode:true">import ghidra.app.script.GhidraScript;
+
+import ghidra.program.model.util.*;
+
+import ghidra.program.model.reloc.*;
+
+import ghidra.program.model.data.*;
+
+import ghidra.program.model.block.*;
+
+import ghidra.program.model.symbol.*;
+
+import ghidra.program.model.scalar.*;
+
+import ghidra.program.model.mem.*;
+
+import ghidra.program.model.listing.*;
+
+import ghidra.program.model.lang.*;
+
+import ghidra.program.model.pcode.*;
+
+import ghidra.program.model.address.*;</pre>
+<p>تمام ابزاری که به برنامه import شده‌اند دارای داکیومنتیشن کامل و مناسبی هستند که در JAVADOC گیدرا قرار دارد و برای توسعه‌ی اسکریپت باید به آن رجوع کنید.</p>
+<p>&nbsp;</p>
+<h3>داکیومنتیشن API های گیدرا برای JAVADOC</h3>
+<p>با کلیک بر روی منوی <strong>Help</strong> و انتخاب <strong>Ghida API Help </strong>برای بار اول، داکیومنتیشن API های گیدرا بصورت خودکار ایجاد می شود. پس از آن میتوانید برای ابزاری که به برنامه import شده داکیومنتیشن ها را بخوانید.</p>
+<p>در آخر بخش بدنه ی اسکریپت وجود دارد که از <strong>GhidraScript </strong> متد run()‎ را وارد برنامه ی خود می کنید. در ادامه ی این آموزش با بخش های مختلف ابزار import شده بیشتر کار خواهیم کرد:</p>
+<pre class="lang:java decode:true ">public class NewScript extends GhidraScript {
+
+        public void run() throws Exception {
+
+                //TODO Add User Code Here
+
+        }
+
+}</pre>
+<p>اگر می‌خواهید اسکریپت‌های خود را به زبان پایتون بنویسید هم API دقیقاً مشابه زبان جاواست اما اسکریپت دو بخشی است و شامل یک header که همان کامنت ها هستند و بدنه اسکریپت که کد شما را در خود جای می‌دهد، می‌شود:</p>
+<pre class="lang:java decode:true ">#TODO write a description for this script
+
+#@author
+
+#@category Strings
+
+#@keybinding
+
+#@menupath
+
+#@toolbar
+
+#TODO Add User Code Here</pre>
+<p>در اینجا به این علت هیچ چیزی را به برنامه import نمی‌کنیم که پایتون مستقیماً از API جاوا بهره می‌برد و این اتفاق به علت اجرا شدن برنامه‌ی پایتون در بستر Jython تنظیم شده‌ی گیدرا رخ می‌دهد.</p>
+<p>از آنجایی که داکیومنتیشن مذکور ممکن است برای توسعه دهندگان پایتون ناخوانا یا دشوار باشد می‌توانید از منوی Window و گزینه‌ی Python مفسر پایتون را فعال کنید و از گزینه‌ی کامل کردن خودکار بهره ببرید (با کلید TAB) و یا به روش مرسوم دیگری داکیومنیشن را ببینید.</p>
+<p><img loading="lazy" decoding="async" class="size-large wp-image-56188 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00011-1024x351.jpg" alt="" width="1024" height="351" title=""></p>
+<p>اگر با زبان پایتون آشنا باشید میدانید که استفاده از تابع help()‎ در مفسر می‌توانید توضیحات و داکیومنتیشن دستورات مختلف را بخوانید. به همین علت استفاده از حداقل 2 مانیتور و باز نگه‌داشتن مفسر پایتون برای نوشتن اسکریپت‌های پایتون در گیدرا بسیار توصیه می‌شود.</p>
+<p><img loading="lazy" decoding="async" class="size-large wp-image-56189 aligncenter" src="https://sisoog.com/wp-content/uploads/2021/11/s2_00012-1024x312.jpg" alt="" width="1024" height="312" title=""></p>
+<p>بسیار خوب! تا اینجا هر چیزی که برای شروع توسعه‌ی اسکریپت نیاز داشتیم را باهم مرور کردیم و یاد گرفتیم که چطور می‌شود به داکیومنتیشن های آنها و API های جاوا دسترسی داشت. حالا زمان تمرین است. اسکریپتی که در ادامه می‌نویسیم و بررسی می‌کنیم برای مقابله با برخی از ویروس‌های کامپیوتری که به‌صورت مرسوم قابل پاک شدن از سیستم شما نیستند مورداستفاده قرار می‌گیرد.</p>
+<p>&nbsp;</p>
+<h3>توسعه ی اسکریپت</h3>
+<p>برنامه‌ای که در این قسمت توسعه می‌دهیم تمام بایت‌های برنامه را به دستور بدون عملیات (NOP) برای <a href="https://sisoog.com/cpu-%da%86%db%8c%d8%b3%d8%aa-%d9%88-%da%86%d9%87-%da%a9%d8%a7%d8%b1%db%8c-%d8%a7%d9%86%d8%ac%d8%a7%d9%85-%d9%85%db%8c%d8%af%d9%87%d8%af/" title="CPU یا پردازنده چیست؟">پردازنده</a> تبدیل می‌کند. ابتدا برنامه را به زبان جاوا می‌نویسیم. توجه کنید که به بخش وسط برنامه دست نمی‌زنیم و تنها بخش کامنت ها و بدنه برای ما مهم است. می‌توانید برنامه را از <a href="https://github.com/PacktPublishing/Ghidra-Software-Reverse-Engineering-for-Beginners/tree/master/Chapter02" target="_blank" rel="noopener">اینجا </a>دریافت کنید.</p>
+<p>در قسمت ‎@keybinding تنظیم می‌کنیم که برنامه با فشردن کلیدهای Ctrl +Alt+ Shift + N اجرا شود.</p>
+<pre class="lang:java decode:true">//This simple script allows you to patch bytes with NOP opcode
+
+//@author Packt
+
+//@category Memory
+
+//@keybinding ctrl alt shift n
+
+//@menupath Tools.Packt.nop
+
+//@toolbar</pre>
+<p>در ادامه به import ها دست نمی‌زنیم و بدنه‌ی تابع را می‌نویسیم:</p>
+<pre class="lang:java decode:true">public class NopScript extends GhidraScript {
+
+        /** empty line */
+
+         public void run() throws Exception {
+
+                 Address startAddr = currentLocation.getByteAddress();
+
+                 byte nop = (byte)0x90;
+
+                 try {
+
+                       int istructionSize = getInstructionAt​(startAddr).getDefaultFallThroughOffset();
+
+                       removeInstructionAt​(startAddr);
+
+                       for(int i=0; i&lt;istructionSize; i++){
+
+                              setByte(startAddr.addWrap​(i), nop);
+
+                       }
+
+                       disassemble​(startAddr);
+
+                 }
+
+                 catch (MemoryAccessException e) {
+
+                         popup("Unable to nop this byte");
+
+                         return;
+
+                  }
+
+        }
+
+}</pre>
+<p>ابتدا باید آدرس اشاره‌گر فعلی گیدرا را استخراج کنیم (خط 03) در این آدرس دستوری تعریف نشده است (خط 06 تا 08)، بایت‌ها را با opcode مورد نظرمان (<strong>دستور NOP</strong>) که مقدار 144 دارد (0x90) جایگزین می‌کنیم خط 09 تا 11) و دوباره بایت‌ها را دیس اسمبل می‌کنیم خط 12). داکیومنت های دستورات استفاده شده را بررسی کنید تا عملیات انجام شده را بهتر بفهمید. کد پایتون برنامه‌ی بالا هم به شکل زیر است:</p>
+<div>
+<div dir="ltr">
+<pre class="lang:python decode:true ">#This simple script allows you to patch bytes with NOP opcode
+#@author Packt
+#@category Memory
+#@keybinding ctrl alt shift n
+#@menupath Tools.Packt.Nop
+#@toolbar
+
+
+currentAddr = currentLocation.getByteAddress()
+nop = 0x90
+instructionSize = getInstructionAt(currentAddr).getDefaultFallThroughOffset()
+removeInstructionAt(currentAddr)
+for i in range(instructionSize):
+         setByte(currentAddr.addWrap(i), nop)
+disassemble(currentAddr)</pre>
+</div>
+</div>
+<p>&nbsp;</p>
+<h3>خلاصه</h3>
+<p>بالاخره یاد گرفتیم که چطور یک اسکریپت بسیار ساده را به زبان جاوا یا پایتون بنویسیم. در آینده از تمام آموخته‌های خود برای نوشتن اسکریپت‌های تحلیل بدافزار و تحلیل باینری استفاده می‌کنیم و اسکریپت‌های پیچیده‌تر و بسیار جلب تری می‌نویسیم. در قسمت بعدی در مورد debug در گیدرا با استفاده از Eclipe <a href="https://sisoog.com/sata-%DA%86%DB%8C%D8%B3%D8%AA%D8%9F-%D9%85%D8%B9%D8%B1%D9%81%DB%8C-%D9%BE%D9%88%D8%B1%D8%AA-%D9%87%D8%A7%DB%8C-pata-%D9%88-ide/" title="SATA و IDE چیست">IDE</a> صحبت می‌کنیم و می‌بینید که چطور می‌توان ویژگی‌های گیدرا را از این هم بیشتر توسعه داد و دسترسی‌های داخلی گیدرا را نیز بررسی می‌کنیم.</p>
+<p>&nbsp;</p>
+<h3>سؤال ها</h3>
+<ol>
+<li>چرا تفاوتی بین API های اسکریپت نویسی پایتون و جاوا وجود ندارد؟</li>
+</ol>
+</article></body></html>
