@@ -50,6 +50,12 @@ export function ShareRail({ url }: { url: string }) {
 
 function ShareSheet({ absolute }: { absolute: string }) {
   const [copied, setCopied] = React.useState(false);
+  // share URLs read document.title, which only exists in the browser —
+  // compute them after mount so SSR never touches `document`
+  const [links, setLinks] = React.useState<{ label: string; href: string; rel: string }[]>([]);
+  React.useEffect(() => {
+    setLinks(shareEntries.map((entry) => ({ label: entry.label, href: entry.href(absolute), rel: entry.rel })));
+  }, [absolute]);
   return (
     <Sheet>
       <SheetTrigger>
@@ -65,7 +71,7 @@ function ShareSheet({ absolute }: { absolute: string }) {
       <SheetContent className="p-5 w-full sm:w-80" dir="rtl" lang="fa">
         <p className="mb-4 text-xs font-medium text-muted-foreground">اشتراک‌گذاری</p>
         <div className="grid grid-cols-2 gap-2 mb-4">
-          {shareEntries.map((entry) => (
+          {links.map((entry) => (
             <a
               key={entry.label}
               href={entry.href(absolute)}
