@@ -31,7 +31,11 @@ log "build api, worker, mock gateway"
 (cd backend && go build -o /tmp/golearn-api ./cmd/api && go build -o /tmp/golearn-worker ./cmd/worker && go build -o /tmp/golearn-mockgw ./cmd/mockgateway)
 
 log "reset rate-limit counters (rl:* in redis)"
-docker compose -f deploy/docker-compose.yml exec -T redis redis-cli --scan --pattern 'rl:*' 2>/dev/null | xargs -r docker compose -f deploy/docker-compose.yml exec -T redis redis-cli DEL >/dev/null 2>&1 || true
+reset_limits() {
+  docker compose -f deploy/docker-compose.yml exec -T redis redis-cli --scan --pattern 'rl:*' 2>/dev/null \
+    | xargs -r docker compose -f deploy/docker-compose.yml exec -T redis redis-cli DEL >/dev/null 2>&1 || true
+}
+reset_limits
 
 log "start api, worker, mock gateway"
 set -a; . ./.env; set +a
@@ -73,5 +77,8 @@ wait_gateway "mock gateway" 30
 wait_for http://localhost:3000/ "frontend" 120
 
 log "playwright"
+# clear the counters again right before the run: the login limiter is keyed by
+# IP, and another local session can burn the budget while the stack boots
+reset_limits
 cd e2e
 bunx playwright test "$@"
