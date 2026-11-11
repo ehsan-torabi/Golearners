@@ -123,6 +123,26 @@ export function formatTomanFromRial(rial: number): string {
   return persian + " تومان";
 }
 
+// precise Persian hints per backend coupon code; one copy shared by the
+// cart and the checkout surfaces so they can never drift apart
+const COUPON_HINTS: Record<string, string> = {
+  COUPON_NOT_ACTIVE: "این کد تخفیف غیرفعال است یا خارج از بازه معتبر است.",
+  COUPON_EXPIRED: "این کد تخفیف منقضی شده است.",
+  COUPON_EXHAUSTED: "سقف استفاده از این کد تخفیف تمام شده است.",
+  COUPON_PER_USER_LIMIT: "شما قبلاً از این کد تخفیف استفاده کرده‌اید.",
+  COUPON_MIN_AMOUNT: "مبلغ سبد خرید برای اعمال این کد تخفیف کافی نیست.",
+  COUPON_SCOPE_MISMATCH: "این کد تخفیف فقط برای یک دوره خاص قابل استفاده است.",
+  COUPON_FIRST_PURCHASE: "این کد تخفیف فقط برای خرید اولین دوره قابل استفاده است.",
+  COUPON_ALREADY_USED: "این کد تخفیف قبلاً برای این سفارش اعمال شده است.",
+  COUPON_VALUE_INVALID: "مقدار کد تخفیف نامعتبر است.",
+};
+
+/** Map a coupon API failure to its Persian hint (or the backend message). */
+export function couponErrorHint(err: unknown): string {
+  const apiErr = err instanceof ApiError ? err : null;
+  return apiErr ? (COUPON_HINTS[apiErr.code] ?? apiErr.message) : "خطا در برقراری ارتباط";
+}
+
 export const LEVEL_FA: Record<CourseSummary["level"], string> = {
   beginner: "مقدماتی",
   intermediate: "متوسط",

@@ -25,12 +25,13 @@ function CrossMark() {
   );
 }
 
-type Outcome = "loading" | "paid" | "failed" | "unknown";
+type Outcome = "loading" | "pending" | "paid" | "failed" | "unknown";
 
 function ResultInner() {
   const params = useSearchParams();
   const orderId = params.get("order");
   const [outcome, setOutcome] = React.useState<Outcome>("loading");
+  const [attempt, setAttempt] = React.useState(0);
 
   /* The outcome comes from the server's order record, never from the URL:
      a link that says "paid" must not be able to dress itself up as a
@@ -41,25 +42,52 @@ function ResultInner() {
       return;
     }
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     (async () => {
       try {
         const order = await api<{ status: string }>(`/me/orders/${encodeURIComponent(orderId)}`);
         if (cancelled) return;
-        setOutcome(order.status === "paid" ? "paid" : "failed");
+        if (order.status === "paid") {
+          setOutcome("paid");
+        } else if (order.status === "awaiting_payment") {
+          // the gateway verify can still land after the redirect: keep
+          // checking for ~20s before handing the question to the user;
+          // this is never a failure — money may already be captured
+          setOutcome("pending");
+          if (attempt < 5) timer = setTimeout(() => setAttempt((a) => a + 1), 4000);
+        } else {
+          setOutcome("failed"); // canceled / expired / refunded
+        }
       } catch {
         if (!cancelled) setOutcome("unknown");
       }
     })();
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
-  }, [orderId]);
+  }, [orderId, attempt]);
 
   if (outcome === "loading") {
     return (
       <Card className="reveal mx-auto max-w-md p-10 text-center">
         <Skeleton className="mx-auto h-14 w-14" aria-label="در حال بررسی نتیجهٔ پرداخت" />
         <p className="mt-4 text-sm leading-7 text-muted-foreground">در حال بررسی نتیجهٔ پرداخت…</p>
+      </Card>
+    );
+  }
+
+  if (outcome === "pending") {
+    return (
+      <Card className="reveal mx-auto max-w-md p-10 text-center">
+        <Skeleton className="mx-auto h-14 w-14" aria-label="در حال بررسی وضعیت پرداخت" />
+        <h1 className="mt-4 font-semibold text-2xl">پرداخت در حال بررسی است</h1>
+        <p className="mt-2 text-sm leading-7 text-muted-foreground">
+          اگر پرداخت را انجام داده‌ای، ثبت نتیجه‌اش چند لحظه طول می‌کشد؛ وضعیت را از سفارش‌های من هم می‌توانی دنبال کنی.
+        </p>
+        <ButtonLink href="/dashboard/orders" variant="outline" className="mt-6">
+          سفارش‌های من
+        </ButtonLink>
       </Card>
     );
   }

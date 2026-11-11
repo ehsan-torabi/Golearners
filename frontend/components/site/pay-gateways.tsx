@@ -21,13 +21,16 @@ export function PayGateways({ onPay, busyGateway, disabled }: {
   busyGateway: Gateway | null;
   disabled?: boolean;
 }) {
+  // one pay attempt at a time: the other gateway must not start a second
+  // order while the first request is still in flight
+  const busy = busyGateway !== null;
   return (
     <div className="mt-6 space-y-2">
       <p className="text-sm font-medium">انتخاب درگاه پرداخت</p>
-      <Button className="w-full" onClick={() => onPay("zarinpal")} disabled={disabled} loading={busyGateway === "zarinpal"}>
+      <Button className="w-full" onClick={() => onPay("zarinpal")} disabled={disabled || busy} loading={busyGateway === "zarinpal"}>
         پرداخت با زرین‌پال
       </Button>
-      <Button variant="outline" className="w-full" onClick={() => onPay("mock")} disabled={disabled} loading={busyGateway === "mock"}>
+      <Button variant="outline" className="w-full" onClick={() => onPay("mock")} disabled={disabled || busy} loading={busyGateway === "mock"}>
         درگاه آزمایشی
       </Button>
       <p className="text-center text-xs text-muted-foreground">درگاه آزمایشی فقط برای تست نصب است.</p>

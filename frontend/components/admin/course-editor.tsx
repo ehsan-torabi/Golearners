@@ -21,6 +21,7 @@ import {
   type CoursePayload,
   type TaxonomyItem,
 } from "@/lib/admin";
+import { parseUserNumber } from "@/lib/digits";
 
 interface CourseForm {
   title: string;
@@ -111,16 +112,23 @@ export function CourseEditor({ courseId }: { courseId: string | null }) {
     setError("");
     setSaved(false);
     setSaving(true);
+    // pasted «۱۵۰٬۰۰۰» must not become NaN → null → a silently free course
+    const priceToman = parseUserNumber(form.price || "0");
+    const compareToman = form.compare_at ? parseUserNumber(form.compare_at) : null;
+    if (Number.isNaN(priceToman) || (compareToman !== null && Number.isNaN(compareToman))) {
+      setSaving(false);
+      setError("قیمت نامعتبر است؛ فقط عدد وارد کنید (بدون متن یا علامت).");
+      return;
+    }
     const payload: CoursePayload = {
       title: form.title.trim(),
       slug: form.slug.trim() || form.title.trim(),
       summary: form.summary,
       description_html: form.description_html,
       level: form.level,
-      price_rial: Math.max(0, Math.round(Number(form.price || "0"))) * 10,
-      compare_at_price_rial: form.compare_at
-        ? Math.max(0, Math.round(Number(form.compare_at))) * 10
-        : null,
+      price_rial: Math.max(0, Math.round(priceToman)) * 10,
+      compare_at_price_rial:
+        compareToman !== null ? Math.max(0, Math.round(compareToman)) * 10 : null,
       prerequisites_html: form.prerequisites_html,
       outcomes: form.outcomes.map((o) => o.trim()).filter(Boolean),
       meta_title: form.meta_title.trim() || null,

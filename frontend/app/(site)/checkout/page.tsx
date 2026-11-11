@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/section-head";
-import { api, ApiError, formatTomanFromRial, type Order } from "@/lib/api";
+import { api, ApiError, couponErrorHint, formatTomanFromRial, type Order } from "@/lib/api";
 import { fa } from "@/lib/utils";
 import { useSession } from "@/components/use-session";
 import { PayGateways, startPayment, type Gateway } from "@/components/site/pay-gateways";
@@ -36,25 +36,10 @@ function CheckoutInner() {
   const [coursePrice, setCoursePrice] = React.useState(0);
   const [courseId, setCourseId] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+  // a /checkout that succeeded but a gateway that didn't: retry reuses this
+  // awaiting order instead of creating a second one
+  const [createdOrderId, setCreatedOrderId] = React.useState("");
   const router = useRouter();
-
-  // precise Persian hints per backend coupon code
-  const COUPON_HINTS: Record<string, string> = {
-    COUPON_NOT_ACTIVE: "این کد تخفیف غیرفعال است یا خارج از بازه معتبر است.",
-    COUPON_EXPIRED: "این کد تخفیف منقضی شده است.",
-    COUPON_EXHAUSTED: "سقف استفاده از این کد تخفیف تمام شده است.",
-    COUPON_PER_USER_LIMIT: "شما قبلاً از این کد تخفیف استفاده کرده‌اید.",
-    COUPON_MIN_AMOUNT: "مبلغ سبد خرید برای اعمال این کد تخفیف کافی نیست.",
-    COUPON_SCOPE_MISMATCH: "این کد تخفیف فقط برای یک دوره خاص قابل استفاده است.",
-    COUPON_FIRST_PURCHASE: "این کد تخفیف فقط برای خرید اولین دوره قابل استفاده است.",
-    COUPON_ALREADY_USED: "این کد تخفیف قبلاً برای این سفارش اعمال شده است.",
-    COUPON_VALUE_INVALID: "مقدار کد تخفیف نامعتبر است.",
-  };
-
-  function couponError(err: unknown): string {
-    const apiErr = err instanceof ApiError ? err : null;
-    return apiErr ? (COUPON_HINTS[apiErr.code] ?? apiErr.message) : "خطا در برقراری ارتباط";
-  }
 
   React.useEffect(() => {
     setLoading(true);
@@ -122,7 +107,7 @@ function CheckoutInner() {
       setDiscount(preview.discount_rial);
     } catch (err) {
       setDiscount(0);
-      setError(couponError(err));
+      setError(couponErrorHint(err));
     } finally {
       setBusy(false);
     }
@@ -145,11 +130,16 @@ function CheckoutInner() {
           await router.push("/dashboard");
           return;
         }
-        const o = await api<{ id: string }>("/checkout", {
-          method: "POST",
-          body: JSON.stringify({ course_id: courseId, coupon_code: coupon.trim() || undefined }),
-        });
-        orderId = o.id;
+        if (createdOrderId) {
+          orderId = createdOrderId; // failed redirect: resume, not re-create
+        } else {
+          const o = await api<{ id: string }>("/checkout", {
+            method: "POST",
+            body: JSON.stringify({ course_id: courseId, coupon_code: coupon.trim() || undefined }),
+          });
+          orderId = o.id;
+          setCreatedOrderId(o.id);
+        }
       }
       await startPayment(orderId, gw);
     } catch (err) {
@@ -158,7 +148,7 @@ function CheckoutInner() {
         setOwned(true);
         return;
       }
-      setError(couponError(err));
+      setError(couponErrorHint(err));
     }
   }
 
@@ -215,6 +205,21 @@ function CheckoutInner() {
           <ButtonLink href="/courses" size="lg" variant="outline">
             بازگشت به دوره‌ها
           </ButtonLink>
+        </div>
+      </Card>
+    );
+  }
+
+  // the order failed to load (401 raced the session probe, network hiccup):
+  // never render a pay surface with empty items and a zero total
+  if (mode === "order" && !order) {
+    return (
+      <Card className="mx-auto max-w-md p-8 text-center">
+        <h1 className="font-semibold text-2xl text-foreground">سفارش را نتوانستیم بارگذاری کنیم</h1>
+        <p className="mt-2 text-sm leading-7 text-muted-foreground">{error || "یک خطای پیش‌بینی‌نشده رخ داد."}</p>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <ButtonLink href="/dashboard/orders" size="lg">سفارش‌های من</ButtonLink>
+          <ButtonLink href="/cart" size="lg" variant="outline">سبد خرید</ButtonLink>
         </div>
       </Card>
     );

@@ -12,7 +12,7 @@ import { TrashIcon } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useSession } from "@/components/use-session";
 import { useRouter } from "next/navigation";
-import { ApiError, api, formatTomanFromRial } from "@/lib/api";
+import { ApiError, api, couponErrorHint, formatTomanFromRial } from "@/lib/api";
 import { PayGateways, startPayment, type Gateway } from "@/components/site/pay-gateways";
 
 interface CartRow {
@@ -36,13 +36,21 @@ export default function CartPage() {
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [paying, setPaying] = React.useState<Gateway | null>(null);
+  // a /checkout that succeeded but a gateway that didn't start: retry reuses
+  // this awaiting order instead of creating a second one
+  const [pendingOrderId, setPendingOrderId] = React.useState("");
 
   // server refresh: the stored snapshot only seeds the view; prices and
   // ownership shown here come from the live course record
+  const itemsRef = React.useRef(items);
+  React.useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
   const refresh = React.useCallback(async () => {
     setRefreshing(true);
+    const snapshot = items;
     const next = await Promise.all(
-      items.map(async (it) => {
+      snapshot.map(async (it) => {
         try {
           const d = await api<{ course: { title: string; price_rial: number }; owned_by_viewer: boolean }>(
             `/courses/${encodeURIComponent(it.slug)}`,
@@ -54,6 +62,9 @@ export default function CartPage() {
         }
       }),
     );
+    // the cart changed while the fan-out was in flight: a newer refresh
+    // will commit its own result, this one must not
+    if (itemsRef.current !== snapshot) return;
     setRows(next);
     setRefreshing(false);
   }, [items]);
@@ -72,6 +83,7 @@ export default function CartPage() {
   React.useEffect(() => {
     setDiscount(0);
     setAppliedCode("");
+    setPendingOrderId("");
   }, [payableIds]);
 
   // validate-only: no order is created until a pay button is pressed
@@ -89,20 +101,7 @@ export default function CartPage() {
     } catch (err) {
       setDiscount(0);
       setAppliedCode("");
-      const apiErr = err instanceof ApiError ? err : null;
-      // map backend coupon codes to precise Persian hints
-      const hints: Record<string, string> = {
-        COUPON_NOT_ACTIVE: "این کد تخفیف غیرفعال است یا خارج از بازه معتبر است.",
-        COUPON_EXPIRED: "این کد تخفیف منقضی شده است.",
-        COUPON_EXHAUSTED: "سقف استفاده از این کد تخفیف تمام شده است.",
-        COUPON_PER_USER_LIMIT: "شما قبلاً از این کد تخفیف استفاده کرده‌اید.",
-        COUPON_MIN_AMOUNT: "مبلغ سبد خرید برای اعمال این کد تخفیف کافی نیست.",
-        COUPON_SCOPE_MISMATCH: "این کد تخفیف فقط برای یک دوره خاص قابل استفاده است.",
-        COUPON_FIRST_PURCHASE: "این کد تخفیف فقط برای خرید اولین دوره قابل استفاده است.",
-        COUPON_ALREADY_USED: "این کد تخفیف قبلاً برای این سفارش اعمال شده است.",
-        COUPON_VALUE_INVALID: "مقدار کد تخفیف نامعتبر است.",
-      };
-      setError(apiErr ? (hints[apiErr.code] ?? apiErr.message) : "خطا در برقراری ارتباط");
+      setError(couponErrorHint(err));
     } finally {
       setBusy(false);
     }
@@ -117,16 +116,23 @@ export default function CartPage() {
     setError("");
     setPaying(gw);
     try {
-      // the order is created here, once, right before the gateway redirect
-      const o = await api<{ id: string }>("/checkout", {
-        method: "POST",
-        body: JSON.stringify({
-          course_ids: payable.map((r) => r.course_id),
-          coupon_code: appliedCode || undefined,
-        }),
-      });
+      // the order is created here, once, right before the gateway redirect;
+      // a retry after a failed redirect reuses it instead of a second order
+      let orderId = pendingOrderId;
+      if (!orderId) {
+        const o = await api<{ id: string }>("/checkout", {
+          method: "POST",
+          body: JSON.stringify({
+            course_ids: payable.map((r) => r.course_id),
+            coupon_code: appliedCode || undefined,
+          }),
+        });
+        orderId = o.id;
+        setPendingOrderId(o.id);
+      }
+      await startPayment(orderId, gw);
+      // the browser is on its way to the gateway: the order now owns the items
       clear();
-      await startPayment(o.id, gw);
     } catch (err) {
       setPaying(null);
       if (err instanceof ApiError && err.code === "ALREADY_OWNED") {
@@ -267,7 +273,7 @@ export default function CartPage() {
         ) : isFree ? (
           <div className="mt-6 rounded-field bg-success-bg p-5 text-center">
             <p className="text-sm leading-7 text-success-text">
-             discount ۱۰۰٪ اعمال شد؛ این دوره را به‌صورت رایگان دریافت می‌کنید.
+             تخفیف ۱۰۰٪ اعمال شد؛ این دوره‌ها را به‌صورت رایگان دریافت می‌کنی.
             </p>
             <Button
               className="mt-4"

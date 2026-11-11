@@ -38,6 +38,13 @@ export function normalizeDigits(value: string): string {
     .replace(/\u2212/g, "-") // minus sign
 }
 
+/** Parse a number a user typed or pasted into a form field: Persian or
+    Latin digits, grouping separators (٬ ,) and stray spaces stripped.
+    Returns NaN when nothing numeric remains — callers must validate. */
+export function parseUserNumber(value: string): number {
+  return Number(normalizeDigits(value).replace(/[,\u066C\s\u00A0]/g, ""))
+}
+
 /** @deprecated Prefer normalizeDigits — kept for compatibility. */
 export const toLatinDigits = normalizeDigits
 

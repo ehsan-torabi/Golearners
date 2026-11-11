@@ -44,6 +44,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { api, formatTomanFromRial } from "@/lib/api";
 import { formatJalali } from "@/lib/jalali";
+import { parseUserNumber } from "@/lib/digits";
 import { fa } from "@/lib/utils";
 
 // the coupons table check constraint only knows active | disabled
@@ -110,6 +111,18 @@ export default function AdminCouponsPage() {
   async function create(event: React.FormEvent) {
     event.preventDefault();
     setError("");
+    // pasted «۱۵۰٬۰۰۰» or a stray letter must not become NaN → null on the wire
+    const nums = {
+      value: parseUserNumber(form.value),
+      max_uses: form.max_uses ? parseUserNumber(form.max_uses) : null,
+      per_user_limit: form.per_user_limit ? parseUserNumber(form.per_user_limit) : null,
+      min_amount_rial: form.min_amount_rial ? parseUserNumber(form.min_amount_rial) : null,
+      discount_cap_rial: form.discount_cap_rial ? parseUserNumber(form.discount_cap_rial) : null,
+    };
+    if (Number.isNaN(nums.value) || Object.values(nums).some((n) => n !== null && Number.isNaN(n))) {
+      setError("مقدارهای عددی نامعتبرند؛ فقط عدد وارد کنید.");
+      return;
+    }
     setSaving(true);
     try {
       await api("/admin/coupons", {
@@ -117,11 +130,11 @@ export default function AdminCouponsPage() {
         body: JSON.stringify({
           code: form.code.trim().toUpperCase(),
           type: form.type,
-          value: Number(form.value),
-          max_uses: form.max_uses ? Number(form.max_uses) : null,
-          per_user_limit: form.per_user_limit ? Number(form.per_user_limit) : null,
-          min_amount_rial: form.min_amount_rial ? Number(form.min_amount_rial) : null,
-          discount_cap_rial: form.discount_cap_rial ? Number(form.discount_cap_rial) : null,
+          value: nums.value,
+          max_uses: nums.max_uses,
+          per_user_limit: nums.per_user_limit,
+          min_amount_rial: nums.min_amount_rial,
+          discount_cap_rial: nums.discount_cap_rial,
           first_purchase_only: form.first_purchase_only,
           applies_to_sale_items: form.applies_to_sale_items,
           starts_at: form.starts_at || null,
