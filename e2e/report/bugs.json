@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-11-03T17:01:03.425Z",
-  "durationMs": 12146,
+  "generatedAt": "2026-11-11T23:17:48.269Z",
+  "durationMs": 308266,
   "status": "passed",
   "total": 76,
   "passed": 71,
-  "failed": 34,
-  "skipped": 2,
+  "failed": 43,
+  "skipped": 6,
   "flaky": 0,
   "rootCauses": [
     {
@@ -20,6 +20,20 @@
         "BUG-032",
         "BUG-033",
         "BUG-034"
+      ]
+    },
+    {
+      "signature": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "count": 8,
+      "bugs": [
+        "BUG-035",
+        "BUG-036",
+        "BUG-037",
+        "BUG-038",
+        "BUG-039",
+        "BUG-040",
+        "BUG-041",
+        "BUG-042"
       ]
     },
     {
@@ -130,6 +144,13 @@
       "count": 1,
       "bugs": [
         "BUG-008"
+      ]
+    },
+    {
+      "signature": "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenera",
+      "count": 1,
+      "bugs": [
+        "BUG-043"
       ]
     }
   ],
@@ -1233,6 +1254,320 @@
       "trace": "report/artifacts/desktop/admin-stats-course-statist-d6f5c-inks-to-the-statistics-page-desktop/trace.zip",
       "suspect": [
         "frontend/app/**"
+      ]
+    },
+    {
+      "id": "BUG-035",
+      "severity": "major",
+      "area": "cart.spec.ts",
+      "title": "an empty cart sends the visitor to the courses",
+      "test": "specs/cart.spec.ts:113 ›  › desktop › cart.spec.ts › shopping cart › an empty cart sends the visitor to the courses",
+      "steps": [
+        "Before Hooks",
+        "Navigate",
+        "Expect \"toBeVisible\"",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "visible",
+      "actual": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('سبد خرید خالی است')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('سبد خرید خالی است') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByText('سبد خرید خالی است')\u001b[22m\n",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "pageErrors": [],
+      "serverErrors": [],
+      "failedRequests": [],
+      "screenshot": "report/artifacts/desktop/cart-shopping-cart-an-empt-67da0--the-visitor-to-the-courses-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/cart-shopping-cart-an-empt-67da0--the-visitor-to-the-courses-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/**"
+      ]
+    },
+    {
+      "id": "BUG-036",
+      "severity": "major",
+      "area": "cart.spec.ts",
+      "title": "a guest cart asks for sign-in only at pay time",
+      "test": "specs/cart.spec.ts:120 ›  › desktop › cart.spec.ts › shopping cart › a guest cart asks for sign-in only at pay time",
+      "steps": [
+        "Before Hooks",
+        "Create request context",
+        "Create request context",
+        "POST",
+        "POST",
+        "POST",
+        "POST",
+        "POST",
+        "Navigate",
+        "Click",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "the page to render the expected content and finish the flow without errors",
+      "actual": "TimeoutError: locator.click: Timeout 20000ms exceeded.",
+      "error": "TimeoutError: locator.click: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'افزودن به سبد خرید' })\u001b[22m\n",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "pageErrors": [],
+      "serverErrors": [],
+      "failedRequests": [],
+      "screenshot": "report/artifacts/desktop/cart-shopping-cart-a-guest-88b49-or-sign-in-only-at-pay-time-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/cart-shopping-cart-a-guest-88b49-or-sign-in-only-at-pay-time-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/**"
+      ]
+    },
+    {
+      "id": "BUG-037",
+      "severity": "major",
+      "area": "checkout & payment",
+      "title": "a guest is asked to sign in before paying",
+      "test": "specs/checkout.spec.ts:15 ›  › desktop › checkout.spec.ts › checkout and payment › a guest is asked to sign in before paying",
+      "steps": [
+        "Before Hooks",
+        "Navigate",
+        "Expect \"toBeVisible\"",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "visible",
+      "actual": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'برای خرید ابتدا وارد شو' })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'برای خرید ابتدا وارد شو' }) with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'برای خرید ابتدا وارد شو' })\u001b[22m\n",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "pageErrors": [],
+      "serverErrors": [],
+      "failedRequests": [],
+      "screenshot": "report/artifacts/desktop/checkout-checkout-and-paym-47894-ed-to-sign-in-before-paying-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/checkout-checkout-and-paym-47894-ed-to-sign-in-before-paying-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go"
+      ]
+    },
+    {
+      "id": "BUG-038",
+      "severity": "major",
+      "area": "checkout & payment",
+      "title": "the learner buys a course with the mock gateway and gets access",
+      "test": "specs/checkout.spec.ts:24 ›  › desktop › checkout.spec.ts › checkout and payment › the learner buys a course with the mock gateway and gets access",
+      "steps": [
+        "Before Hooks",
+        "Create request context",
+        "Create request context",
+        "POST",
+        "POST",
+        "POST",
+        "POST",
+        "POST",
+        "Navigate",
+        "Expect \"toBeVisible\"",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "visible",
+      "actual": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'تسویه حساب' })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('heading', { name: 'تسویه حساب' }) with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'تسویه حساب' })\u001b[22m\n",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "pageErrors": [],
+      "serverErrors": [],
+      "failedRequests": [],
+      "screenshot": "report/artifacts/desktop/checkout-checkout-and-paym-e637d-ock-gateway-and-gets-access-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/checkout-checkout-and-paym-e637d-ock-gateway-and-gets-access-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go"
+      ]
+    },
+    {
+      "id": "BUG-039",
+      "severity": "major",
+      "area": "checkout & payment",
+      "title": "buying the same course twice is refused",
+      "test": "specs/checkout.spec.ts:63 ›  › desktop › checkout.spec.ts › checkout and payment › buying the same course twice is refused",
+      "steps": [
+        "Before Hooks",
+        "Create request context",
+        "Create request context",
+        "POST",
+        "POST",
+        "POST",
+        "POST",
+        "POST",
+        "Navigate",
+        "Expect \"toBeVisible\"",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "visible",
+      "actual": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('قابل پرداخت')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('قابل پرداخت') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByText('قابل پرداخت')\u001b[22m\n",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "pageErrors": [],
+      "serverErrors": [],
+      "failedRequests": [],
+      "screenshot": "report/artifacts/desktop/checkout-checkout-and-paym-9c9ef-ame-course-twice-is-refused-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/checkout-checkout-and-paym-9c9ef-ame-course-twice-is-refused-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go"
+      ]
+    },
+    {
+      "id": "BUG-040",
+      "severity": "major",
+      "area": "checkout & payment",
+      "title": "a cancelled payment keeps the order payable and a retry succeeds",
+      "test": "specs/checkout.spec.ts:87 ›  › desktop › checkout.spec.ts › checkout and payment › a cancelled payment keeps the order payable and a retry succeeds",
+      "steps": [
+        "Before Hooks",
+        "Create request context",
+        "Create request context",
+        "POST",
+        "POST",
+        "POST",
+        "POST",
+        "POST",
+        "Navigate",
+        "Expect \"toBeVisible\"",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "visible",
+      "actual": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('قابل پرداخت')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('قابل پرداخت') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByText('قابل پرداخت')\u001b[22m\n",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "pageErrors": [],
+      "serverErrors": [],
+      "failedRequests": [],
+      "screenshot": "report/artifacts/desktop/checkout-checkout-and-paym-ddaf7-ayable-and-a-retry-succeeds-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/checkout-checkout-and-paym-ddaf7-ayable-and-a-retry-succeeds-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go"
+      ]
+    },
+    {
+      "id": "BUG-041",
+      "severity": "major",
+      "area": "checkout & payment",
+      "title": "checkout without a course shows the empty state",
+      "test": "specs/checkout.spec.ts:146 ›  › desktop › checkout.spec.ts › checkout and payment › checkout without a course shows the empty state",
+      "steps": [
+        "Before Hooks",
+        "Navigate",
+        "Expect \"toBeVisible\"",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "visible",
+      "actual": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('دوره‌ای انتخاب نشده است')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('دوره‌ای انتخاب نشده است') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByText('دوره‌ای انتخاب نشده است')\u001b[22m\n",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "pageErrors": [],
+      "serverErrors": [],
+      "failedRequests": [],
+      "screenshot": "report/artifacts/desktop/checkout-checkout-and-paym-8cd02-ourse-shows-the-empty-state-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/checkout-checkout-and-paym-8cd02-ourse-shows-the-empty-state-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go"
+      ]
+    },
+    {
+      "id": "BUG-042",
+      "severity": "major",
+      "area": "checkout & payment",
+      "title": "the learner can sign in again after the session is lost",
+      "test": "specs/checkout.spec.ts:153 ›  › desktop › checkout.spec.ts › checkout and payment › the learner can sign in again after the session is lost",
+      "steps": [
+        "Before Hooks",
+        "Navigate",
+        "Fill \"09190000001\"",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "the page to render the expected content and finish the flow without errors",
+      "actual": "TimeoutError: locator.fill: Timeout 20000ms exceeded.",
+      "error": "TimeoutError: locator.fill: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('شماره موبایل')\u001b[22m\n",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "pageErrors": [],
+      "serverErrors": [],
+      "failedRequests": [],
+      "screenshot": "report/artifacts/desktop/checkout-checkout-and-paym-b4b32-n-after-the-session-is-lost-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/checkout-checkout-and-paym-b4b32-n-after-the-session-is-lost-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go"
+      ]
+    },
+    {
+      "id": "BUG-043",
+      "severity": "major",
+      "area": "admin console",
+      "title": "a blog post is written, published, visible on the blog and deletable",
+      "test": "specs/admin.spec.ts:166 ›  › desktop › admin.spec.ts › admin console › a blog post is written, published, visible on the blog and deletable",
+      "steps": [
+        "Before Hooks",
+        "Navigate",
+        "Fill \"نوشتهٔ تست E2E mwcpnhc132\"",
+        "Fill \"e2e-post-mwcpnhc179\"",
+        "Fill \"خلاصهٔ نوشتهٔ تست خودکار.\"",
+        "Click",
+        "Set input files",
+        "Expect \"toBeVisible\"",
+        "Expect \"toHaveText\"",
+        "Click",
+        "Click",
+        "Type \"متن نوشتهٔ تست خودکار.\"",
+        "Click",
+        "Expect \"toBeVisible\"",
+        "Navigate",
+        "Fill \"نوشتهٔ تست E2E mwcpnhc132\"",
+        "Press \"Enter\"",
+        "Expect \"toHaveCount\"",
+        "Click",
+        "Click",
+        "Expect \"toBeVisible\"",
+        "Navigate",
+        "Expect \"toBeVisible\"",
+        "Expect \"toBeVisible\"",
+        "Navigate",
+        "Fill \"نوشتهٔ تست E2E mwcpnhc132\"",
+        "Press \"Enter\"",
+        "Click",
+        "Click",
+        "Click",
+        "Expect \"toHaveCount\"",
+        "client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "- 1\u001b[39m",
+      "actual": "+ 7\u001b[39m",
+      "error": "Error: client/server errors:\nError: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 7\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\u001b[39m\n\u001b[31m+\u001b[39m\n\u001b[31m+ - A server/client branch `if (typeof window !== 'undefined')`.\u001b[39m\n\u001b[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\u001b[39m\n\u001b[31m+ - Date formatting in a user's locale which doesn't m\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+      "consoleErrors": [
+        "In HTML, %s cannot be a descendant of <%s>.\nThis will cause a hydration error.%s <button> button \n\n  ...\n    <RedirectErrorBoundary router={{...}}>\n      <InnerLayoutRouter url=\"/blog/e2e-...\" tree={[...]} cacheNode={{lazyData:null, ...}} segmentPath={[...]}>\n        <SegmentViewNode type=\"page\" pagePath=\"(site)/blo...\">\n          <SegmentTrieNode>\n          <BlogPostPage>\n            <article cla",
+        "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. button <button>"
+      ],
+      "pageErrors": [
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't m"
+      ],
+      "serverErrors": [],
+      "failedRequests": [
+        "PUT http://localhost:9000/golearn-media/media/image/2026/11/01a1cccc-afc7-76ff-b4cc-31a7f3dd7e91/sample.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20261111%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20261111T224848Z&X-Amz-Expires=600&X-Amz-SignedHeaders=content-type%3Bhost&x-id=PutObject&X-Amz-Signature=560806f9856c84f8164cc707ca9424b43fd5c61b3a7c898fa6dc8cb9f75321b3 :: net::ERR_ABORTED"
+      ],
+      "screenshot": "report/artifacts/desktop/admin-admin-console-a-blog-06728-e-on-the-blog-and-deletable-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/admin-admin-console-a-blog-06728-e-on-the-blog-and-deletable-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/(app)/admin/** + frontend/components/admin/**"
       ]
     }
   ],
@@ -4143,6 +4478,60 @@
       "test": "specs/site.spec.ts:59 ›  › desktop › site.spec.ts › public site › unknown course slug renders the not-found page",
       "consoleErrors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "serverErrors": []
+    },
+    {
+      "area": "learner dashboard",
+      "title": "a learner can change the password and sign in with the new one",
+      "test": "specs/learner.spec.ts:188 ›  › desktop › learner.spec.ts › learner dashboard › a learner can change the password and sign in with the new one",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "serverErrors": []
+    },
+    {
+      "area": "public site",
+      "title": "unknown course slug renders the not-found page",
+      "test": "specs/site.spec.ts:59 ›  › desktop › site.spec.ts › public site › unknown course slug renders the not-found page",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "serverErrors": []
+    },
+    {
+      "area": "authentication",
+      "title": "registration rejects a password that is too short",
+      "test": "specs/auth.spec.ts:39 ›  › desktop › auth.spec.ts › authentication › registration rejects a password that is too short",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+      ],
+      "serverErrors": []
+    },
+    {
+      "area": "learner dashboard",
+      "title": "a learner can change the password and sign in with the new one",
+      "test": "specs/learner.spec.ts:188 ›  › desktop › learner.spec.ts › learner dashboard › a learner can change the password and sign in with the new one",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "serverErrors": []
+    },
+    {
+      "area": "public site",
+      "title": "unknown course slug renders the not-found page",
+      "test": "specs/site.spec.ts:59 ›  › desktop › site.spec.ts › public site › unknown course slug renders the not-found page",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "serverErrors": []
+    },
+    {
+      "area": "authentication",
+      "title": "registration rejects a password that is too short",
+      "test": "specs/auth.spec.ts:39 ›  › desktop › auth.spec.ts › authentication › registration rejects a password that is too short",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 400 (Bad Request)"
       ],
       "serverErrors": []
     },

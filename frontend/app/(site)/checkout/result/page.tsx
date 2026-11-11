@@ -45,16 +45,26 @@ function ResultInner() {
     let timer: ReturnType<typeof setTimeout> | null = null;
     (async () => {
       try {
-        const order = await api<{ status: string }>(`/me/orders/${encodeURIComponent(orderId)}`);
+        const order = await api<{ status: string; payments?: { status: string }[] }>(
+          `/me/orders/${encodeURIComponent(orderId)}`,
+        );
         if (cancelled) return;
         if (order.status === "paid") {
           setOutcome("paid");
         } else if (order.status === "awaiting_payment") {
-          // the gateway verify can still land after the redirect: keep
-          // checking for ~20s before handing the question to the user;
-          // this is never a failure — money may already be captured
-          setOutcome("pending");
-          if (attempt < 5) timer = setTimeout(() => setAttempt((a) => a + 1), 4000);
+          // the order detail embeds only the in-flight payment attempts;
+          // a live one means the verify can still land (never a failure —
+          // money may be captured). No live attempt means the buyer canceled
+          // or the PSP failed: say so, the order itself stays payable.
+          const inFlight = (order.payments ?? []).some(
+            (p) => p.status === "initiated" || p.status === "redirected",
+          );
+          if (inFlight) {
+            setOutcome("pending");
+            if (attempt < 5) timer = setTimeout(() => setAttempt((a) => a + 1), 4000);
+          } else {
+            setOutcome("failed");
+          }
         } else {
           setOutcome("failed"); // canceled / expired / refunded
         }

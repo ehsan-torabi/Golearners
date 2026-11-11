@@ -1,6 +1,6 @@
 # GoLearn — E2E bug report
 
-Generated 2026-11-03T17:01:03.425Z · 12s · 71 passed · 34 failed · 2 skipped · 0 flaky (76 total)
+Generated 2026-11-11T23:17:48.269Z · 308s · 71 passed · 43 failed · 6 skipped · 0 flaky (76 total)
 
 Reproduce a single entry with `cd e2e && bunx playwright test <spec file>`.
 
@@ -9,20 +9,22 @@ Reproduce a single entry with `cd e2e && bunx playwright test <spec file>`.
 | # | Failures | Signature |
 |---|----------|-----------|
 | 1 | 8 (BUG-003, BUG-004, BUG-010, BUG-021, BUG-025, BUG-032, BUG-033, BUG-034) | Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed |
-| 2 | 4 (BUG-009, BUG-019, BUG-022, BUG-023) | Failed to load resource: the server responded with a status of 401 (Unauthorized) |
-| 3 | 4 (BUG-015, BUG-016, BUG-017, BUG-018) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login |
-| 4 | 2 (BUG-011, BUG-024) | Failed to load resource: the server responded with a status of 500 (Internal Server Error) |
-| 5 | 2 (BUG-012, BUG-020) | Error: browserContext.close: ENOENT: no such file or directory, open '/home/ehsan/Workspace/GoLearn/e2e/report/artifacts |
-| 6 | 2 (BUG-013, BUG-014) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/register |
-| 7 | 2 (BUG-026, BUG-027) | TimeoutError: locator.click: Timeout 20000ms exceeded. |
-| 8 | 2 (BUG-028, BUG-031) | Failed to load resource: the server responded with a status of 400 (Bad Request) |
-| 9 | 2 (BUG-029, BUG-030) | TypeError: Cannot read properties of undefined (reading 'unicode') |
-| 10 | 1 (BUG-001) | Failed to load resource: net::ERR_CONNECTION_REFUSED |
-| 11 | 1 (BUG-002) | Error: login as admin failed: 0 AggregateError: apiRequestContext.post: connect ECONNREFUSED ::1:8080 |
-| 12 | 1 (BUG-005) | AggregateError: apiRequestContext.get: connect ECONNREFUSED ::1:8080 |
-| 13 | 1 (BUG-006) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/ |
-| 14 | 1 (BUG-007) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/courses |
-| 15 | 1 (BUG-008) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/courses?q=Go |
+| 2 | 8 (BUG-035, BUG-036, BUG-037, BUG-038, BUG-039, BUG-040, BUG-041, BUG-042) | Failed to load resource: the server responded with a status of 404 (Not Found) |
+| 3 | 4 (BUG-009, BUG-019, BUG-022, BUG-023) | Failed to load resource: the server responded with a status of 401 (Unauthorized) |
+| 4 | 4 (BUG-015, BUG-016, BUG-017, BUG-018) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login |
+| 5 | 2 (BUG-011, BUG-024) | Failed to load resource: the server responded with a status of 500 (Internal Server Error) |
+| 6 | 2 (BUG-012, BUG-020) | Error: browserContext.close: ENOENT: no such file or directory, open '/home/ehsan/Workspace/GoLearn/e2e/report/artifacts |
+| 7 | 2 (BUG-013, BUG-014) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/register |
+| 8 | 2 (BUG-026, BUG-027) | TimeoutError: locator.click: Timeout 20000ms exceeded. |
+| 9 | 2 (BUG-028, BUG-031) | Failed to load resource: the server responded with a status of 400 (Bad Request) |
+| 10 | 2 (BUG-029, BUG-030) | TypeError: Cannot read properties of undefined (reading 'unicode') |
+| 11 | 1 (BUG-001) | Failed to load resource: net::ERR_CONNECTION_REFUSED |
+| 12 | 1 (BUG-002) | Error: login as admin failed: 0 AggregateError: apiRequestContext.post: connect ECONNREFUSED ::1:8080 |
+| 13 | 1 (BUG-005) | AggregateError: apiRequestContext.get: connect ECONNREFUSED ::1:8080 |
+| 14 | 1 (BUG-006) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/ |
+| 15 | 1 (BUG-007) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/courses |
+| 16 | 1 (BUG-008) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/courses?q=Go |
+| 17 | 1 (BUG-043) | Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenera |
 
 ## Index
 
@@ -62,6 +64,15 @@ Reproduce a single entry with `cd e2e && bunx playwright test <spec file>`.
 | BUG-032 | major | admin-stats.spec.ts | a course opens its own statistics page |
 | BUG-033 | major | admin-stats.spec.ts | the course page lists its learners and filters them |
 | BUG-034 | major | admin-stats.spec.ts | the course editor links to the statistics page |
+| BUG-035 | major | cart.spec.ts | an empty cart sends the visitor to the courses |
+| BUG-036 | major | cart.spec.ts | a guest cart asks for sign-in only at pay time |
+| BUG-037 | major | checkout & payment | a guest is asked to sign in before paying |
+| BUG-038 | major | checkout & payment | the learner buys a course with the mock gateway and gets access |
+| BUG-039 | major | checkout & payment | buying the same course twice is refused |
+| BUG-040 | major | checkout & payment | a cancelled payment keeps the order payable and a retry succeeds |
+| BUG-041 | major | checkout & payment | checkout without a course shows the empty state |
+| BUG-042 | major | checkout & payment | the learner can sign in again after the session is lost |
+| BUG-043 | major | admin console | a blog post is written, published, visible on the blog and deletable |
 
 ## BUG-001 · a course is created, gets a curriculum, is published and shows up on the site
 
@@ -1292,11 +1303,435 @@ Call log:
 
 **Trace:** `report/artifacts/desktop/admin-stats-course-statist-d6f5c-inks-to-the-statistics-page-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/admin-stats-course-statist-d6f5c-inks-to-the-statistics-page-desktop/trace.zip`)
 
+## BUG-035 · an empty cart sends the visitor to the courses
+
+- **Severity:** major
+- **Area:** cart.spec.ts
+- **Test:** `specs/cart.spec.ts:113 ›  › desktop › cart.spec.ts › shopping cart › an empty cart sends the visitor to the courses`
+- **Steps:**
+  - Before Hooks
+  - Navigate
+  - Expect "toBeVisible"
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** visible
+- **Actual:** Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+- **Suspect area:** `frontend/app/**`
+
+```
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+Locator: getByText('سبد خرید خالی است')
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+[2m  - Expect "toBeVisible" getByText('سبد خرید خالی است') with timeout 15000ms[22m
+[2m  - waiting for getByText('سبد خرید خالی است')[22m
+
+```
+
+**Console errors**
+```
+Failed to load resource: the server responded with a status of 404 (Not Found)
+```
+
+**Screenshot:** `report/artifacts/desktop/cart-shopping-cart-an-empt-67da0--the-visitor-to-the-courses-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/cart-shopping-cart-an-empt-67da0--the-visitor-to-the-courses-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/cart-shopping-cart-an-empt-67da0--the-visitor-to-the-courses-desktop/trace.zip`)
+
+## BUG-036 · a guest cart asks for sign-in only at pay time
+
+- **Severity:** major
+- **Area:** cart.spec.ts
+- **Test:** `specs/cart.spec.ts:120 ›  › desktop › cart.spec.ts › shopping cart › a guest cart asks for sign-in only at pay time`
+- **Steps:**
+  - Before Hooks
+  - Create request context
+  - Create request context
+  - POST
+  - POST
+  - POST
+  - POST
+  - POST
+  - Navigate
+  - Click
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** the page to render the expected content and finish the flow without errors
+- **Actual:** TimeoutError: locator.click: Timeout 20000ms exceeded.
+- **Suspect area:** `frontend/app/**`
+
+```
+TimeoutError: locator.click: Timeout 20000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: 'افزودن به سبد خرید' })[22m
+
+```
+
+**Console errors**
+```
+Failed to load resource: the server responded with a status of 404 (Not Found)
+```
+
+**Screenshot:** `report/artifacts/desktop/cart-shopping-cart-a-guest-88b49-or-sign-in-only-at-pay-time-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/cart-shopping-cart-a-guest-88b49-or-sign-in-only-at-pay-time-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/cart-shopping-cart-a-guest-88b49-or-sign-in-only-at-pay-time-desktop/trace.zip`)
+
+## BUG-037 · a guest is asked to sign in before paying
+
+- **Severity:** major
+- **Area:** checkout & payment
+- **Test:** `specs/checkout.spec.ts:15 ›  › desktop › checkout.spec.ts › checkout and payment › a guest is asked to sign in before paying`
+- **Steps:**
+  - Before Hooks
+  - Navigate
+  - Expect "toBeVisible"
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** visible
+- **Actual:** Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+- **Suspect area:** `frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go`
+
+```
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+Locator: getByRole('heading', { name: 'برای خرید ابتدا وارد شو' })
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+[2m  - Expect "toBeVisible" getByRole('heading', { name: 'برای خرید ابتدا وارد شو' }) with timeout 15000ms[22m
+[2m  - waiting for getByRole('heading', { name: 'برای خرید ابتدا وارد شو' })[22m
+
+```
+
+**Console errors**
+```
+Failed to load resource: the server responded with a status of 404 (Not Found)
+```
+
+**Screenshot:** `report/artifacts/desktop/checkout-checkout-and-paym-47894-ed-to-sign-in-before-paying-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/checkout-checkout-and-paym-47894-ed-to-sign-in-before-paying-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/checkout-checkout-and-paym-47894-ed-to-sign-in-before-paying-desktop/trace.zip`)
+
+## BUG-038 · the learner buys a course with the mock gateway and gets access
+
+- **Severity:** major
+- **Area:** checkout & payment
+- **Test:** `specs/checkout.spec.ts:24 ›  › desktop › checkout.spec.ts › checkout and payment › the learner buys a course with the mock gateway and gets access`
+- **Steps:**
+  - Before Hooks
+  - Create request context
+  - Create request context
+  - POST
+  - POST
+  - POST
+  - POST
+  - POST
+  - Navigate
+  - Expect "toBeVisible"
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** visible
+- **Actual:** Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+- **Suspect area:** `frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go`
+
+```
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+Locator: getByRole('heading', { name: 'تسویه حساب' })
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+[2m  - Expect "toBeVisible" getByRole('heading', { name: 'تسویه حساب' }) with timeout 15000ms[22m
+[2m  - waiting for getByRole('heading', { name: 'تسویه حساب' })[22m
+
+```
+
+**Console errors**
+```
+Failed to load resource: the server responded with a status of 404 (Not Found)
+```
+
+**Screenshot:** `report/artifacts/desktop/checkout-checkout-and-paym-e637d-ock-gateway-and-gets-access-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/checkout-checkout-and-paym-e637d-ock-gateway-and-gets-access-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/checkout-checkout-and-paym-e637d-ock-gateway-and-gets-access-desktop/trace.zip`)
+
+## BUG-039 · buying the same course twice is refused
+
+- **Severity:** major
+- **Area:** checkout & payment
+- **Test:** `specs/checkout.spec.ts:63 ›  › desktop › checkout.spec.ts › checkout and payment › buying the same course twice is refused`
+- **Steps:**
+  - Before Hooks
+  - Create request context
+  - Create request context
+  - POST
+  - POST
+  - POST
+  - POST
+  - POST
+  - Navigate
+  - Expect "toBeVisible"
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** visible
+- **Actual:** Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+- **Suspect area:** `frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go`
+
+```
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+Locator: getByText('قابل پرداخت')
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+[2m  - Expect "toBeVisible" getByText('قابل پرداخت') with timeout 15000ms[22m
+[2m  - waiting for getByText('قابل پرداخت')[22m
+
+```
+
+**Console errors**
+```
+Failed to load resource: the server responded with a status of 404 (Not Found)
+```
+
+**Screenshot:** `report/artifacts/desktop/checkout-checkout-and-paym-9c9ef-ame-course-twice-is-refused-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/checkout-checkout-and-paym-9c9ef-ame-course-twice-is-refused-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/checkout-checkout-and-paym-9c9ef-ame-course-twice-is-refused-desktop/trace.zip`)
+
+## BUG-040 · a cancelled payment keeps the order payable and a retry succeeds
+
+- **Severity:** major
+- **Area:** checkout & payment
+- **Test:** `specs/checkout.spec.ts:87 ›  › desktop › checkout.spec.ts › checkout and payment › a cancelled payment keeps the order payable and a retry succeeds`
+- **Steps:**
+  - Before Hooks
+  - Create request context
+  - Create request context
+  - POST
+  - POST
+  - POST
+  - POST
+  - POST
+  - Navigate
+  - Expect "toBeVisible"
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** visible
+- **Actual:** Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+- **Suspect area:** `frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go`
+
+```
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+Locator: getByText('قابل پرداخت')
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+[2m  - Expect "toBeVisible" getByText('قابل پرداخت') with timeout 15000ms[22m
+[2m  - waiting for getByText('قابل پرداخت')[22m
+
+```
+
+**Console errors**
+```
+Failed to load resource: the server responded with a status of 404 (Not Found)
+```
+
+**Screenshot:** `report/artifacts/desktop/checkout-checkout-and-paym-ddaf7-ayable-and-a-retry-succeeds-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/checkout-checkout-and-paym-ddaf7-ayable-and-a-retry-succeeds-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/checkout-checkout-and-paym-ddaf7-ayable-and-a-retry-succeeds-desktop/trace.zip`)
+
+## BUG-041 · checkout without a course shows the empty state
+
+- **Severity:** major
+- **Area:** checkout & payment
+- **Test:** `specs/checkout.spec.ts:146 ›  › desktop › checkout.spec.ts › checkout and payment › checkout without a course shows the empty state`
+- **Steps:**
+  - Before Hooks
+  - Navigate
+  - Expect "toBeVisible"
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** visible
+- **Actual:** Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+- **Suspect area:** `frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go`
+
+```
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+Locator: getByText('دوره‌ای انتخاب نشده است')
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+[2m  - Expect "toBeVisible" getByText('دوره‌ای انتخاب نشده است') with timeout 15000ms[22m
+[2m  - waiting for getByText('دوره‌ای انتخاب نشده است')[22m
+
+```
+
+**Console errors**
+```
+Failed to load resource: the server responded with a status of 404 (Not Found)
+```
+
+**Screenshot:** `report/artifacts/desktop/checkout-checkout-and-paym-8cd02-ourse-shows-the-empty-state-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/checkout-checkout-and-paym-8cd02-ourse-shows-the-empty-state-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/checkout-checkout-and-paym-8cd02-ourse-shows-the-empty-state-desktop/trace.zip`)
+
+## BUG-042 · the learner can sign in again after the session is lost
+
+- **Severity:** major
+- **Area:** checkout & payment
+- **Test:** `specs/checkout.spec.ts:153 ›  › desktop › checkout.spec.ts › checkout and payment › the learner can sign in again after the session is lost`
+- **Steps:**
+  - Before Hooks
+  - Navigate
+  - Fill "09190000001"
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** the page to render the expected content and finish the flow without errors
+- **Actual:** TimeoutError: locator.fill: Timeout 20000ms exceeded.
+- **Suspect area:** `frontend/app/(site)/checkout/** + backend/internal/service/checkout/** + backend/internal/repository/review.go`
+
+```
+TimeoutError: locator.fill: Timeout 20000ms exceeded.
+Call log:
+[2m  - waiting for getByLabel('شماره موبایل')[22m
+
+```
+
+**Console errors**
+```
+Failed to load resource: the server responded with a status of 404 (Not Found)
+```
+
+**Screenshot:** `report/artifacts/desktop/checkout-checkout-and-paym-b4b32-n-after-the-session-is-lost-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/checkout-checkout-and-paym-b4b32-n-after-the-session-is-lost-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/checkout-checkout-and-paym-b4b32-n-after-the-session-is-lost-desktop/trace.zip`)
+
+## BUG-043 · a blog post is written, published, visible on the blog and deletable
+
+- **Severity:** major
+- **Area:** admin console
+- **Test:** `specs/admin.spec.ts:166 ›  › desktop › admin.spec.ts › admin console › a blog post is written, published, visible on the blog and deletable`
+- **Steps:**
+  - Before Hooks
+  - Navigate
+  - Fill "نوشتهٔ تست E2E mwcpnhc132"
+  - Fill "e2e-post-mwcpnhc179"
+  - Fill "خلاصهٔ نوشتهٔ تست خودکار."
+  - Click
+  - Set input files
+  - Expect "toBeVisible"
+  - Expect "toHaveText"
+  - Click
+  - Click
+  - Type "متن نوشتهٔ تست خودکار."
+  - Click
+  - Expect "toBeVisible"
+  - Navigate
+  - Fill "نوشتهٔ تست E2E mwcpnhc132"
+  - Press "Enter"
+  - Expect "toHaveCount"
+  - Click
+  - Click
+  - Expect "toBeVisible"
+  - Navigate
+  - Expect "toBeVisible"
+  - Expect "toBeVisible"
+  - Navigate
+  - Fill "نوشتهٔ تست E2E mwcpnhc132"
+  - Press "Enter"
+  - Click
+  - Click
+  - Click
+  - Expect "toHaveCount"
+  - client/server errors:
+Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't m
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** - 1[39m
+- **Actual:** + 7[39m
+- **Suspect area:** `frontend/app/(app)/admin/** + frontend/components/admin/**`
+
+```
+Error: client/server errors:
+Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't m
+
+[2mexpect([22m[31mreceived[39m[2m).[22mtoEqual[2m([22m[32mexpected[39m[2m) // deep equality[22m
+
+[32m- Expected  - 1[39m
+[31m+ Received  + 7[39m
+
+[32m- Array [][39m
+[31m+ Array [[39m
+[31m+   "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:[39m
+[31m+[39m
+[31m+ - A server/client branch `if (typeof window !== 'undefined')`.[39m
+[31m+ - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.[39m
+[31m+ - Date formatting in a user's locale which doesn't m",[39m
+[31m+ ][39m
+```
+
+**Console errors**
+```
+In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <RedirectErrorBoundary router={{...}}>
+      <InnerLayoutRouter url="/blog/e2e-..." tree={[...]} cacheNode={{lazyData:null, ...}} segmentPath={[...]}>
+        <SegmentViewNode type="page" pagePath="(site)/blo...">
+          <SegmentTrieNode>
+          <BlogPostPage>
+            <article cla
+<%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button>
+```
+
+**Uncaught page errors**
+```
+Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't m
+```
+
+**Failed requests**
+```
+PUT http://localhost:9000/golearn-media/media/image/2026/11/01a1cccc-afc7-76ff-b4cc-31a7f3dd7e91/sample.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20261111%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20261111T224848Z&X-Amz-Expires=600&X-Amz-SignedHeaders=content-type%3Bhost&x-id=PutObject&X-Amz-Signature=560806f9856c84f8164cc707ca9424b43fd5c61b3a7c898fa6dc8cb9f75321b3 :: net::ERR_ABORTED
+```
+
+**Screenshot:** `report/artifacts/desktop/admin-admin-console-a-blog-06728-e-on-the-blog-and-deletable-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/admin-admin-console-a-blog-06728-e-on-the-blog-and-deletable-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/admin-admin-console-a-blog-06728-e-on-the-blog-and-deletable-desktop/trace.zip`)
+
 ## Observations — tests passed but the page logged errors
 
-- **13×** Failed to load resource: the server responded with a status of 400 (Bad Request)
+- **15×** Failed to load resource: the server responded with a status of 400 (Bad Request)
   - e.g. “a coupon is created and switched off”, “a coupon is created and switched off”, “a coupon is created and switched off”, “a coupon is created and switched off”, “a coupon is created and switched off”
-- **277×** Failed to load resource: the server responded with a status of 401 (Unauthorized)
+- **279×** Failed to load resource: the server responded with a status of 401 (Unauthorized)
   - e.g. “a new mobile registers, verifies the OTP and lands on the dashboard”, “registration rejects a password that is too short”, “login with a wrong password shows an error and stays on the login page”, “login with the correct password opens the learner dashboard”, “login with an SMS code opens the learner dashboard”
-- **21×** Failed to load resource: the server responded with a status of 404 (Not Found)
+- **23×** Failed to load resource: the server responded with a status of 404 (Not Found)
   - e.g. “unknown course slug renders the not-found page”, “unknown course slug renders the not-found page”, “unknown course slug renders the not-found page”, “unknown course slug renders the not-found page”, “unknown course slug renders the not-found page”

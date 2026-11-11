@@ -57,15 +57,17 @@ function ShareSheet({ absolute }: { absolute: string }) {
   }, [absolute]);
   return (
     <Sheet>
-      <SheetTrigger>
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="اشتراک‌گذاری این مقاله"
-          className="rounded-full w-11 h-11"
-        >
-          <Share2Icon className="size-5" />
-        </Button>
+      <SheetTrigger
+        render={
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="اشتراک‌گذاری این مقاله"
+            className="rounded-full w-11 h-11"
+          />
+        }
+      >
+        <Share2Icon className="size-5" />
       </SheetTrigger>
       <SheetContent className="p-5 w-full sm:w-80" dir="rtl" lang="fa">
         <p className="mb-4 text-xs font-medium text-muted-foreground">اشتراک‌گذاری</p>
