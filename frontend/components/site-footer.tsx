@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { toJalali } from "@/lib/jalali";
+import { toPersianDigits } from "@/lib/digits";
 
 const links = [
   { href: "/courses", label: "دوره‌ها" },
@@ -65,7 +67,7 @@ export function SiteFooter({ categories }: { categories: FooterCategory[] }) {
       )}
 
       <div className="border-t border-line py-5 text-center text-xs text-muted-foreground">
-        گوLearn ،۱۴۰۵. همه محتوا متعلق به این رسانه است.
+        گوLearn ،{toPersianDigits(String(toJalali(new Date()).jy))}. همه محتوا متعلق به این رسانه است.
       </div>
     </footer>
   );

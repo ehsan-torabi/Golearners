@@ -32,14 +32,19 @@ export function LogoutButton({
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState("");
 
   async function logout() {
     setBusy(true);
+    setError("");
     try {
       await api("/auth/logout", { method: "POST" });
       setOpen(false);
       router.push(redirectTo);
       router.refresh();
+    } catch {
+      // the server session is still alive: say so instead of failing silently
+      setError("خروج انجام نشد؛ اتصال را بررسی کن و دوباره تلاش کن.");
     } finally {
       setBusy(false);
     }
@@ -71,6 +76,7 @@ export function LogoutButton({
           <AlertDialogDescription>
             پس از خروج، برای ادامه یادگیری یا مدیریت سایت باید دوباره وارد شوی.
           </AlertDialogDescription>
+          {error && <p className="text-sm text-destructive-text">{error}</p>}
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>انصراف</AlertDialogCancel>

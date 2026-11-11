@@ -64,8 +64,20 @@ function d2j(jdn: number): JalaliDate {
   return { jy, jm: 7 + div(k, 30), jd: mod(k, 30) + 1 };
 }
 
+// the calendar day is Tehran's, never the runtime's: a UTC container and a
+// Tehran browser must agree, or receipts flip a day and SSR hydration mismatches
+const TEHRAN_PARTS = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Tehran",
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+});
+
 export function toJalali(date: Date): JalaliDate {
-  return d2j(g2d(date.getFullYear(), date.getMonth() + 1, date.getDate()));
+  const parts = TEHRAN_PARTS.formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value);
+  return d2j(g2d(get("year"), get("month"), get("day")));
 }
 
 /** zero-value timestamps (year 1) mean "not set", not a date in the past */

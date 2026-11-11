@@ -16,7 +16,8 @@ import { cn, fa } from "@/lib/utils";
     management console and everyone else on the learner dashboard. */
 function landingFor(roles: string[] | undefined): string {
   const next = new URLSearchParams(window.location.search).get("next");
-  if (next && next.startsWith("/") && !next.startsWith("//")) return next;
+  // "/\evil.com" parses as protocol-relative, so backslashes are rejected too
+  if (next && next.startsWith("/") && !next.startsWith("//") && !next.includes("\\")) return next;
   const admin = roles?.includes("admin") || roles?.includes("owner");
   return admin ? "/admin" : "/dashboard";
 }
@@ -37,6 +38,14 @@ export default function LoginPage() {
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [resent, setResent] = React.useState(0);
+  // the resend countdown must not keep ticking after the page is gone
+  const resendTimer = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  React.useEffect(
+    () => () => {
+      if (resendTimer.current) clearInterval(resendTimer.current);
+    },
+    [],
+  );
 
   async function requestOtp(purpose: OtpPurpose) {
     await api("/auth/otp/request", {
@@ -131,6 +140,7 @@ export default function LoginPage() {
                     return s - 1;
                   });
                 }, 1000);
+                resendTimer.current = t;
               } catch {
                 setError("ارسال مجدد ممکن نشد؛ کمی بعد تلاش کن.");
               }
