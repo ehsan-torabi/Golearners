@@ -5,8 +5,6 @@ import { CopyIcon, Loader2, Share2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-const ICON_SIZE = 20;
-
 const shareEntries = [
   {
     label: "تلگرام",
@@ -65,7 +63,7 @@ function ShareSheet({ absolute }: { absolute: string }) {
           aria-label="اشتراک‌گذاری این مقاله"
           className="rounded-full w-11 h-11"
         >
-          <Share2Icon className={`size-${ICON_SIZE}`} />
+          <Share2Icon className="size-5" />
         </Button>
       </SheetTrigger>
       <SheetContent className="p-5 w-full sm:w-80" dir="rtl" lang="fa">
@@ -74,7 +72,7 @@ function ShareSheet({ absolute }: { absolute: string }) {
           {links.map((entry) => (
             <a
               key={entry.label}
-              href={entry.href(absolute)}
+              href={entry.href}
               target="_blank"
               rel={entry.rel}
               className="flex h-10 flex-col items-center justify-center rounded-md border border-line bg-card text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-primary-tint"
