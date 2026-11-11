@@ -35,3 +35,18 @@ export function faDuration(seconds: number): string {
   if (m > 0) return `${fa(m)} دقیقه`;
   return `${fa(s)} ثانیه`;
 }
+
+/** Seconds -> «۰۳:۲۰» / «۱:۰۲:۰۰» for players and previews. */
+export function formatDuration(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = String(s % 60).padStart(2, "0");
+  return fa(h ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`);
+}
+
+/** Serialize JSON-LD so a `</script>` inside an admin title can never
+    break out of the ld+json tag. */
+export function jsonLdScript(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}

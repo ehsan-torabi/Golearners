@@ -48,6 +48,7 @@ export function ShareRail({ url }: { url: string }) {
 
 function ShareSheet({ absolute }: { absolute: string }) {
   const [copied, setCopied] = React.useState(false);
+  const [copyFailed, setCopyFailed] = React.useState(false);
   // share URLs read document.title, which only exists in the browser —
   // compute them after mount so SSR never touches `document`
   const [links, setLinks] = React.useState<{ label: string; href: string; rel: string }[]>([]);
@@ -84,9 +85,14 @@ function ShareSheet({ absolute }: { absolute: string }) {
         <Button
           variant="outline"
           onClick={() => {
-            navigator.clipboard.writeText(absolute);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+            navigator.clipboard
+              .writeText(absolute)
+              .then(() => {
+                setCopied(true);
+                setCopyFailed(false);
+                setTimeout(() => setCopied(false), 2000);
+              })
+              .catch(() => setCopyFailed(true));
           }}
           className="w-full gap-1"
         >
@@ -100,6 +106,11 @@ function ShareSheet({ absolute }: { absolute: string }) {
             </>
           )}
         </Button>
+        {copyFailed && (
+          <p className="mt-2 text-xs text-destructive-text">
+            کپی خودکار ممکن نشد؛ لینک را از نوار آدرس دستی کپی کنید.
+          </p>
+        )}
       </SheetContent>
     </Sheet>
   );

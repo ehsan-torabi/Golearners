@@ -11,7 +11,7 @@ import { ReviewForm } from "@/components/site/review-form";
 import { PromoPlayer } from "@/components/site/promo-player";
 import { PreviewLessonItem } from "@/components/site/preview-lesson";
 import { AddToCartButton } from "@/components/site/add-to-cart";
-import { cn, fa, faPercent } from "@/lib/utils";
+import { cn, fa, faPercent, formatDuration, jsonLdScript } from "@/lib/utils";
 
 /* per-viewer state (owned, lesson progress) needs the session cookie */
 export const dynamic = "force-dynamic";
@@ -125,13 +125,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-/** seconds -> «۰۳:۲۰» */
-function formatClock(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${fa(String(m).padStart(2, "0"))}:${fa(String(s).padStart(2, "0"))}`;
-}
-
 export default async function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const d = await detailForViewer(decodeURIComponent(slug));
@@ -163,7 +156,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="space-y-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
 
       {/* course hero: the brand band carries title, rating and facts */}
       <section className="hero-band reveal rounded-surface border border-line px-6 py-8 md:px-10 md:py-10">
@@ -262,7 +255,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                               <span className="min-w-0 flex-1 truncate">{title}</span>
                             )}
                             <span className="shrink-0 text-xs text-muted-foreground">
-                              {formatClock(l.duration_seconds)}
+                              {formatDuration(l.duration_seconds)}
                             </span>
                             <span className="hidden w-28 shrink-0 text-end text-xs sm:block">
                               {state ? (
@@ -271,7 +264,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                                 ) : playable ? (
                                   <span className="font-medium text-accent-strong">
                                     {state.position_seconds > 0
-                                      ? `ادامه از ${formatClock(state.position_seconds)}`
+                                      ? `ادامه از ${formatDuration(state.position_seconds)}`
                                       : "پخش"}
                                   </span>
                                 ) : (
@@ -353,13 +346,6 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                       size="lg"
                     >
                       ادامه یادگیری
-                    </ButtonLink>
-                    <ButtonLink
-                      href={`/dashboard/courses/${encodeURIComponent(d.course.slug)}`}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      رفتن به فهرست درس‌ها
                     </ButtonLink>
                   </div>
                 </>

@@ -6,7 +6,7 @@ import { HlsJsVideo } from "@videojs/react/media/hlsjs-video";
 import { NeutralVideoSkin, Video, VideoPlayer as VjsPlayer } from "@videojs/react/video";
 import "@videojs/react/i18n/locales/fa/register";
 import "@videojs/react/video/neutral-skin.css";
-import { cn, fa } from "@/lib/utils";
+import { cn, fa, formatDuration } from "@/lib/utils";
 
 export interface VideoChapter {
   /** Start time in seconds. */
@@ -40,15 +40,6 @@ export interface VideoPlayerProps {
   /** fires when the browser cannot decode the source (missing or broken file) */
   onError?: (message: string) => void;
   className?: string;
-}
-
-/** ۶۵ → «۱:۰۵»، ۳۷۲۰ → «۱:۰۲:۰۰». */
-export function formatDuration(seconds: number): string {
-  const s = Math.max(0, Math.floor(seconds || 0));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const ss = String(s % 60).padStart(2, "0");
-  return fa(h ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`);
 }
 
 /**

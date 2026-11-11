@@ -3,18 +3,12 @@
 import * as React from "react";
 import { Play } from "lucide-react";
 import { VideoPlayer } from "@/components/ui/video-player";
-import { fa } from "@/lib/utils";
+import { formatDuration } from "@/lib/utils";
 
 export interface PreviewLessonData {
   id: string;
   title: string;
   duration_seconds: number;
-}
-
-function formatClock(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return fa(`${m}:${String(s).padStart(2, "0")}`);
 }
 
 /**
@@ -65,7 +59,7 @@ export function PreviewLessonItem({ lesson }: { lesson: PreviewLessonData }) {
         </span>
         <span className="min-w-0 flex-1 truncate text-foreground/90">{lesson.title}</span>
         <span className="shrink-0 text-xs text-muted-foreground">
-          {formatClock(lesson.duration_seconds)}
+          {formatDuration(lesson.duration_seconds)}
         </span>
         <span className="hidden w-28 shrink-0 text-end text-xs font-medium text-success-text sm:block">
           {open ? "بستن پیش‌نمایش" : "پیش‌نمایش رایگان"}

@@ -40,6 +40,7 @@ import {
   useAdminList,
   useFacetCounts,
   type ListChip,
+  ListError,
 } from "@/components/admin/list-view";
 import { ApiError, formatTomanFromRial } from "@/lib/api";
 import { adminGetOrder, adminRefundOrder, type AdminOrderDetail } from "@/lib/admin";
@@ -180,6 +181,7 @@ export default function AdminOrdersPage() {
           }
         />
 
+        <ListError error={list.error} />
         {list.loading ? (
           <ListLoading label="در حال بارگذاری سفارش‌ها" />
         ) : list.items.length === 0 ? (

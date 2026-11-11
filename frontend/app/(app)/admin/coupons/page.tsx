@@ -40,6 +40,7 @@ import {
   useAdminList,
   useFacetCounts,
   type ListChip,
+  ListError,
 } from "@/components/admin/list-view";
 import { ApiError } from "@/lib/api";
 import { api, formatTomanFromRial } from "@/lib/api";
@@ -390,6 +391,7 @@ export default function AdminCouponsPage() {
           }
         />
 
+        <ListError error={list.error} />
         {list.loading ? (
           <ListLoading label="در حال بارگذاری کدهای تخفیف" />
         ) : list.items.length === 0 ? (

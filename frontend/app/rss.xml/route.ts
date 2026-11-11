@@ -6,7 +6,7 @@ function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-export const dynamic = "force-dynamic";
+// ISR: a fresh feed every 10 minutes is plenty for RSS readers
 export const revalidate = 600;
 
 export async function GET() {

@@ -26,6 +26,7 @@ import {
   useAdminList,
   useFacetCounts,
   type ListChip,
+  ListError,
 } from "@/components/admin/list-view";
 import { fetchCourseCategories, type CourseStatsRow, type TaxonomyItem } from "@/lib/admin";
 import { formatTomanFromRial, LEVEL_FA } from "@/lib/api";
@@ -211,6 +212,7 @@ export function CourseStatsList() {
           }
         />
 
+        <ListError error={list.error} />
         {list.loading ? (
           <ListLoading label="در حال بارگذاری آمار دوره‌ها" />
         ) : list.items.length === 0 ? (

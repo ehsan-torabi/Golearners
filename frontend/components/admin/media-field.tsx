@@ -54,21 +54,8 @@ export function MediaField({
   }, [kind]);
 
   React.useEffect(() => {
-    let alive = true;
-    setState("loading");
-    fetchMedia(kind)
-      .then((res) => {
-        if (!alive) return;
-        setItems(res.data);
-        setState("ready");
-      })
-      .catch(() => {
-        if (alive) setState("error");
-      });
-    return () => {
-      alive = false;
-    };
-  }, [kind]);
+    void load();
+  }, [load]);
 
   const selected = items.find((m) => m.id === value) ?? null;
 

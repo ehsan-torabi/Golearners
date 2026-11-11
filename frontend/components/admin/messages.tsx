@@ -30,6 +30,7 @@ import {
   useAdminList,
   useFacetCounts,
   type ListChip,
+  ListError,
 } from "@/components/admin/list-view";
 import { ApiError, api } from "@/lib/api";
 import { formatJalali } from "@/lib/jalali";
@@ -136,6 +137,7 @@ export function AdminMessages() {
           }
         />
 
+        <ListError error={list.error} />
         {list.loading ? (
           <ListLoading label="در حال بارگذاری پیام‌ها" />
         ) : list.items.length === 0 ? (

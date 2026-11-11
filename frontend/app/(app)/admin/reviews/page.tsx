@@ -30,6 +30,7 @@ import {
   useAdminList,
   useFacetCounts,
   type ListChip,
+  ListError,
 } from "@/components/admin/list-view";
 import { ApiError, adminModerateReview, type AdminReview } from "@/lib/admin";
 import { formatJalali } from "@/lib/jalali";
@@ -129,6 +130,7 @@ export default function AdminReviewsPage() {
           }
         />
 
+        <ListError error={list.error} />
         {list.loading ? (
           <ListLoading label="در حال بارگذاری نظرها" />
         ) : list.items.length === 0 ? (

@@ -44,6 +44,7 @@ import {
   useAdminList,
   useFacetCounts,
   type ListChip,
+  ListError,
 } from "@/components/admin/list-view";
 import {
   ApiError,
@@ -297,6 +298,7 @@ export default function AdminPostsPage() {
           />
         )}
 
+        <ListError error={list.error} />
         {list.loading ? (
           <ListLoading label="در حال بارگذاری نوشته‌ها" />
         ) : list.items.length === 0 ? (

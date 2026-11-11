@@ -9,33 +9,6 @@ export type RichTextEditorContent = string | JSONContent
 
 export type RichTextEditorVariant = "simple" | "advanced"
 
-export const RICH_TEXT_HEADING_LEVELS = [1, 2, 3] as const
-
-export const RICH_TEXT_SIMPLE_EXTENSION_NAMES = [
-  "starterKit",
-  "underline",
-  "link",
-  "image",
-  "placeholder",
-] as const
-
-export const RICH_TEXT_EXTENSION_NAMES = [
-  "starterKit",
-  "textStyleKit",
-  "underline",
-  "subscript",
-  "superscript",
-  "highlight",
-  "textAlign",
-  "taskList",
-  "taskItem",
-  "tableKit",
-  "link",
-  "image",
-  "typography",
-  "placeholder",
-] as const
-
 const HTTP_URL_PATTERN = /^https?:\/\//i
 
 export function isAllowedRichTextUrl(url: string): boolean {

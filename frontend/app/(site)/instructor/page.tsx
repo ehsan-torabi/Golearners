@@ -2,6 +2,7 @@ import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/ui/empty-state";
 import { api } from "@/lib/api";
+import { jsonLdScript } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "درباره مدرس",
@@ -31,7 +32,7 @@ export default async function InstructorPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <h1 className="reveal font-semibold text-3xl">درباره مدرس</h1>
 
       {!instructor ? (
@@ -57,18 +58,21 @@ export default async function InstructorPage() {
           )}
           {Object.keys(instructor.socials ?? {}).length > 0 && (
             <ul className="flex flex-wrap gap-3 text-sm">
-              {Object.entries(instructor.socials).map(([name, url]) => (
-                <li key={name}>
-                  <a
-                    href={url}
-                    rel="noopener noreferrer nofollow"
-                    target="_blank"
-                    className="inline-flex h-10 items-center rounded-control border border-line bg-card px-4 text-foreground transition-colors duration-(--motion) ease-motion hover:bg-muted"
-                  >
-                    {name}
-                  </a>
-                </li>
-              ))}
+              {Object.entries(instructor.socials).map(([name, url]) =>
+                // a social entry is a website address, never a scheme handler
+                typeof url === "string" && /^https?:\/\//i.test(url) ? (
+                  <li key={name}>
+                    <a
+                      href={url}
+                      rel="noopener noreferrer nofollow"
+                      target="_blank"
+                      className="inline-flex h-10 items-center rounded-control border border-line bg-card px-4 text-foreground transition-colors duration-(--motion) ease-motion hover:bg-muted"
+                    >
+                      {name}
+                    </a>
+                  </li>
+                ) : null,
+              )}
             </ul>
           )}
         </div>

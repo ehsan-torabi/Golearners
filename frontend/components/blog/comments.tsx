@@ -5,8 +5,7 @@ import { api } from "@/lib/api";
 import { formatJalali } from "@/lib/jalali";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/input";
+import { Field, Input, Textarea } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 
 interface Comment {
@@ -143,7 +142,7 @@ export function BlogComments({ postSlug }: CommentsProps) {
       <Card className="mt-6">
         <form onSubmit={submit} className="space-y-3 p-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="نام شما" id="author">
+            <Field label="نام شما" htmlFor="author">
               <Input
                 id="author"
                 value={form.author_name}
@@ -153,7 +152,7 @@ export function BlogComments({ postSlug }: CommentsProps) {
                 required
               />
             </Field>
-            <Field label="ایمیل شما" id="email">
+            <Field label="ایمیل شما" htmlFor="email">
               <Input
                 id="email"
                 value={form.email}
@@ -163,7 +162,7 @@ export function BlogComments({ postSlug }: CommentsProps) {
               />
             </Field>
           </div>
-          <Field label="نظرتان" hint="بعد از تایید مدیر منتشر می‌شود." id="comment-body">
+          <Field label="نظرتان" hint="بعد از تایید مدیر منتشر می‌شود." htmlFor="comment-body">
             <Textarea
               id="body"
               value={form.body}
@@ -181,24 +180,3 @@ export function BlogComments({ postSlug }: CommentsProps) {
   );
 }
 
-function Field({
-  children,
-  label,
-  hint,
-  id,
-}: {
-  children: React.ReactNode;
-  label: string;
-  hint?: string;
-  id: string;
-}) {
-  return (
-    <div className="space-y-1">
-      <label htmlFor={id} className="text-sm font-medium text-foreground">
-        {label}
-      </label>
-      {children}
-      {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
-    </div>
-  );
-}

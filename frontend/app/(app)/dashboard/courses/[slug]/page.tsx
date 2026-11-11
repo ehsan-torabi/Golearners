@@ -165,6 +165,7 @@ export default async function LearnCoursePage({
                             <span className="flex items-center gap-2.5 rounded-field px-2 py-2 text-muted-foreground/60">
                               <Lock className="size-3.5 shrink-0" aria-hidden />
                               <span className="min-w-0 flex-1 truncate">{l.title}</span>
+                              <span className="sr-only">(قفل‌شده)</span>
                             </span>
                           </li>
                         ),

@@ -31,6 +31,7 @@ import {
   useAdminList,
   useFacetCounts,
   type ListChip,
+  ListError,
 } from "@/components/admin/list-view";
 import { ApiError, api } from "@/lib/api";
 import { adminSetUserStatus } from "@/lib/admin";
@@ -242,6 +243,7 @@ export default function AdminUsersPage() {
           />
         )}
 
+        <ListError error={list.error} />
         {list.loading ? (
           <ListLoading label="در حال بارگذاری کاربران" />
         ) : list.items.length === 0 ? (

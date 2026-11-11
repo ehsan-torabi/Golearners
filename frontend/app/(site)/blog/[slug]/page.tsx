@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ListTreeIcon } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatJalali } from "@/lib/jalali";
-import { fa } from "@/lib/utils";
+import { fa, jsonLdScript } from "@/lib/utils";
 import { SiteBreadcrumb } from "@/components/site-breadcrumb";
 import { ShareRail } from "@/components/blog/share";
 import { BlogComments } from "@/components/blog/comments";
@@ -129,7 +129,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <article className="mx-auto max-w-3xl space-y-10">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <SiteBreadcrumb
         items={[
           { label: "خانه", href: "/" },

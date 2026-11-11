@@ -45,6 +45,7 @@ import {
   useAdminList,
   useFacetCounts,
   type ListChip,
+  ListError,
 } from "@/components/admin/list-view";
 import {
   ApiError,
@@ -369,6 +370,7 @@ export function CoursesList() {
           />
         )}
 
+        <ListError error={list.error} />
         {list.loading ? (
           <ListLoading label="در حال بارگذاری دوره‌ها" />
         ) : list.items.length === 0 ? (

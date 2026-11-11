@@ -25,6 +25,7 @@ import {
   ListToolbar,
   useAdminList,
   type ListChip,
+  ListError,
 } from "@/components/admin/list-view";
 import {
   ApiError,
@@ -69,7 +70,6 @@ export function CourseStats({ courseId }: { courseId: string }) {
   const [detail, setDetail] = React.useState<CourseStatsDetail | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
-  const [nonce, setNonce] = React.useState(0);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -96,7 +96,7 @@ export function CourseStats({ courseId }: { courseId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [courseId, nonce]);
+  }, [courseId]);
 
   if (loading) {
     return (
@@ -585,6 +585,7 @@ function Learners({ courseId }: { courseId: string }) {
         }
       />
 
+      <ListError error={list.error} />
       {list.loading ? (
         <ListLoading label="در حال بارگذاری دانشجوها" />
       ) : list.items.length === 0 ? (

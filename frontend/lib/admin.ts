@@ -360,21 +360,6 @@ export async function adminDeleteBlogCategory(id: string) {
 
 // ---------- media ----------
 
-export function adminListMedia(params: {
-  page?: number;
-  per_page?: number;
-  kind?: string;
-  status?: string;
-  q?: string;
-  sort?: string;
-}) {
-  const search = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== "") search.set(k, String(v));
-  });
-  return fetchAdmin<AdminList<MediaAsset>>(`/admin/media?${search}`);
-}
-
 export async function adminDeleteMedia(id: string) {
   return api(`/admin/media/${id}`, { method: "DELETE" });
 }
@@ -615,13 +600,3 @@ export interface CourseLearnerStat {
   rating: number | null;
 }
 
-export function adminCourseStatsLearners(
-  id: string,
-  params: { q?: string; source?: string; state?: string; sort?: string; page?: number; per_page?: number },
-) {
-  const search = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== "") search.set(k, String(v));
-  });
-  return fetchAdmin<AdminList<CourseLearnerStat>>(`/admin/course-stats/${id}/learners?${search}`);
-}

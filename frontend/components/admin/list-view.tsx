@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Alert } from "@/components/ui/alert";
 import { ApiError, fetchAdmin } from "@/lib/admin";
 import { cn, fa } from "@/lib/utils";
 
@@ -286,6 +287,13 @@ export function ListSelectionBar({
 }
 
 /* ---------- body states ---------- */
+
+/** A failed fetch must not read as "no records": render the API error
+    above the table so an admin never believes their data vanished. */
+export function ListError({ error }: { error: string }) {
+  if (!error) return null;
+  return <Alert className="mb-4">{error}</Alert>;
+}
 
 export function ListLoading({ label }: { label: string }) {
   return (

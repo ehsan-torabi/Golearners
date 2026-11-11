@@ -73,8 +73,8 @@ export default function AdminSettingsPage() {
   if (!loaded) {
     return (
       <Card className="space-y-3 p-6" aria-label="در حال بارگذاری تنظیمات">
-        <div className="h-5 w-1/3 animate-pulse rounded bg-accent" />
-        <div className="h-5 w-1/2 animate-pulse rounded bg-accent" />
+        <div className="h-5 w-1/3 animate-pulse rounded bg-muted" />
+        <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
       </Card>
     );
   }

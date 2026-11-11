@@ -41,6 +41,7 @@ import {
   useAdminList,
   useFacetCounts,
   type ListChip,
+  ListError,
 } from "@/components/admin/list-view";
 import { MediaUploader } from "@/components/admin/media-uploader";
 import { adminDeleteMedia, ApiError, type MediaAsset } from "@/lib/admin";
@@ -211,6 +212,7 @@ export default function AdminMediaPage() {
           }
         />
 
+        <ListError error={list.error} />
         {list.loading ? (
           <ListLoading label="در حال بارگذاری رسانه‌ها" />
         ) : list.items.length === 0 ? (
