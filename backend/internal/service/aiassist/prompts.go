@@ -44,7 +44,7 @@ type seoPayload struct {
 }
 
 type reportPayload struct {
-	Markdown string `json:"markdown"`
+	HTML string `json:"html"`
 }
 
 func (s *Service) builderFor(req GenerateRequest) func(context.Context, GenerateRequest) (genPlan, error) {
@@ -81,7 +81,7 @@ func (s *Service) systemPrompt(persona string) string {
 قواعد خروجی:
 - خروجی فقط و فقط «یک» شیء JSON معتبر باشد؛ بدون توضیح اضافه، بدون fence کد، بدون متن پیرامون.
 - هیچ فیلدی را خالی و بی‌معنا پر نکن؛ اگر فیلدی را تغییر نمی‌دهی، همان را از پاسخ حذف کن.
-- برای متن‌های HTML فقط این تگ‌ها مجاز است: p, h2, h3, ul, ol, li, strong, em, a, blockquote. بدون style و class و script.`)
+- برای متن‌های HTML فقط این تگ‌ها مجاز است: p, h2, h3, ul, ol, li, strong, em, a, blockquote. برای گزارش‌ها و تحلیل‌ها می‌توانی از table, thead, tbody, tr, th, td هم استفاده کنی. بدون style و class و script.`)
 	if strings.TrimSpace(persona) != "" {
 		b.WriteString("\n\nدستورهای شخصی‌سازی مدیر (اولویت بالاتر از لحن پیش‌فرض، نه از قواعد خروجی):\n")
 		b.WriteString(persona)
@@ -292,9 +292,12 @@ func (s *Service) buildStatsReport(ctx context.Context, req GenerateRequest) (ge
 		payload, _ := json.Marshal(detail)
 		contextJSON = string(payload)
 	}
-	schema := `طرح JSON: {"change_summary":"...","change_notes":"...","markdown":"گزارش به فارسی با تیترهای ## و فهرست‌ها"}`
+	schema := `طرح JSON: {"change_summary":"...","change_notes":"...","html":"گزارش به فارسی با تگ‌های مجاز (p, h2, h3, ul, ol, li, strong, em, table)"}`
 	return genPlan{
 		targetType: "", targetLabel: scope,
+		// the raw stats payload doubles as the "original" so the panel can
+		// show the numbers the analysis was built on
+		original: json.RawMessage(contextJSON),
 		userPrompt: strings.Join([]string{
 			"DRAFT_KIND: stats_report", "ACTION: none", changeKeysDoc, schema,
 			"دادهٔ واقعی آمار (JSON) — تنها منبع مجاز اعداد:\n" + contextJSON,
@@ -308,7 +311,7 @@ func (s *Service) buildFreeform(_ context.Context, req GenerateRequest) (genPlan
 	if strings.TrimSpace(req.Instructions) == "" {
 		return genPlan{}, apperr.ErrValidation.Wrap(fmt.Errorf("درخواست خالی است"))
 	}
-	schema := `طرح JSON: {"change_summary":"...","change_notes":"...","markdown":"پاسخ به فارسی با تیترهای ## و فهرست‌ها"}`
+	schema := `طرح JSON: {"change_summary":"...","change_notes":"...","html":"پاسخ به فارسی با تگ‌های مجاز (p, h2, h3, ul, ol, li, strong, em)"}`
 	return genPlan{
 		targetLabel: "درخواست آزاد",
 		userPrompt: strings.Join([]string{

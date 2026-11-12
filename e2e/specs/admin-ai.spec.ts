@@ -83,4 +83,29 @@ test.describe("admin AI assistant", () => {
 
     expectNoClientErrors(diag);
   });
+
+  test("a stats report renders the real numbers and the analysis", async ({ page, diag }) => {
+    await page.goto("/admin/ai");
+
+    await page.getByRole("tab", { name: "تولید جدید" }).click();
+    await page
+      .getByLabel("دستور به دستیار")
+      .fill("روند ثبت‌نام و درآمد ماه گذشته را خلاصه کن.");
+    await page.getByRole("button", { name: /تولید «گزارش آمار»/ }).click();
+
+    // read-only report lands as ready — open the newest one from the worklist
+    const reportRow = page.getByRole("row").filter({ hasText: "گزارش" }).first();
+    await expect(reportRow).toBeVisible({ timeout: 30000 });
+    await reportRow.getByRole("button", { name: /نمایش گزارش/ }).click();
+
+    // the analysis renders (not a bare label)
+    await expect(page.getByText("تحلیل دستیار").first()).toBeVisible();
+    // and the source numbers the analysis was built on are visible
+    await expect(page.getByText("داده‌های بررسی‌شده").first()).toBeVisible();
+    await expect(
+      page.locator("table").filter({ hasText: /enrollments|revenue_rial/ }).first()
+    ).toBeVisible();
+
+    expectNoClientErrors(diag);
+  });
 });

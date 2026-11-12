@@ -58,8 +58,8 @@ export default function AdminSettingsPage() {
     });
   }
 
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
+  async function save(e?: React.FormEvent) {
+    e?.preventDefault();
     setError("");
     setSaved(false);
     setSaving(true);
@@ -102,7 +102,7 @@ export default function AdminSettingsPage() {
             </TabsTrigger>
           ))}
         </TabsList>
-        <TabsContent value="site">
+        <TabsContent value="site" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>سایت</CardTitle>
@@ -135,6 +135,9 @@ export default function AdminSettingsPage() {
               </div>
             </CardContent>
           </Card>
+          <Button type="button" onClick={() => save()} loading={saving}>
+            ذخیره تنظیمات
+          </Button>
         </TabsContent>
         <TabsContent value="seo">
           <Card>
@@ -160,6 +163,9 @@ export default function AdminSettingsPage() {
               </Field>
             </CardContent>
           </Card>
+          <Button type="button" onClick={() => save()} loading={saving}>
+            ذخیره تنظیمات
+          </Button>
         </TabsContent>
         <TabsContent value="gateways">
           <Card>

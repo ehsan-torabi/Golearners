@@ -270,7 +270,37 @@ export default function AssistantPage() {
                               type="button"
                               size="sm"
                               variant="outline"
-                              onClick={() => setOpenDraft(d.id)}
+                              onClick={() => {
+                                setOpenDraft(d.id);
+                                setView("diff");
+                              }}
+                              className="w-full text-xs py-1.5"
+                            >
+                              نمایش
+                            </Button>
+                          )}
+                          {d.status === "ready" && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => {
+                                setOpenDraft(d.id);
+                                setView("diff");
+                              }}
+                              className="w-full text-xs py-1.5"
+                            >
+                              نمایش گزارش
+                            </Button>
+                          )}
+                          {(d.status === "rejected" || d.status === "failed") && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setOpenDraft(d.id);
+                                setView("diff");
+                              }}
                               className="w-full text-xs py-1.5"
                             >
                               نمایش
@@ -327,7 +357,12 @@ export default function AssistantPage() {
         <TabsContent value="diff">
           {openDraft == null ? null : (
             <div className="space-y-3">
-              <DiffView draftId={openDraft} onApprove={handleApprove} onReject={handleReject} />
+              <DiffView
+                draftId={openDraft}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onBack={() => setView("worklist")}
+              />
             </div>
           )}
         </TabsContent>

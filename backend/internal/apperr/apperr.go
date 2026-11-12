@@ -93,4 +93,12 @@ var (
 	ErrAINoChange       = New(http.StatusBadRequest, "AI_NO_CHANGE", "پیشنهاد تفاوتی با محتوای فعلی ندارد.")
 	ErrAIDecided        = New(http.StatusConflict, "AI_DRAFT_DECIDED", "برای این پیش‌نویس قبلاً تصمیم گرفته شده است.")
 	ErrAINotApplicable  = New(http.StatusBadRequest, "AI_DRAFT_NOT_APPLICABLE", "این پیش‌نویس قابل اعمال نیست.")
+
+	// Field-specific messages for the AI settings form: the generic
+	// VALIDATION_ERROR does not tell the admin which input to fix.
+	ErrAIProvider    = New(http.StatusBadRequest, "AI_PROVIDER_INVALID", "سرویس‌دهندهٔ انتخاب‌شده پشتیبانی نمی‌شود.")
+	ErrAIModel       = New(http.StatusBadRequest, "AI_MODEL_INVALID", "نام مدل را وارد کنید (حداکثر ۱۲۰ نویسه).")
+	ErrAITemperature = New(http.StatusBadRequest, "AI_TEMPERATURE_RANGE", "خلاقیت (temperature) باید عددی بین ۰ تا ۱٫۵ باشد.")
+	ErrAIMaxTokens   = New(http.StatusBadRequest, "AI_MAX_TOKENS_RANGE", "سقف توکن پاسخ باید بین ۱۰۰ تا ۱۶٬۰۰۰ باشد.")
+	ErrAIBaseURL     = New(http.StatusBadRequest, "AI_BASE_URL_SCHEME", "آدرس پایه باید با http:// یا https:// آغاز شود.")
 )

@@ -49,14 +49,23 @@ func (a *App) handleAnalyticsCourses(w http.ResponseWriter, r *http.Request) {
 	writeData(w, list)
 }
 
-// GET /api/v1/admin/settings
+// GET /api/v1/admin/settings — only the keys this endpoint owns. Other
+// consumers (the AI assistant) store their config in the same KV table under
+// their own key and serve it from their own masked endpoint, so echoing
+// unknown keys here would both leak them and break the PATCH round-trip.
 func (a *App) handleAdminSettings(w http.ResponseWriter, r *http.Request) {
 	all, err := a.SettingsRepo.All(r.Context())
 	if err != nil {
 		a.writeError(w, r, apperr.ErrInternal.Wrap(err))
 		return
 	}
-	writeJSON(w, http.StatusOK, all)
+	owned := make(map[string]json.RawMessage, len(all))
+	for _, key := range []string{settingsKeySite, settingsKeySEO, settingsKeyGateways} {
+		if v, ok := all[key]; ok {
+			owned[key] = v
+		}
+	}
+	writeJSON(w, http.StatusOK, owned)
 }
 
 // Writable setting keys. Anything else is rejected: the settings table is a

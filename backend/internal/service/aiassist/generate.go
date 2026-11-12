@@ -192,7 +192,8 @@ func (s *Service) normalizeKind(ctx context.Context, req GenerateRequest,
 		if err := json.Unmarshal(obj, &p); err != nil {
 			return nil, "", apperr.ErrAIProviderFailed.Wrap(err)
 		}
-		if strings.TrimSpace(p.Markdown) == "" {
+		p.HTML = s.d.Sanitize(p.HTML)
+		if strings.TrimSpace(p.HTML) == "" {
 			return nil, "", apperr.ErrAIProviderFailed.Wrap(fmt.Errorf("مدل متنی برنگرداند"))
 		}
 		return mustJSONRaw(p), ports.AIStatusReady, nil

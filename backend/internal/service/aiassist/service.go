@@ -124,23 +124,23 @@ func (s *Service) SaveSettings(ctx context.Context, actor Actor, in SettingsUpda
 	case aiprovider.ProviderOpenAI, aiprovider.ProviderAnthropic,
 		aiprovider.ProviderGemini, aiprovider.ProviderMock:
 	default:
-		return Settings{}, apperr.ErrValidation.Wrap(fmt.Errorf("unknown provider %q", in.Provider))
+		return Settings{}, apperr.ErrAIProvider
 	}
 	if in.Model == "" || len(in.Model) > 120 {
-		return Settings{}, apperr.ErrValidation.Wrap(fmt.Errorf("model"))
+		return Settings{}, apperr.ErrAIModel
 	}
 	if in.Temperature < 0 || in.Temperature > 1.5 {
-		return Settings{}, apperr.ErrValidation.Wrap(fmt.Errorf("temperature"))
+		return Settings{}, apperr.ErrAITemperature
 	}
 	if in.MaxTokens < 100 || in.MaxTokens > 16000 {
-		return Settings{}, apperr.ErrValidation.Wrap(fmt.Errorf("max_tokens"))
+		return Settings{}, apperr.ErrAIMaxTokens
 	}
 	if in.BaseURL != "" && !strings.HasPrefix(in.BaseURL, "http://") &&
 		!strings.HasPrefix(in.BaseURL, "https://") {
-		return Settings{}, apperr.ErrValidation.Wrap(fmt.Errorf("base_url scheme"))
+		return Settings{}, apperr.ErrAIBaseURL
 	}
 	if len(in.Persona) > 4000 {
-		return Settings{}, apperr.ErrValidation.Wrap(fmt.Errorf("persona"))
+		return Settings{}, apperr.ErrValidation.Wrap(fmt.Errorf("persona exceeds 4000 characters"))
 	}
 
 	stored, err := s.loadStored(ctx)

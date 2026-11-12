@@ -16,6 +16,7 @@ import {
   adminSaveAISettings,
   type AISettings,
 } from "@/lib/admin";
+import { parseUserNumber } from "@/lib/digits";
 
 const PROVIDERS: { value: string; label: string }[] = [
   { value: "openai", label: "سازگار با OpenAI (OpenAI، OpenRouter، Ollama و …)" },
@@ -68,11 +69,13 @@ export function AISettingsCard() {
       const next = await adminSaveAISettings({
         enabled: settings.enabled,
         provider: settings.provider,
-        base_url: settings.base_url,
+        base_url: settings.base_url.trim(),
         api_key: apiKey,
-        model: settings.model,
-        temperature: settings.temperature,
-        max_tokens: settings.max_tokens,
+        model: settings.model.trim(),
+        // clamp to the server's accepted range so a stray edit can never
+        // bounce the whole save with a generic validation error
+        temperature: Math.min(1.5, Math.max(0, settings.temperature)),
+        max_tokens: Math.min(16000, Math.max(100, Math.round(settings.max_tokens))),
         persona: settings.persona,
       });
       setSettings(next);
@@ -213,28 +216,30 @@ export function AISettingsCard() {
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="خلاقیت (temperature)" htmlFor="ai-temp" hint="۰ دقیق، ۱ خلاق">
+            <Field label="خلاقیت (temperature)" htmlFor="ai-temp" hint="۰ دقیق، ۱٫۵ خلاقانه">
               <Input
                 id="ai-temp"
+                type="text"
+                inputMode="decimal"
                 dir="ltr"
-                type="number"
-                min={0}
-                max={1.5}
-                step={0.1}
-                value={settings.temperature}
-                onChange={(e) => patch("temperature", Number(e.target.value) || 0)}
+                value={String(settings.temperature)}
+                onChange={(e) => {
+                  const v = parseUserNumber(e.target.value);
+                  patch("temperature", Number.isNaN(v) ? 0 : v);
+                }}
               />
             </Field>
             <Field label="سقف توکن پاسخ" htmlFor="ai-max-tokens">
               <Input
                 id="ai-max-tokens"
+                type="text"
+                inputMode="numeric"
                 dir="ltr"
-                type="number"
-                min={100}
-                max={16000}
-                step={100}
-                value={settings.max_tokens}
-                onChange={(e) => patch("max_tokens", Number(e.target.value) || 0)}
+                value={String(settings.max_tokens)}
+                onChange={(e) => {
+                  const v = parseUserNumber(e.target.value);
+                  patch("max_tokens", Number.isNaN(v) ? 0 : v);
+                }}
               />
             </Field>
           </div>
