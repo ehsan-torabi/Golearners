@@ -32,9 +32,13 @@ func scanInstructor(row pgx.Row) (*course.Instructor, error) {
 	return i, nil
 }
 
+// Primary is the one profile the site shows. v1 keeps a single row, but
+// integration tests (and repeated upserts) can leave more, so the pick must be
+// deterministic: the oldest row wins, never whatever the heap scan hits first.
 func (r *InstructorRepo) Primary(ctx context.Context) (*course.Instructor, error) {
 	return scanInstructor(querierOf(ctx, r.pool).QueryRow(ctx,
-		`SELECT user_id, headline, bio_html, avatar_media_id, socials FROM instructors LIMIT 1`))
+		`SELECT user_id, headline, bio_html, avatar_media_id, socials
+		   FROM instructors ORDER BY created_at ASC LIMIT 1`))
 }
 
 func (r *InstructorRepo) Upsert(ctx context.Context, i *course.Instructor) error {

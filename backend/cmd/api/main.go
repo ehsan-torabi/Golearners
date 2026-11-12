@@ -178,7 +178,7 @@ throttler := ratelimit.New(rdb)
 	catalogSvc := catalog.NewService(catalog.Deps{
 		Courses: courses, Sections: sections, Lessons: lessons,
 		Categories: categories, Reviews: reviews, Entitlements: entitlements,
-		Instructors: instructors,
+		Instructors: instructors, Users: usersRepo,
 	})
 	courseAdminSvc := courseadmin.NewService(courseadmin.Deps{
 		Courses: courses, Sections: sections, Lessons: lessons,

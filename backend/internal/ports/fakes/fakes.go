@@ -1095,3 +1095,31 @@ func (f *EntitlementRepo) ListForUser(_ context.Context, userID uuid.UUID) ([]*c
 	}
 	return out, nil
 }
+
+// --- instructor repo ---
+
+// InstructorRepo holds the single public teacher profile for unit tests.
+type InstructorRepo struct {
+	mu   sync.Mutex
+	rows []*course.Instructor
+}
+
+func (f *InstructorRepo) Primary(_ context.Context) (*course.Instructor, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if len(f.rows) == 0 {
+		return nil, ports.ErrNotFound
+	}
+	clone := *f.rows[0]
+	return &clone, nil
+}
+
+func (f *InstructorRepo) Upsert(_ context.Context, i *course.Instructor) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.rows == nil {
+		f.rows = []*course.Instructor{}
+	}
+	f.rows = []*course.Instructor{i}
+	return nil
+}

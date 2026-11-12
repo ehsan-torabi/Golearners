@@ -22,6 +22,7 @@ type Deps struct {
 	Reviews      ports.ReviewRepo
 	Entitlements ports.EntitlementRepo
 	Instructors  ports.InstructorRepo
+	Users        ports.UserRepo
 }
 
 type Service struct{ d Deps }
@@ -46,6 +47,7 @@ type CourseDetail struct {
 	RatingAvg     float64
 	RatingCount   int
 	OwnedByViewer bool
+	Instructor    *InstructorCard
 }
 
 func (s *Service) CourseDetail(ctx context.Context, slug string, viewerID *uuid.UUID) (*CourseDetail, error) {
@@ -74,23 +76,55 @@ func (s *Service) CourseDetail(ctx context.Context, slug string, viewerID *uuid.
 			return nil, err
 		}
 	}
+	// the profile row is single-row in v1; an absent one leaves the card out
+	if d.Instructor, err = s.optionalInstructor(ctx); err != nil {
+		return nil, err
+	}
 	return d, nil
+}
+
+// optionalInstructor returns the teacher card, or nil when no profile exists,
+// so a course page still renders before the console sets one up.
+func (s *Service) optionalInstructor(ctx context.Context) (*InstructorCard, error) {
+	c, err := s.instructorCard(ctx)
+	if err != nil {
+		if errors.Is(err, apperr.ErrNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return c, nil
 }
 
 func (s *Service) Categories(ctx context.Context) ([]*course.Category, error) {
 	return s.d.Categories.List(ctx)
 }
 
-// InstructorProfile is the public about-the-teacher payload.
-type InstructorProfile struct {
+// InstructorCard is the public teacher summary: the profile row joined with
+// the display name of the user it is anchored to.
+type InstructorCard struct {
 	UserID        uuid.UUID         `json:"user_id"`
+	FullName      string            `json:"full_name"`
 	Headline      string            `json:"headline"`
 	BioHTML       string            `json:"bio_html"`
 	AvatarMediaID *uuid.UUID        `json:"avatar_media_id"`
 	Socials       map[string]string `json:"socials"`
 }
 
+// InstructorProfile is the public about-the-teacher payload.
+type InstructorProfile = InstructorCard
+
 func (s *Service) InstructorProfile(ctx context.Context) (*InstructorProfile, error) {
+	c, err := s.instructorCard(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+// instructorCard loads the profile row and resolves the anchored user's name;
+// a missing row is a not-found, so callers render their empty state.
+func (s *Service) instructorCard(ctx context.Context) (*InstructorCard, error) {
 	p, err := s.d.Instructors.Primary(ctx)
 	if err != nil {
 		if errors.Is(err, ports.ErrNotFound) {
@@ -98,10 +132,15 @@ func (s *Service) InstructorProfile(ctx context.Context) (*InstructorProfile, er
 		}
 		return nil, err
 	}
-	return &InstructorProfile{
+	card := &InstructorCard{
 		UserID: p.UserID, Headline: p.Headline, BioHTML: p.BioHTML,
 		AvatarMediaID: p.AvatarMediaID, Socials: p.Socials,
-	}, nil
+	}
+	// a deleted anchor user must not 500 the public page; the headline still reads
+	if u, err := s.d.Users.ByID(ctx, p.UserID); err == nil && u != nil {
+		card.FullName = u.FullName
+	}
+	return card, nil
 }
 
 // ReviewsFor returns approved reviews of a course.

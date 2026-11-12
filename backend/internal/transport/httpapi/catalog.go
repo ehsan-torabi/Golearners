@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"golearn/backend/internal/apperr"
+	"golearn/backend/internal/service/catalog"
 	"golearn/backend/internal/domain/course"
 	"golearn/backend/internal/ports"
 )
@@ -105,6 +106,7 @@ func (a *App) handleCourseDetail(w http.ResponseWriter, r *http.Request) {
 		"sections":           sections, "lessons": lessons,
 		"rating_avg": d.RatingAvg, "rating_count": d.RatingCount,
 		"owned_by_viewer": d.OwnedByViewer,
+		"instructor":         instructorCardJSON(d.Instructor),
 	})
 }
 
@@ -141,7 +143,21 @@ func (a *App) handleInstructor(w http.ResponseWriter, r *http.Request) {
 		a.writeError(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, p)
+	writeJSON(w, http.StatusOK, instructorCardJSON(p))
+}
+
+// instructorCardJSON is the shared public teacher shape: the profile fields
+// plus the resolved avatar read path the site renders directly.
+func instructorCardJSON(p *catalog.InstructorCard) map[string]any {
+	if p == nil {
+		return nil
+	}
+	return map[string]any{
+		"user_id": p.UserID, "full_name": p.FullName, "headline": p.Headline,
+		"bio_html": p.BioHTML,
+		"avatar_media_id": p.AvatarMediaID, "avatar_url": mediaRef(p.AvatarMediaID),
+		"socials": p.Socials,
+	}
 }
 
 type reviewRequest struct {
