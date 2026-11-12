@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/input";
+import { Field, Input, Textarea } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import {
@@ -45,6 +45,7 @@ export default function AssistantPage() {
   const [page, setPage] = React.useState(1);
   const [error, setError] = React.useState("");
   const [openDraft, setOpenDraft] = React.useState<number | null>(null);
+  const [instructions, setInstructions] = React.useState("");
 
   const fetchDrafts = async () => {
     setLoading(true);
@@ -68,19 +69,17 @@ export default function AssistantPage() {
   }, [filterStatus, filterKind]);
 
   async function generate(kind: AIKind) {
-    setView("new");
     setLoading(true);
     try {
-      const draft = await adminAIGenerate({ kind });
+      const draft = await adminAIGenerate({ kind, instructions });
       setLoading(false);
-      setView("diff");
       setOpenDraft(draft.id);
-      fetchDrafts();
+      await fetchDrafts();
+      setView("worklist");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "ساخت پیش‌نویس با هوش مصنوعی ناموفق بود",
       );
-      setView("worklist");
     } finally {
       setLoading(false);
     }
@@ -93,7 +92,8 @@ export default function AssistantPage() {
       if (res.applied_at) {
         setError("");
       }
-      fetchDrafts();
+      await fetchDrafts();
+      setView("worklist");
       setOpenDraft(null);
     } catch (err) {
       setError(
@@ -108,7 +108,8 @@ export default function AssistantPage() {
     setLoading(true);
     try {
       await adminAIReject(id);
-      fetchDrafts();
+      await fetchDrafts();
+      setView("worklist");
       setOpenDraft(null);
     } catch (err) {
       setError(
@@ -144,10 +145,7 @@ export default function AssistantPage() {
               key={k}
               type="button"
               variant={view === "worklist" ? "default" : "outline"}
-              onClick={() => {
-                if (view === "worklist") generate(k as AIKind);
-                else setView("worklist");
-              }}
+              onClick={() => generate(k as AIKind)}
               size="sm"
             >
               «{kindLabel(k as AIKind)}» جدید
@@ -237,7 +235,10 @@ export default function AssistantPage() {
                               <Button
                                 type="button"
                                 size="sm"
-                                onClick={() => setOpenDraft(d.id)}
+                                onClick={() => {
+                                  setOpenDraft(d.id);
+                                  setView("diff");
+                                }}
                                 className="w-full text-xs py-1.5"
                               >
                                 نمایش و تایید
@@ -298,8 +299,17 @@ export default function AssistantPage() {
         <TabsContent value="new">
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              انتخاب نوع محتوای مورد نظر؛ دستیار پیشنهادی را می‌سازد، سپس در پیش‌نویس‌ها نمایش داده می‌شود.
+              انتخاب نوع محتوای مورد نظر و نوشتن دستور؛ دستیار پیشنهادی را می‌سازد،
+              سپس در پیش‌نویس‌ها نمایش داده می‌شود تا تایید یا رد کنید.
             </p>
+            <Field label="دستور به دستیار" htmlFor="ai-instructions" hint="مثلاً «موضوع نوشته: شروع زبان گو؛ متن را روان‌تر بنویس»">
+              <Textarea
+                id="ai-instructions"
+                className="min-h-24"
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+              />
+            </Field>
             {KINDS.map((k) => (
               <Button
                 key={k}

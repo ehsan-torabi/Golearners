@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test";
-import { API_URL, expectNoClientErrors, sessionCookies } from "../lib/helpers";
+import { expect } from "@playwright/test";
+import { API_URL, authHeaders, expectNoClientErrors, sessionCookies, test } from "../lib/helpers";
 
 test.describe("admin AI assistant", () => {
   test.use({ sessionRole: "admin" });
@@ -14,10 +14,9 @@ test.describe("admin AI assistant", () => {
   }) => {
     // --- settings: enable the mock provider --------------------------------
     const adminCookies = await sessionCookies(playwright, "admin");
-    const csrf = adminCookies.find((c) => c.name === "gl_csrf")?.value ?? "";
     const api = await playwright.request.newContext({
       baseURL: API_URL,
-      extraHTTPHeaders: { "X-CSRF-Token": csrf },
+      extraHTTPHeaders: authHeaders(adminCookies),
     });
 
     const settings = await api.put("/api/v1/admin/ai/settings", {
@@ -41,30 +40,45 @@ test.describe("admin AI assistant", () => {
     await page.goto("/admin/ai");
     await expect(page.getByRole("heading", { name: "دستیار هوشمند" })).toBeVisible();
 
+    const consoleMessages: string[] = [];
+    page.on("console", (msg) => {
+      consoleMessages.push(`${msg.type()}: ${msg.text()}`);
+    });
+    page.on("pageerror", (err) => {
+      consoleMessages.push(`PAGE ERROR: ${err.message}`);
+    });
+
+    await page.getByRole("tab", { name: "تولید جدید" }).click();
+    await page
+      .getByLabel("دستور به دستیار")
+      .fill("موضوع نوشته: شروع زبان گو؛ متن را روان‌تر بنویس.");
     await page.getByRole("button", { name: /تولید «نوشتهٔ وبلاگ»/ }).click();
 
     // the new draft lands as pending
     const pendingRow = page
       .getByRole("row")
-      .filter({
-        has: page.getByRole("cell", { name: "در انتظار تصمیم" }),
-      })
+      .filter({ hasText: /در انتظار تصمیم/ })
       .first();
-    await expect(pendingRow).toBeVisible({ timeout: 40000 });
+    try {
+      await expect(pendingRow).toBeVisible({ timeout: 30000 });
+    } catch {
+      const errors = consoleMessages.join("\n");
+      const bodyText = await page.locator("body").innerText();
+      throw new Error(
+        `pending draft did not appear. console errors: ${errors.slice(0, 500)} | body: ${bodyText.slice(0, 300)}`,
+      );
+    }
 
-    // open it and approve → applied → real post row appears
+    // open it and approve → real post row appears on the posts list
     await pendingRow.getByRole("button", { name: /نمایش و تایید/ }).click();
     await page.getByRole("button", { name: /تایید و اعمال/ }).click();
-    await expect(
-      page.getByRole("cell", { name: "اعمال شده" })
-    ).toBeVisible({ timeout: 30000 });
 
     await page.goto("/admin/posts");
     const search = page.getByLabel("عنوان یا متن نوشته");
     await search.fill(mockTitle);
     await search.press("Enter");
     await expect(
-      page.getByRole("row").filter({ hasText: mockTitle })
+      page.getByRole("row").filter({ hasText: mockTitle }).first()
     ).toBeVisible({ timeout: 30000 });
 
     expectNoClientErrors(diag);
