@@ -600,3 +600,156 @@ export interface CourseLearnerStat {
   rating: number | null;
 }
 
+
+// ---------- AI assistant (دستیار هوشمند) ----------
+
+/**
+ * The admin AI endpoints run long (one provider call can take minutes), so
+ * they bypass api()'s 15s timeout with their own request helper. Errors keep
+ * the backend's Persian message.
+ */
+async function aiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const method = (init.method ?? "GET").toUpperCase();
+  const headers = new Headers(init.headers);
+  if (init.body) headers.set("Content-Type", "application/json");
+  if (method !== "GET" && method !== "HEAD") {
+    headers.set("X-CSRF-Token", csrfToken());
+  }
+  const res = await fetch(`/api/v1${path}`, {
+    ...init,
+    method,
+    headers,
+    credentials: "same-origin",
+    signal: init.signal ?? AbortSignal.timeout(180000),
+  });
+  if (!res.ok) {
+    let message = "درخواست مدیریتی ناموفق بود.";
+    try {
+      const body = (await res.json()) as { error?: { message?: string } };
+      if (body?.error?.message) message = body.error.message;
+    } catch {
+      /* keep the fallback message */
+    }
+    throw new ApiError(res.status, "ADMIN_ERROR", message);
+  }
+  if (res.status === 204) return undefined as T;
+  return (await res.json()) as T;
+}
+
+async function aiData<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const body = await aiRequest<{ data: T }>(path, init);
+  return body.data;
+}
+
+/** Provider configuration as the panel sees it — the key never round-trips. */
+export interface AISettings {
+  enabled: boolean;
+  provider: string;
+  base_url: string;
+  api_key_set: boolean;
+  api_key_last4: string;
+  model: string;
+  temperature: number;
+  max_tokens: number;
+  persona: string;
+}
+
+/** PUT payload; api_key empty keeps the stored one, clear_api_key erases it. */
+export interface AISettingsPayload {
+  enabled: boolean;
+  provider: string;
+  base_url: string;
+  api_key?: string;
+  clear_api_key?: boolean;
+  model: string;
+  temperature: number;
+  max_tokens: number;
+  persona: string;
+}
+
+export function adminAISettings() {
+  return aiData<AISettings>("/admin/ai/settings");
+}
+
+export function adminSaveAISettings(payload: AISettingsPayload) {
+  return aiData<AISettings>("/admin/ai/settings", { method: "PUT", body: JSON.stringify(payload) });
+}
+
+export function adminAITestConnection() {
+  return aiData<{ ok: boolean; latency_ms: number; model: string; provider: string; error?: string }>(
+    "/admin/ai/settings/test",
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
+export function adminAIModels() {
+  return aiData<string[]>("/admin/ai/models");
+}
+
+export type AIKind = "blog_post" | "course_copy" | "seo" | "stats_report" | "freeform";
+export type AIStatus = "pending" | "applied" | "rejected" | "ready" | "failed";
+
+/** One AI proposal (or read-only report) with before/after snapshots. */
+export interface AIDraft {
+  id: number;
+  kind: AIKind;
+  action: "create" | "update" | "none";
+  target_type: "" | "post" | "course";
+  target_id?: string;
+  target_label: string;
+  status: AIStatus;
+  summary: string;
+  notes: string;
+  instructions: string;
+  original?: Record<string, unknown> | null;
+  proposed: Record<string, unknown>;
+  provider: string;
+  model: string;
+  prompt_tokens: number;
+  completion_tokens: number;
+  error: string;
+  created_at: string;
+  decided_at?: string;
+  applied_at?: string;
+}
+
+export function adminAIGenerate(req: {
+  kind: AIKind;
+  target_type?: string;
+  target_id?: string;
+  instructions?: string;
+}) {
+  return aiData<AIDraft>("/admin/ai/generate", { method: "POST", body: JSON.stringify(req) });
+}
+
+export function adminAIDrafts(status = "", kind = "", page = 1, perPage = 20) {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  if (kind) params.set("kind", kind);
+  params.set("page", String(page));
+  params.set("per_page", String(perPage));
+  return aiRequest<AdminList<AIDraft>>(`/admin/ai/drafts?${params.toString()}`);
+}
+
+export function adminAIDraft(id: number) {
+  return aiData<AIDraft>(`/admin/ai/drafts/${id}`);
+}
+
+export function adminAIApprove(id: number) {
+  return aiData<AIDraft>(`/admin/ai/drafts/${id}/approve`, { method: "POST", body: JSON.stringify({}) });
+}
+
+export function adminAIReject(id: number) {
+  return aiData<AIDraft>(`/admin/ai/drafts/${id}/reject`, { method: "POST", body: JSON.stringify({}) });
+}
+
+export function adminAIDeleteDraft(id: number) {
+  return aiRequest<void>(`/admin/ai/drafts/${id}`, { method: "DELETE" });
+}
+
+export function adminAIUsage(days = 30) {
+  return aiData<{
+    summary: { requests: number; ok: number; failed: number; prompt_tokens: number; completion_tokens: number; by_kind: Record<string, number> };
+    daily: { day: string; requests: number; prompt_tokens: number; completion_tokens: number }[];
+  }>(`/admin/ai/usage?days=${days}`);
+}
