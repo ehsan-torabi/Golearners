@@ -7,8 +7,10 @@ import { Field, Input, Textarea } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApiError, api } from "@/lib/api";
 import { fetchAdmin } from "@/lib/admin";
+import { AISettingsCard } from "@/components/admin/ai-settings";
 
 interface Settings {
   site?: { title?: string; description?: string; maintenance_mode?: boolean };
@@ -23,6 +25,7 @@ interface Settings {
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = React.useState<Settings | null>(null);
+  const [tab, setTab] = React.useState("site" as "site" | "seo" | "gateways" | "ai");
   const [loaded, setLoaded] = React.useState(false);
   const [error, setError] = React.useState("");
   const [saved, setSaved] = React.useState(false);
@@ -79,82 +82,100 @@ export default function AdminSettingsPage() {
     );
   }
 
+  const tabs = [
+    { value: "site", label: "سایت" },
+    { value: "seo", label: "سئو" },
+    { value: "gateways", label: "درگاه‌های پرداخت" },
+    { value: "ai", label: "دستیار هوشمند" },
+  ] as const;
+
   return (
-    <form onSubmit={save} className="space-y-6">
+    <>
       <h1 className="reveal text-xl leading-7 text-foreground">تنظیمات</h1>
       {error && <Alert>{error}</Alert>}
       {saved && <Alert tone="success">تنظیمات ذخیره شد.</Alert>}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>سایت</CardTitle>
-          <CardDescription>نام و توضیح سایت که در مرورگر و اشتراک‌گذاری دیده می‌شود.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Field label="نام سایت" htmlFor="s-title">
-            <Input
-              id="s-title"
-              value={settings?.site?.title ?? ""}
-              onChange={(e) => patch(["site", "title"], e.target.value)}
-            />
-          </Field>
-          <Field label="توضیح سایت" htmlFor="s-desc">
-            <Input
-              id="s-desc"
-              value={settings?.site?.description ?? ""}
-              onChange={(e) => patch(["site", "description"], e.target.value)}
-            />
-          </Field>
-          <div className="flex items-center justify-between gap-4">
-            <Label htmlFor="s-maint" className="text-sm font-medium">
-              حالت تعمیرات
-            </Label>
-            <Switch
-              id="s-maint"
-              checked={Boolean(settings?.site?.maintenance_mode)}
-              onCheckedChange={(v: boolean) => patch(["site", "maintenance_mode"], v)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>سئو</CardTitle>
-          <CardDescription>عنوان و توضیح پیش‌فرض برای موتورهای جست‌وجو.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Field label="عنوان متا" htmlFor="s-meta-title">
-            <Input
-              id="s-meta-title"
-              value={settings?.seo?.meta_title ?? ""}
-              onChange={(e) => patch(["seo", "meta_title"], e.target.value)}
-            />
-          </Field>
-          <Field label="توضیح متا" htmlFor="s-meta-desc">
-            <Textarea
-              id="s-meta-desc"
-              className="min-h-20"
-              value={settings?.seo?.meta_description ?? ""}
-              onChange={(e) => patch(["seo", "meta_description"], e.target.value)}
-            />
-          </Field>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>درگاه‌های پرداخت</CardTitle>
-          <CardDescription>
-            درگاه فعال: <span dir="ltr">{settings?.gateways?.default ?? "ثبت نشده"}</span> · فعال‌ها:{" "}
-            <span dir="ltr">{(settings?.gateways?.enabled ?? []).join(", ") || "ثبت نشده"}</span>
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
-      <Button type="submit" loading={saving}>
-        ذخیره تنظیمات
-      </Button>
-    </form>
+      <Tabs value={tab} onValueChange={setTab} className="gap-4">
+        <TabsList variant="line">
+          {tabs.map((t) => (
+            <TabsTrigger key={t.value} value={t.value}>
+              {t.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent value="site">
+          <Card>
+            <CardHeader>
+              <CardTitle>سایت</CardTitle>
+              <CardDescription>نام و توضیح سایت که در مرورگر و اشتراک‌گذاری دیده می‌شود.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Field label="نام سایت" htmlFor="s-title">
+                <Input
+                  id="s-title"
+                  value={settings?.site?.title ?? ""}
+                  onChange={(e) => patch(["site", "title"], e.target.value)}
+                />
+              </Field>
+              <Field label="توضیح سایت" htmlFor="s-desc">
+                <Input
+                  id="s-desc"
+                  value={settings?.site?.description ?? ""}
+                  onChange={(e) => patch(["site", "description"], e.target.value)}
+                />
+              </Field>
+              <div className="flex items-center justify-between gap-4">
+                <Label htmlFor="s-maint" className="text-sm font-medium">
+                  حالت تعمیرات
+                </Label>
+                <Switch
+                  id="s-maint"
+                  checked={Boolean(settings?.site?.maintenance_mode)}
+                  onCheckedChange={(v: boolean) => patch(["site", "maintenance_mode"], v)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="seo">
+          <Card>
+            <CardHeader>
+              <CardTitle>سئو</CardTitle>
+              <CardDescription>عنوان و توضیح پیش‌فرض برای موتورهای جست‌وجو.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Field label="عنوان متا" htmlFor="s-meta-title">
+                <Input
+                  id="s-meta-title"
+                  value={settings?.seo?.meta_title ?? ""}
+                  onChange={(e) => patch(["seo", "meta_title"], e.target.value)}
+                />
+              </Field>
+              <Field label="توضیح متا" htmlFor="s-meta-desc">
+                <Textarea
+                  id="s-meta-desc"
+                  className="min-h-20"
+                  value={settings?.seo?.meta_description ?? ""}
+                  onChange={(e) => patch(["seo", "meta_description"], e.target.value)}
+                />
+              </Field>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="gateways">
+          <Card>
+            <CardHeader>
+              <CardTitle>درگاه‌های پرداخت</CardTitle>
+              <CardDescription>
+                درگاه فعال: <span dir="ltr">{settings?.gateways?.default ?? "ثبت نشده"}</span> · فعال‌ها:{" "}
+                <span dir="ltr">{(settings?.gateways?.enabled ?? []).join(", ") || "ثبت نشده"}</span>
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </TabsContent>
+        <TabsContent value="ai">
+          <AISettingsCard />
+        </TabsContent>
+      </Tabs>
+    </>
   );
 }

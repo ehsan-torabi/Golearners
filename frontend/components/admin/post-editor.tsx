@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
@@ -12,6 +13,7 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { MediaField } from "@/components/admin/media-field";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  adminAIGenerate,
   adminCreatePost,
   adminGetPost,
   adminListSeries,
@@ -69,9 +71,31 @@ export function PostEditor({ postId }: { postId: string | null }) {
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState("");
   const [saved, setSaved] = React.useState(false);
+  const [aiGenerating, setAiGenerating] = React.useState(false);
+  const router = useRouter();
 
   const set = <K extends keyof PostForm>(key: K, value: PostForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  async function generateAI(kind: "blog_post") {
+    setError("");
+    setAiGenerating(true);
+    try {
+      const draft = await adminAIGenerate({
+        kind,
+        target_type: postId ? "post" : undefined,
+        target_id: postId ?? undefined,
+        instructions: `موضوع نوشته: "${form.title}".${
+          form.body_html ? " متن فعلی را حفظ کنید و فقط بهبود بخشید." : ""
+        }`,
+      });
+      setAiGenerating(false);
+      router.push("/admin/ai");
+    } catch (err) {
+      setAiGenerating(false);
+      setError(err instanceof Error ? err.message : "تولید با هوش مصنوعی ناموفق بود.");
+    }
+  }
 
   React.useEffect(() => {
     setError("");
@@ -170,6 +194,15 @@ export function PostEditor({ postId }: { postId: string | null }) {
           ← بازگشت به فهرست نوشته‌ها
         </Link>
         {saved && <Badge tone="success">ذخیره شد</Badge>}
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => generateAI("blog_post")}
+          disabled={aiGenerating}
+          className="h-8"
+        >
+          {aiGenerating ? "در حال تولید…" : "تولید با هوش مصنوعی"}
+        </Button>
       </header>
 
       {error && <Alert>{error}</Alert>}

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
@@ -14,6 +15,7 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { CurriculumEditor } from "@/components/admin/curriculum-editor";
 import { MediaField } from "@/components/admin/media-field";
 import {
+  adminAIGenerate,
   adminCreateCourse,
   adminGetCourse,
   adminUpdateCourse,
@@ -70,9 +72,29 @@ export function CourseEditor({ courseId }: { courseId: string | null }) {
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState("");
   const [saved, setSaved] = React.useState(false);
+  const [aiGenerating, setAiGenerating] = React.useState(false);
+  const router = useRouter();
 
   const set = <K extends keyof CourseForm>(key: K, value: CourseForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  async function generateAI(kind: "course_copy") {
+    setError("");
+    setAiGenerating(true);
+    try {
+      const draft = await adminAIGenerate({
+        kind,
+        target_type: "course",
+        target_id: courseId ?? undefined,
+        instructions: `عنوان: "${form.title}". محتوای صفحهٔ دوره را بهبود بخشید؛ قیمت‌ها و سرفصل‌ها را دست نزنید.`,
+      });
+      setAiGenerating(false);
+      router.push("/admin/ai");
+    } catch (err) {
+      setAiGenerating(false);
+      setError(err instanceof Error ? err.message : "تولید با هوش مصنوعی ناموفق بود.");
+    }
+  }
 
   React.useEffect(() => {
     setError("");
@@ -180,6 +202,17 @@ export function CourseEditor({ courseId }: { courseId: string | null }) {
             </Link>
           )}
         </div>
+          {courseId && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => generateAI("course_copy")}
+              disabled={aiGenerating}
+              className="h-8 text-xs px-3"
+            >
+              {aiGenerating ? "در حال تولید…" : "تولید با هوش مصنوعی"}
+            </Button>
+          )}
         {saved && <Badge tone="success">ذخیره شد</Badge>}
       </header>
 
