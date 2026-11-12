@@ -101,10 +101,16 @@ components:
     Instructor:
       type: object
       properties:
+        user_id: { type: string, format: uuid }
         full_name: { type: string }
         headline: { type: string }
         bio_html: { type: string }
-        avatar_url: { type: string, nullable: true }
+        avatar_media_id: { type: string, format: uuid, nullable: true }
+        avatar_url: { type: string, description: public read path of the photo; empty when none }
+        socials:
+          type: object
+          additionalProperties: { type: string }
+          description: github, linkedin, website, email
     Order:
       type: object
       properties:
@@ -255,6 +261,13 @@ paths:
       parameters: [{ name: slug, in: path, required: true, schema: { type: string } }]
       responses:
         '200': { description: detail, content: { application/json: { schema: { $ref: '#/components/schemas/CourseDetail' } } } }
+        '404': { $ref: '#/components/responses/Err' }
+  /instructor:
+    get:
+      tags: [public]
+      summary: Teacher profile (photo, bio, socials)
+      responses:
+        '200': { description: profile, content: { application/json: { schema: { $ref: '#/components/schemas/Instructor' } } } }
         '404': { $ref: '#/components/responses/Err' }
   /coupons/validate:
     post:

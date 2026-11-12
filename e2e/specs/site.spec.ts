@@ -53,6 +53,13 @@ test.describe("public site", () => {
     // guests add to the cart freely; sign-in is asked at pay time
     await expect(page.getByRole("button", { name: "افزودن به سبد خرید" })).toBeVisible();
 
+    // US-B2/B3: the teacher card with a photo, and a link to the full profile
+    const teacher = page.getByRole("heading", { name: "مدرس دوره" });
+    if ((await teacher.count()) > 0) {
+      await expect(teacher).toBeVisible();
+      await expect(page.getByRole("link", { name: "بیشتر دربارهٔ مدرس" })).toBeVisible();
+    }
+
     expectNoClientErrors(diag);
   });
 
@@ -81,13 +88,19 @@ test.describe("public site", () => {
     expectNoClientErrors(diag);
   });
 
-  test("instructor page renders the profile or its empty state", async ({ page, diag }) => {
+  test("instructor page renders the profile or its empty state", async ({ page, diag, request }) => {
     await page.goto("/instructor");
 
     await expect(page.getByRole("heading", { name: "درباره مدرس" })).toBeVisible();
     const empty = page.getByText("اطلاعات مدرس هنوز تکمیل نشده است");
     const headline = page.locator("main p").first();
     await expect(empty.or(headline)).toBeVisible();
+
+    // the profile photo must render whenever the API has one; the empty state
+    // has no photo, so both branches stay honest
+    const api = await request.get("http://localhost:8080/api/v1/instructor");
+    const photo = api.ok() ? ((await api.json()) as { avatar_url?: string }).avatar_url || "" : "";
+    if (photo) await expect(page.locator(`img[src="${photo}"]`).first()).toBeVisible();
 
     expectNoClientErrors(diag);
   });
