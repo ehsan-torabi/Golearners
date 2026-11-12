@@ -25,6 +25,7 @@ const groups = [
       { href: "/admin/comments", label: "دیدگاه‌ها" },
       { href: "/admin/media", label: "رسانه‌ها" },
       { href: "/admin/instructor", label: "پروفایل مدرس" },
+      { href: "/admin/ai", label: "دستیار هوشمند" },
     ],
   },
   {

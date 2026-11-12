@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpenIcon,
+  BotIcon,
   CreditCardIcon,
   FolderOpenIcon,
   HomeIcon,
@@ -61,6 +62,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/admin/messages": MessageSquareIcon,
   "/admin/settings": SettingsIcon,
   "/admin/audit-logs": ListOrderedIcon,
+  "/admin/ai": BotIcon,
 };
 
 /* account-menu style dashboard sider: white card, captioned groups, flat items
