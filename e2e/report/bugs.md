@@ -1,6 +1,6 @@
 # GoLearn — E2E bug report
 
-Generated 2026-11-11T23:17:48.269Z · 308s · 71 passed · 43 failed · 6 skipped · 0 flaky (76 total)
+Generated 2026-11-12T14:26:55.421Z · 14s · 74 passed · 46 failed · 6 skipped · 0 flaky (84 total)
 
 Reproduce a single entry with `cd e2e && bunx playwright test <spec file>`.
 
@@ -12,7 +12,7 @@ Reproduce a single entry with `cd e2e && bunx playwright test <spec file>`.
 | 2 | 8 (BUG-035, BUG-036, BUG-037, BUG-038, BUG-039, BUG-040, BUG-041, BUG-042) | Failed to load resource: the server responded with a status of 404 (Not Found) |
 | 3 | 4 (BUG-009, BUG-019, BUG-022, BUG-023) | Failed to load resource: the server responded with a status of 401 (Unauthorized) |
 | 4 | 4 (BUG-015, BUG-016, BUG-017, BUG-018) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login |
-| 5 | 2 (BUG-011, BUG-024) | Failed to load resource: the server responded with a status of 500 (Internal Server Error) |
+| 5 | 3 (BUG-011, BUG-024, BUG-045) | Failed to load resource: the server responded with a status of 500 (Internal Server Error) |
 | 6 | 2 (BUG-012, BUG-020) | Error: browserContext.close: ENOENT: no such file or directory, open '/home/ehsan/Workspace/GoLearn/e2e/report/artifacts |
 | 7 | 2 (BUG-013, BUG-014) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/register |
 | 8 | 2 (BUG-026, BUG-027) | TimeoutError: locator.click: Timeout 20000ms exceeded. |
@@ -25,6 +25,9 @@ Reproduce a single entry with `cd e2e && bunx playwright test <spec file>`.
 | 15 | 1 (BUG-007) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/courses |
 | 16 | 1 (BUG-008) | Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/courses?q=Go |
 | 17 | 1 (BUG-043) | Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenera |
+| 18 | 1 (BUG-044) | ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):
+Error: |
+| 19 | 1 (BUG-046) | Error: no OTP code for 09126799816 in /tmp/golearn-api.log. The API must run with APP_ENV=development so the mock SMS pr |
 
 ## Index
 
@@ -73,6 +76,9 @@ Reproduce a single entry with `cd e2e && bunx playwright test <spec file>`.
 | BUG-041 | major | checkout & payment | checkout without a course shows the empty state |
 | BUG-042 | major | checkout & payment | the learner can sign in again after the session is lost |
 | BUG-043 | major | admin console | a blog post is written, published, visible on the blog and deletable |
+| BUG-044 | critical | admin console | the settings are saved |
+| BUG-045 | critical | admin console | the audit log lists the admin mutations |
+| BUG-046 | major | learner dashboard | a learner can change the password and sign in with the new one |
 
 ## BUG-001 · a course is created, gets a curriculum, is published and shows up on the site
 
@@ -1727,11 +1733,149 @@ PUT http://localhost:9000/golearn-media/media/image/2026/11/01a1cccc-afc7-76ff-b
 
 **Trace:** `report/artifacts/desktop/admin-admin-console-a-blog-06728-e-on-the-blog-and-deletable-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/admin-admin-console-a-blog-06728-e-on-the-blog-and-deletable-desktop/trace.zip`)
 
+## BUG-044 · the settings are saved
+
+- **Severity:** critical
+- **Area:** admin console
+- **Test:** `specs/admin.spec.ts:352 ›  › desktop › admin.spec.ts › admin console › the settings are saved`
+- **Steps:**
+  - Before Hooks
+  - Navigate
+  - Expect "toBeVisible"
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** visible
+- **Actual:** Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+- **Suspect area:** `frontend/app/(app)/admin/** + frontend/components/admin/**`
+
+```
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+Locator: locator('#s-title')
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+[2m  - Expect "toBeVisible" locator('#s-title') with timeout 15000ms[22m
+[2m  - waiting for locator('#s-title')[22m
+
+```
+
+**Console errors**
+```
+Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+./app/(app)/admin/settings/page.tsx
+Error:   x Expected '</', got 'jsx text (
+  |     )'
+     ,-[/home/ehsan/Workspace/GoLearn/frontend/app/(app)/admin/settings/page.tsx:185:1]
+ 182 |             <TabsContent value="ai">
+ 183 |               <AISettingsCard />
+ 184 |             </TabsContent>
+ 185 | ,->       </Tabs>
+ 186 | `->     </>
+ 187 |       );
+ 188 |     }
+     `----
+
+Caused by:
+    Synta
+```
+
+**Uncaught page errors**
+```
+ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):
+Error:   x Expected '</', got 'jsx text (
+  |     )'
+     ,-[/home/ehsan/Workspace/GoLearn/frontend/app/(app)/admin/settings/page.tsx:185:1]
+ 182 |             <TabsContent value="ai">
+ 183 |               <AISettingsCard />
+ 184 |             </TabsContent>
+ 185 | ,->       </Tabs>
+ 186
+```
+
+**HTTP 5xx**
+```
+500 GET http://localhost:3000/admin/settings
+```
+
+**Screenshot:** `report/artifacts/desktop/admin-admin-console-the-settings-are-saved-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/admin-admin-console-the-settings-are-saved-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/admin-admin-console-the-settings-are-saved-desktop/trace.zip`)
+
+## BUG-045 · the audit log lists the admin mutations
+
+- **Severity:** critical
+- **Area:** admin console
+- **Test:** `specs/admin.spec.ts:371 ›  › desktop › admin.spec.ts › admin console › the audit log lists the admin mutations`
+- **Steps:**
+  - Before Hooks
+  - Navigate
+  - Expect "toBeVisible"
+  - Expect "toBeVisible"
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** visible
+- **Actual:** Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+- **Suspect area:** `frontend/app/(app)/admin/** + frontend/components/admin/**`
+
+```
+Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+Locator: locator('table tbody tr').first()
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+[2m  - Expect "toBeVisible" locator('table tbody tr').first() with timeout 15000ms[22m
+[2m  - waiting for locator('table tbody tr').first()[22m
+
+```
+
+**Console errors**
+```
+Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+```
+
+**HTTP 5xx**
+```
+500 GET http://localhost:3000/api/v1/admin/audit-logs?page=1&per_page=20
+```
+
+**Screenshot:** `report/artifacts/desktop/admin-admin-console-the-audit-log-lists-the-admin-mutations-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/admin-admin-console-the-audit-log-lists-the-admin-mutations-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/admin-admin-console-the-audit-log-lists-the-admin-mutations-desktop/trace.zip`)
+
+## BUG-046 · a learner can change the password and sign in with the new one
+
+- **Severity:** major
+- **Area:** learner dashboard
+- **Test:** `specs/learner.spec.ts:188 ›  › desktop › learner.spec.ts › learner dashboard › a learner can change the password and sign in with the new one`
+- **Steps:**
+  - Before Hooks
+  - Create request context
+  - POST
+  - After Hooks
+  - Worker Cleanup
+- **Expected:** the page to render the expected content and finish the flow without errors
+- **Actual:** Error: no OTP code for 09126799816 in /tmp/golearn-api.log. The API must run with APP_ENV=development so the mock SMS provider logs codes.
+- **Suspect area:** `frontend/app/(app)/dashboard/**`
+
+```
+Error: no OTP code for 09126799816 in /tmp/golearn-api.log. The API must run with APP_ENV=development so the mock SMS provider logs codes.
+```
+
+**Screenshot:** `report/artifacts/desktop/learner-learner-dashboard--01f1e-nd-sign-in-with-the-new-one-desktop/test-failed-1.png`
+
+**Trace:** `report/artifacts/desktop/learner-learner-dashboard--01f1e-nd-sign-in-with-the-new-one-desktop/trace.zip` (open with `bunx playwright show-trace report/artifacts/desktop/learner-learner-dashboard--01f1e-nd-sign-in-with-the-new-one-desktop/trace.zip`)
+
 ## Observations — tests passed but the page logged errors
 
-- **15×** Failed to load resource: the server responded with a status of 400 (Bad Request)
+- **17×** Failed to load resource: the server responded with a status of 400 (Bad Request)
   - e.g. “a coupon is created and switched off”, “a coupon is created and switched off”, “a coupon is created and switched off”, “a coupon is created and switched off”, “a coupon is created and switched off”
-- **279×** Failed to load resource: the server responded with a status of 401 (Unauthorized)
+- **280×** Failed to load resource: the server responded with a status of 401 (Unauthorized)
   - e.g. “a new mobile registers, verifies the OTP and lands on the dashboard”, “registration rejects a password that is too short”, “login with a wrong password shows an error and stays on the login page”, “login with the correct password opens the learner dashboard”, “login with an SMS code opens the learner dashboard”
-- **23×** Failed to load resource: the server responded with a status of 404 (Not Found)
+- **24×** Failed to load resource: the server responded with a status of 404 (Not Found)
   - e.g. “unknown course slug renders the not-found page”, “unknown course slug renders the not-found page”, “unknown course slug renders the not-found page”, “unknown course slug renders the not-found page”, “unknown course slug renders the not-found page”

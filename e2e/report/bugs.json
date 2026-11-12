@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-11-11T23:17:48.269Z",
-  "durationMs": 308266,
+  "generatedAt": "2026-11-12T14:26:55.421Z",
+  "durationMs": 13826,
   "status": "passed",
-  "total": 76,
-  "passed": 71,
-  "failed": 43,
+  "total": 84,
+  "passed": 74,
+  "failed": 46,
   "skipped": 6,
   "flaky": 0,
   "rootCauses": [
@@ -58,10 +58,11 @@
     },
     {
       "signature": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
-      "count": 2,
+      "count": 3,
       "bugs": [
         "BUG-011",
-        "BUG-024"
+        "BUG-024",
+        "BUG-045"
       ]
     },
     {
@@ -151,6 +152,20 @@
       "count": 1,
       "bugs": [
         "BUG-043"
+      ]
+    },
+    {
+      "signature": "ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):\nError:",
+      "count": 1,
+      "bugs": [
+        "BUG-044"
+      ]
+    },
+    {
+      "signature": "Error: no OTP code for 09126799816 in /tmp/golearn-api.log. The API must run with APP_ENV=development so the mock SMS pr",
+      "count": 1,
+      "bugs": [
+        "BUG-046"
       ]
     }
   ],
@@ -1568,6 +1583,96 @@
       "trace": "report/artifacts/desktop/admin-admin-console-a-blog-06728-e-on-the-blog-and-deletable-desktop/trace.zip",
       "suspect": [
         "frontend/app/(app)/admin/** + frontend/components/admin/**"
+      ]
+    },
+    {
+      "id": "BUG-044",
+      "severity": "critical",
+      "area": "admin console",
+      "title": "the settings are saved",
+      "test": "specs/admin.spec.ts:352 ›  › desktop › admin.spec.ts › admin console › the settings are saved",
+      "steps": [
+        "Before Hooks",
+        "Navigate",
+        "Expect \"toBeVisible\"",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "visible",
+      "actual": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#s-title')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('#s-title') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('#s-title')\u001b[22m\n",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "./app/(app)/admin/settings/page.tsx\nError:   x Expected '</', got 'jsx text (\n  |     )'\n     ,-[/home/ehsan/Workspace/GoLearn/frontend/app/(app)/admin/settings/page.tsx:185:1]\n 182 |             <TabsContent value=\"ai\">\n 183 |               <AISettingsCard />\n 184 |             </TabsContent>\n 185 | ,->       </Tabs>\n 186 | `->     </>\n 187 |       );\n 188 |     }\n     `----\n\nCaused by:\n    Synta"
+      ],
+      "pageErrors": [
+        "ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):\nError:   x Expected '</', got 'jsx text (\n  |     )'\n     ,-[/home/ehsan/Workspace/GoLearn/frontend/app/(app)/admin/settings/page.tsx:185:1]\n 182 |             <TabsContent value=\"ai\">\n 183 |               <AISettingsCard />\n 184 |             </TabsContent>\n 185 | ,->       </Tabs>\n 186"
+      ],
+      "serverErrors": [
+        "500 GET http://localhost:3000/admin/settings"
+      ],
+      "failedRequests": [],
+      "screenshot": "report/artifacts/desktop/admin-admin-console-the-settings-are-saved-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/admin-admin-console-the-settings-are-saved-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/(app)/admin/** + frontend/components/admin/**"
+      ]
+    },
+    {
+      "id": "BUG-045",
+      "severity": "critical",
+      "area": "admin console",
+      "title": "the audit log lists the admin mutations",
+      "test": "specs/admin.spec.ts:371 ›  › desktop › admin.spec.ts › admin console › the audit log lists the admin mutations",
+      "steps": [
+        "Before Hooks",
+        "Navigate",
+        "Expect \"toBeVisible\"",
+        "Expect \"toBeVisible\"",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "visible",
+      "actual": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('table tbody tr').first()\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" locator('table tbody tr').first() with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('table tbody tr').first()\u001b[22m\n",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "serverErrors": [
+        "500 GET http://localhost:3000/api/v1/admin/audit-logs?page=1&per_page=20"
+      ],
+      "failedRequests": [],
+      "screenshot": "report/artifacts/desktop/admin-admin-console-the-audit-log-lists-the-admin-mutations-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/admin-admin-console-the-audit-log-lists-the-admin-mutations-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/(app)/admin/** + frontend/components/admin/**"
+      ]
+    },
+    {
+      "id": "BUG-046",
+      "severity": "major",
+      "area": "learner dashboard",
+      "title": "a learner can change the password and sign in with the new one",
+      "test": "specs/learner.spec.ts:188 ›  › desktop › learner.spec.ts › learner dashboard › a learner can change the password and sign in with the new one",
+      "steps": [
+        "Before Hooks",
+        "Create request context",
+        "POST",
+        "After Hooks",
+        "Worker Cleanup"
+      ],
+      "expected": "the page to render the expected content and finish the flow without errors",
+      "actual": "Error: no OTP code for 09126799816 in /tmp/golearn-api.log. The API must run with APP_ENV=development so the mock SMS provider logs codes.",
+      "error": "Error: no OTP code for 09126799816 in /tmp/golearn-api.log. The API must run with APP_ENV=development so the mock SMS provider logs codes.",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "serverErrors": [],
+      "failedRequests": [],
+      "screenshot": "report/artifacts/desktop/learner-learner-dashboard--01f1e-nd-sign-in-with-the-new-one-desktop/test-failed-1.png",
+      "trace": "report/artifacts/desktop/learner-learner-dashboard--01f1e-nd-sign-in-with-the-new-one-desktop/trace.zip",
+      "suspect": [
+        "frontend/app/(app)/dashboard/**"
       ]
     }
   ],
@@ -4550,6 +4655,42 @@
       "test": "specs/site.spec.ts:59 ›  › desktop › site.spec.ts › public site › unknown course slug renders the not-found page",
       "consoleErrors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "serverErrors": []
+    },
+    {
+      "area": "authentication",
+      "title": "registration rejects a password that is too short",
+      "test": "specs/auth.spec.ts:39 ›  › desktop › auth.spec.ts › authentication › registration rejects a password that is too short",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+      ],
+      "serverErrors": []
+    },
+    {
+      "area": "public site",
+      "title": "unknown course slug renders the not-found page",
+      "test": "specs/site.spec.ts:66 ›  › desktop › site.spec.ts › public site › unknown course slug renders the not-found page",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "serverErrors": []
+    },
+    {
+      "area": "learner dashboard",
+      "title": "a learner can change the password and sign in with the new one",
+      "test": "specs/learner.spec.ts:188 ›  › desktop › learner.spec.ts › learner dashboard › a learner can change the password and sign in with the new one",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "serverErrors": []
+    },
+    {
+      "area": "authentication",
+      "title": "registration rejects a password that is too short",
+      "test": "specs/auth.spec.ts:39 ›  › desktop › auth.spec.ts › authentication › registration rejects a password that is too short",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 400 (Bad Request)"
       ],
       "serverErrors": []
     }
