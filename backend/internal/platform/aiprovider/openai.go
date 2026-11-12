@@ -31,6 +31,9 @@ type openAIRequest struct {
 	Messages    []openAIMessage `json:"messages"`
 	Temperature float64         `json:"temperature"`
 	MaxTokens   int             `json:"max_tokens,omitempty"`
+	// explicit false: many OpenAI-compatible gateways stream by default and
+	// an SSE body cannot carry the whole (single-object) reply we parse
+	Stream bool `json:"stream"`
 }
 
 type openAIResponse struct {
@@ -60,6 +63,7 @@ func (c *openAI) Chat(ctx context.Context, req Request) (Response, error) {
 		Messages: []openAIMessage{{Role: "system", Content: req.System}, {Role: "user", Content: req.User}},
 		Temperature: req.Temperature,
 		MaxTokens:   req.MaxTokens,
+		Stream:      false,
 	}
 	endpoint := strings.TrimRight(c.cfg.BaseURL, "/") + "/chat/completions"
 	raw, err := postJSON(ctx, endpoint, map[string]string{
@@ -68,9 +72,9 @@ func (c *openAI) Chat(ctx context.Context, req Request) (Response, error) {
 	if err != nil {
 		return Response{}, err
 	}
-	var out openAIResponse
-	if err := json.Unmarshal(raw, &out); err != nil {
-		return Response{}, fmt.Errorf("parse provider reply: %w", err)
+	out, err := parseProviderReply[openAIResponse](raw)
+	if err != nil {
+		return Response{}, err
 	}
 	if len(out.Choices) == 0 {
 		return Response{}, fmt.Errorf("provider reply holds no choices")
@@ -96,7 +100,7 @@ func (c *openAI) ListModels(ctx context.Context) ([]string, error) {
 	req.Header.Set("Authorization", "Bearer "+c.cfg.APIKey)
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("provider request failed: %w", err)
+		return nil, fmt.Errorf("ارسال درخواست به سرویس‌دهنده ناموفق بود: %w", err)
 	}
 	defer resp.Body.Close()
 	raw, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
@@ -104,7 +108,7 @@ func (c *openAI) ListModels(ctx context.Context) ([]string, error) {
 		return nil, fmt.Errorf("read provider response: %w", err)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("provider returned %d", resp.StatusCode)
+		return nil, fmt.Errorf("سرویس‌دهنده خطای %d برگرداند", resp.StatusCode)
 	}
 	var parsed struct {
 		Data []struct {

@@ -2,7 +2,6 @@ package aiprovider
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -79,8 +78,8 @@ func (c *gemini) Chat(ctx context.Context, req Request) (Response, error) {
 		return Response{}, err
 	}
 	var out geminiResponse
-	if err := json.Unmarshal(raw, &out); err != nil {
-		return Response{}, fmt.Errorf("parse provider reply: %w", err)
+	if out, err = parseProviderReply[geminiResponse](raw); err != nil {
+		return Response{}, err
 	}
 	if len(out.Candidates) == 0 {
 		return Response{}, fmt.Errorf("provider reply holds no candidates")

@@ -2,7 +2,6 @@ package aiprovider
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -68,8 +67,8 @@ func (c *anthropic) Chat(ctx context.Context, req Request) (Response, error) {
 		return Response{}, err
 	}
 	var out anthropicResponse
-	if err := json.Unmarshal(raw, &out); err != nil {
-		return Response{}, fmt.Errorf("parse provider reply: %w", err)
+	if out, err = parseProviderReply[anthropicResponse](raw); err != nil {
+		return Response{}, err
 	}
 	text := ""
 	for _, block := range out.Content {

@@ -9,6 +9,41 @@ import (
 	"testing"
 )
 
+func TestOpenAIStreamForcedOffAndSalvage(t *testing.T) {
+	var gotBody map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewDecoder(r.Body).Decode(&gotBody)
+		// a gateway that streamed anyway: valid object + SSE remnant
+		w.Write([]byte(`{"choices":[{"message":{"content":"سلام"}}],"usage":{"prompt_tokens":3,"completion_tokens":2}}data: [DONE]`))
+	}))
+	defer srv.Close()
+
+	c := newOpenAI(Config{BaseURL: srv.URL, APIKey: "k", Model: "m"})
+	resp, err := c.Chat(context.Background(), Request{})
+	if err != nil {
+		t.Fatalf("salvage Chat: %v", err)
+	}
+	if gotBody["stream"] != false {
+		t.Fatalf("stream flag not forced false: %v", gotBody["stream"])
+	}
+	if resp.Text != "سلام" {
+		t.Fatalf("salvaged text = %q", resp.Text)
+	}
+}
+
+func TestOpenAINonJSONReplySurfacesSnippet(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html><body>502 Bad Gateway</body></html>`))
+	}))
+	defer srv.Close()
+
+	c := newOpenAI(Config{BaseURL: srv.URL, APIKey: "k", Model: "m"})
+	_, err := c.Chat(context.Background(), Request{})
+	if err == nil || !strings.Contains(err.Error(), "502 Bad Gateway") {
+		t.Fatalf("want body snippet in error, got %v", err)
+	}
+}
+
 func TestOpenAIChatRoundTrip(t *testing.T) {
 	var gotBody openAIRequest
 	var gotAuth string

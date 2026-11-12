@@ -95,6 +95,27 @@ func ModelSuggestions(provider string) []string {
 // httpClient is shared; generation calls are long, transport is short.
 var httpClient = &http.Client{Timeout: 150 * time.Second}
 
+// parseProviderReply decodes a provider body into T. Gateways occasionally
+// trail the JSON (SSE remnants, banners, encoding issues); when the strict
+// decode fails we salvage the first JSON object, and the error always
+// carries a body snippet so «تست اتصال» can show what actually came back.
+func parseProviderReply[T any](raw []byte) (T, error) {
+	var out T
+	if err := json.Unmarshal(raw, &out); err == nil {
+		return out, nil
+	}
+	if obj, xerr := ExtractJSONObject(string(raw)); xerr == nil {
+		if err := json.Unmarshal(obj, &out); err == nil {
+			return out, nil
+		}
+	}
+	snippet := strings.TrimSpace(string(raw))
+	if len(snippet) > 200 {
+		snippet = snippet[:200]
+	}
+	return out, fmt.Errorf("پاسخ سرویس‌دهنده JSON معتبر نیست: %s", snippet)
+}
+
 // postJSON sends one provider request and returns the raw body. Provider
 // errors surface with a body snippet so the panel can show the real cause.
 func postJSON(ctx context.Context, url string, headers map[string]string, body any) ([]byte, error) {
@@ -112,7 +133,7 @@ func postJSON(ctx context.Context, url string, headers map[string]string, body a
 	}
 	resp, err := httpClient.Do(httpReq)
 	if err != nil {
-		return nil, fmt.Errorf("provider request failed: %w", err)
+		return nil, fmt.Errorf("ارسال درخواست به سرویس‌دهنده ناموفق بود: %w", err)
 	}
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
@@ -124,7 +145,7 @@ func postJSON(ctx context.Context, url string, headers map[string]string, body a
 		if len(snippet) > 300 {
 			snippet = snippet[:300]
 		}
-		return nil, fmt.Errorf("provider returned %d: %s", resp.StatusCode, snippet)
+		return nil, fmt.Errorf("سرویس‌دهنده خطای %d برگرداند: %s", resp.StatusCode, snippet)
 	}
 	return bodyBytes, nil
 }

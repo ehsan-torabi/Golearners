@@ -82,7 +82,7 @@ func TestBlogPublishAndRelated(t *testing.T) {
 	require.NoError(t, posts.Create(ctx, p2))
 
 	require.NoError(t, posts.Publish(ctx, p1.ID))
-	got, err := posts.BySlug(ctx, "post-one")
+	got, err := posts.BySlug(ctx, p1.Slug)
 	require.NoError(t, err)
 	require.NotNil(t, got.PublishedAt)
 

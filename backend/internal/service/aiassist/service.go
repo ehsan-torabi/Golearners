@@ -207,8 +207,11 @@ func (s *Service) TestConnection(ctx context.Context) (map[string]any, error) {
 	if err != nil {
 		return nil, apperr.ErrValidation.Wrap(err)
 	}
+	// bound the probe: a hanging gateway must not hang the panel button
+	probeCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 	start := time.Now()
-	_, err = client.Chat(ctx, aiprovider.Request{
+	_, err = client.Chat(probeCtx, aiprovider.Request{
 		System:      "یک کلمه پاسخ بده.",
 		User:        "سلام",
 		MaxTokens:   16,
