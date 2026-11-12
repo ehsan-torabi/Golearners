@@ -7,6 +7,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api, LEVEL_FA, formatTomanFromRial } from "@/lib/api";
 import { SiteBreadcrumb } from "@/components/site-breadcrumb";
+import { InstructorCard } from "@/components/site/instructor-card";
 import { ReviewForm } from "@/components/site/review-form";
 import { PromoPlayer } from "@/components/site/promo-player";
 import { PreviewLessonItem } from "@/components/site/preview-lesson";
@@ -33,6 +34,12 @@ interface Detail {
   rating_avg: number | null;
   rating_count: number;
   owned_by_viewer: boolean;
+  /** US-B2: the teacher card; absent until the console saves a profile */
+  instructor?: {
+    full_name: string;
+    headline: string;
+    avatar_url?: string | null;
+  } | null;
 }
 
 interface OwnerLesson {
@@ -195,6 +202,15 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
         <div className="space-y-10">
+          {d.instructor && (
+            <section aria-labelledby="instructor">
+              <h2 id="instructor" className="mb-4 font-semibold text-2xl">
+                مدرس دوره
+              </h2>
+              <InstructorCard instructor={d.instructor} />
+            </section>
+          )}
+
           {(d.outcomes ?? []).length > 0 && (
             <section aria-labelledby="outcomes">
               <h2 id="outcomes" className="mb-4 font-semibold text-2xl">در این دوره یاد می‌گیری</h2>

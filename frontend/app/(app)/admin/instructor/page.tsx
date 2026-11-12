@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
@@ -80,7 +81,12 @@ export default function AdminInstructorPage() {
         <div>
           <h1 className="reveal text-xl leading-7 text-foreground">پروفایل مدرس</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            این اطلاعات در صفحهٔ «درباره مدرس» سایت نمایش داده می‌شود.
+            این اطلاعات در صفحهٔ «درباره مدرس» سایت نمایش داده می‌شود. نام نمایشی مدرس از
+            نام حساب کاربری گرفته می‌شود، پس آن را از{" "}
+            <Link href="/admin/users" className="text-accent-strong underline">
+              صفحهٔ کاربران
+            </Link>{" "}
+            تغییر بده.
           </p>
         </div>
         {saved && <Badge tone="success">ذخیره شد</Badge>}
