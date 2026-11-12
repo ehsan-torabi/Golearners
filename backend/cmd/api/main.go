@@ -33,6 +33,7 @@ import (
 	"golearn/backend/internal/repository"
 	"golearn/backend/internal/service/catalog"
 	checkoutsvc "golearn/backend/internal/service/checkout"
+	"golearn/backend/internal/service/aiassist"
 	"golearn/backend/internal/service/contentadmin"
 	"golearn/backend/internal/service/courseadmin"
 	idsvc "golearn/backend/internal/service/identity"
@@ -197,10 +198,19 @@ throttler := ratelimit.New(rdb)
 	settingsRepo := repository.NewSettingsRepo(pool)
 	userAdminRepo := repository.NewUserAdminRepo(pool)
 
+	aiRepo := repository.NewAIRepo(pool)
+	aiSvc := aiassist.NewService(aiassist.Deps{
+		Settings: settingsRepo, Drafts: aiRepo, Usage: aiRepo,
+		Posts: posts, Courses: courses, Cats: categories,
+		Stats: repository.NewCourseStatsRepo(pool), Analytics: analyticsRepo,
+		Content: contentAdminSvc, CourseAdmin: courseAdminSvc, Audit: audit,
+		ServerSecret: cfg.JWTSecret, Sanitize: cleanHTML,
+	})
+
 	app := &httpapi.App{
 		Cfg: cfg, Log: log, DB: pool, Redis: rdb, Storage: st,
 		Auth: authSvc, Throttle: throttler, Signer: signer,
-		Catalog: catalogSvc, CourseAdmin: courseAdminSvc, Content: contentAdminSvc,
+		Catalog: catalogSvc, CourseAdmin: courseAdminSvc, Content: contentAdminSvc, AI: aiSvc,
 		MediaService: mediaSvc, Playback: playbackSvc, StoragePort: st,
 		Learning: learningSvc, Checkout: checkoutSvc,
 		Orders: orders, Analytics: analyticsRepo, SettingsRepo: settingsRepo, UserAdmin: userAdminRepo,

@@ -85,4 +85,12 @@ var (
 	ErrRefundFailed         = New(http.StatusConflict, "REFUND_FAILED", "استرداد پرداخت ممکن نشد؛ در پنل درگاه بررسی کنید.")
 
 	ErrCourseNotReady = New(http.StatusConflict, "COURSE_NOT_READY", "برای انتشار دوره باید دست‌کم یک درسِ آماده داشته باشید.")
+
+	// AI assistant (admin panel). Provider failures stay 502 so the panel can
+	// offer a retry; decided drafts conflict so double-clicks are harmless.
+	ErrAIDisabled       = New(http.StatusBadRequest, "AI_DISABLED", "دستیار هوشمند فعال نیست؛ از تنظیمات پنل فعالش کنید.")
+	ErrAIProviderFailed = New(http.StatusBadGateway, "AI_PROVIDER_FAILED", "سرویس‌دهندهٔ هوش مصنوعی پاسخ درستی نداد؛ بعداً دوباره تلاش کنید.")
+	ErrAINoChange       = New(http.StatusBadRequest, "AI_NO_CHANGE", "پیشنهاد تفاوتی با محتوای فعلی ندارد.")
+	ErrAIDecided        = New(http.StatusConflict, "AI_DRAFT_DECIDED", "برای این پیش‌نویس قبلاً تصمیم گرفته شده است.")
+	ErrAINotApplicable  = New(http.StatusBadRequest, "AI_DRAFT_NOT_APPLICABLE", "این پیش‌نویس قابل اعمال نیست.")
 )

@@ -18,6 +18,7 @@ import (
 	"golearn/backend/internal/platform/config"
 	"golearn/backend/internal/platform/storage"
 	"golearn/backend/internal/ports"
+	"golearn/backend/internal/service/aiassist"
 	"golearn/backend/internal/service/catalog"
 	checkoutsvc "golearn/backend/internal/service/checkout"
 	"golearn/backend/internal/service/contentadmin"
@@ -42,6 +43,7 @@ type App struct {
 	Catalog      *catalog.Service
 	CourseAdmin  *courseadmin.Service
 	Content      *contentadmin.Service
+	AI           *aiassist.Service
 	MediaService *mediasvc.Service
 	Playback     *playback.Service
 	Checkout     *checkoutsvc.Service
@@ -230,6 +232,18 @@ func NewRouter(a *App) http.Handler {
 			r.Get("/admin/course-stats/{id}/learners", a.handleAdminCourseStatsLearners)
 			r.Get("/admin/settings", a.handleAdminSettings)
 			r.Patch("/admin/settings", a.handleAdminSettingsPatch)
+
+			r.Get("/admin/ai/settings", a.handleAISettingsGet)
+			r.Put("/admin/ai/settings", a.handleAISettingsPut)
+			r.Post("/admin/ai/settings/test", a.handleAISettingsTest)
+			r.Get("/admin/ai/models", a.handleAIModels)
+			r.With(a.rateLimit("ai-generate", 30, time.Hour)).Post("/admin/ai/generate", a.handleAIGenerate)
+			r.Get("/admin/ai/drafts", a.handleAIDraftsList)
+			r.Get("/admin/ai/drafts/{id}", a.handleAIDraftGet)
+			r.Post("/admin/ai/drafts/{id}/approve", a.handleAIDraftApprove)
+			r.Post("/admin/ai/drafts/{id}/reject", a.handleAIDraftReject)
+			r.Delete("/admin/ai/drafts/{id}", a.handleAIDraftDelete)
+			r.Get("/admin/ai/usage", a.handleAIUsage)
 			r.Get("/admin/users", a.handleAdminUsers)
 			r.Patch("/admin/users/{id}", a.handleAdminUserPatch)
 			r.Get("/admin/coupons", a.handleAdminCouponList)

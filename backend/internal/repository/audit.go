@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -15,10 +16,16 @@ type AuditRepo struct{ pool *pgxpool.Pool }
 func NewAuditRepo(pool *pgxpool.Pool) *AuditRepo { return &AuditRepo{pool: pool} }
 
 func (r *AuditRepo) Insert(ctx context.Context, e *ports.AuditEntry) error {
+	// an empty IP is legal (internal calls) and must land as NULL — the inet
+	// column rejects ""
+	var ip any = e.IP
+	if strings.TrimSpace(e.IP) == "" {
+		ip = nil
+	}
 	_, err := querierOf(ctx, r.pool).Exec(ctx,
 		`INSERT INTO audit_logs (id, actor_user_id, action, entity_type, entity_id, before, after, ip, user_agent)
 		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-		e.ID, e.ActorID, e.Action, e.EntityType, e.EntityID, e.Before, e.After, e.IP, e.UserAgent)
+		e.ID, e.ActorID, e.Action, e.EntityType, e.EntityID, e.Before, e.After, ip, e.UserAgent)
 	if err != nil {
 		return fmt.Errorf("insert audit: %w", err)
 	}
